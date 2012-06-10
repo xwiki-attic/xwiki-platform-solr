@@ -19,17 +19,16 @@
  */
 package org.xwiki.platform.search;
 
-/**
- * @version $Id$
- */
-public interface SearchService
+public interface PageTool
 {
+    public int getCurrent_page_number();
 
-    /**
-     * Search Service.
-     * 
-     * @return reference to Search.
-     */
-    Search getSearch();
+    public int getPage_count();
+
+    public long getResults_found();
+
+    public int getResults_per_page();
+
+    public long getStart();
 
 }

@@ -22,14 +22,7 @@ package org.xwiki.platform.search;
 /**
  * @version $Id$
  */
-public interface SearchService
+public interface IndexBuilder
 {
-
-    /**
-     * Search Service.
-     * 
-     * @return reference to Search.
-     */
-    Search getSearch();
 
 }

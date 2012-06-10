@@ -20,16 +20,15 @@
 package org.xwiki.platform.search;
 
 /**
+ * XWiki search back end.
+ * 
  * @version $Id$
  */
-public interface SearchService
+public interface SearchBackEnd
 {
+    String EMBEDDED_SOLR_SERVER = "solrj";
 
-    /**
-     * Search Service.
-     * 
-     * @return reference to Search.
-     */
-    Search getSearch();
+    String LUCENE = "lucene";
 
+    String REMOTE_SOLR_SERVER = "solr-remote";
 }

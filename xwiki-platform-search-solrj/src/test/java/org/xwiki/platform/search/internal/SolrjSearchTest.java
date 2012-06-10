@@ -17,19 +17,34 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.platform.search;
+package org.xwiki.platform.search.internal;
+
+import junit.framework.Assert;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.xwiki.platform.search.Search;
+import org.xwiki.test.AbstractComponentTestCase;
 
 /**
  * @version $Id$
  */
-public interface SearchService
+public class SolrjSearchTest extends AbstractComponentTestCase
 {
+    protected AbstractSearch search;
 
-    /**
-     * Search Service.
-     * 
-     * @return reference to Search.
-     */
-    Search getSearch();
+    @Before
+    @Override
+    public void setUp() throws Exception
+    {
+        super.setUp();
+        this.search = getComponentManager().getInstance(Search.class, "solrj");
+    }
 
+    @Test
+    public void testSolrjSearchComponent()
+    {
+        Assert.assertNotNull(this.search);
+        Assert.assertEquals(this.search.getImplementation(), "Embedded Solr");
+    }
 }

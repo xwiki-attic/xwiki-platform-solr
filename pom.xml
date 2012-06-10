@@ -11,7 +11,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <commons.version>4.1-SNAPSHOT</commons.version>
+    <commons.version>4.2-SNAPSHOT</commons.version>
   </properties>
 
   <modules>

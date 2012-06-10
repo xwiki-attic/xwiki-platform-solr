@@ -1,2 +1,1 @@
-org.xwiki.platform.search.internal.DefaultHelloWorld
-org.xwiki.platform.search.internal.HelloWorldScriptService
+org.xwiki.platform.search.internal.SearchServiceImpl

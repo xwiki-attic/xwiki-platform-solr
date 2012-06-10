@@ -22,9 +22,7 @@
 	<artifactId>xwiki-platform-search-api</artifactId>
 	<name>XWiki Search API</name>
 	<description>XWiki Search API</description>
-	<properties>
-		<solr.version>3.5.0</solr.version>
-	</properties>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -49,6 +47,16 @@
 			<artifactId>xwiki-platform-model</artifactId>
 			<version>${commons.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.xwiki.platform</groupId>
+			<artifactId>xwiki-platform-oldcore</artifactId>
+			<version>${commons.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.xwiki.platform</groupId>
+			<artifactId>xwiki-platform-bridge</artifactId>
+			<version>${commons.version}</version>
+		</dependency>
 		<!-- Only needed if some of the component's APIs must be made visible to
 			scripting in wiki pages -->
 		<dependency>
@@ -64,30 +72,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<artifactId>solr-solrj</artifactId>
-			<groupId>org.apache.solr</groupId>
-			<version>${solr.version}</version>
-		</dependency>
-		<dependency>
 			<artifactId>junit-dep</artifactId>
 			<groupId>junit</groupId>
 			<version>4.10</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-			<version>2.6</version>
-		</dependency>
-		<dependency>
-			<artifactId>solr-core</artifactId>
-			<groupId>org.apache.solr</groupId>
-			<version>${solr.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-jdk14</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 	</dependencies>
 </project>

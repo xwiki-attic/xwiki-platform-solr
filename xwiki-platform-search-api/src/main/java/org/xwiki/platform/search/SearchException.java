@@ -20,16 +20,40 @@
 package org.xwiki.platform.search;
 
 /**
+ * Generic XWiki Search exception.
+ * 
  * @version $Id$
  */
-public interface SearchService
+public class SearchException extends Exception
 {
+    /**
+     *
+     */
+    private static final long serialVersionUID = -4071116940987116724L;
 
     /**
-     * Search Service.
-     * 
-     * @return reference to Search.
+     * @param message
      */
-    Search getSearch();
+    public SearchException(String message)
+    {
+        super(message);
+    }
+
+    /**
+     * @param message
+     * @param t
+     */
+    public SearchException(String message, Throwable t)
+    {
+        super(message, t);
+    }
+
+    /**
+     * @param t
+     */
+    public SearchException(Throwable t)
+    {
+        super(t);
+    }
 
 }

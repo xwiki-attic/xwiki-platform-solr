@@ -22,14 +22,36 @@ package org.xwiki.platform.search;
 /**
  * @version $Id$
  */
-public interface SearchService
+public class SearchIndexingException extends SearchException
 {
 
     /**
-     * Search Service.
-     * 
-     * @return reference to Search.
+     * Default serial version uid.
      */
-    Search getSearch();
+    private static final long serialVersionUID = 1L;
 
+    /**
+     * @param message
+     */
+    public SearchIndexingException(String message)
+    {
+        super(message);
+    }
+
+    /**
+     * @param message
+     * @param t
+     */
+    public SearchIndexingException(String message, Throwable t)
+    {
+        super(message, t);
+    }
+
+    /**
+     * @param t
+     */
+    public SearchIndexingException(Throwable t)
+    {
+        super(t);
+    }
 }
