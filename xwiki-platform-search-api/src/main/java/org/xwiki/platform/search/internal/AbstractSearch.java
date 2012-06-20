@@ -25,27 +25,23 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.slf4j.Logger;
+import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.bridge.event.DocumentDeletedEvent;
 import org.xwiki.bridge.event.DocumentUpdatedEvent;
 import org.xwiki.context.Execution;
-import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.SpaceReference;
-import org.xwiki.model.reference.WikiReference;
+import org.xwiki.context.ExecutionContext;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.event.Event;
-import org.xwiki.platform.search.IndexerProcess;
 import org.xwiki.platform.search.Search;
-import org.xwiki.platform.search.SearchException;
 import org.xwiki.platform.search.SearchIndexingException;
-import org.xwiki.platform.search.SearchResponse;
-import org.xwiki.platform.search.SolrQuery;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.internal.event.AttachmentAddedEvent;
 import com.xpn.xwiki.internal.event.AttachmentDeletedEvent;
 import com.xpn.xwiki.internal.event.AttachmentUpdatedEvent;
+import com.xpn.xwiki.util.XWikiStubContextProvider;
 
 /**
  * @version $Id$
@@ -58,11 +54,32 @@ public abstract class AbstractSearch implements Search, EventListener
     @Inject
     protected Execution execution;
 
-    protected IndexerProcess indexerProcessor;
+    @Inject
+    protected XWikiStubContextProvider contextProvider;
+
+    @Inject
+    protected DocumentAccessBridge documentAccessBridge;
 
     private static final List<Event> EVENTS = Arrays.<Event> asList(new DocumentUpdatedEvent(),
         new DocumentCreatedEvent(), new DocumentDeletedEvent(), new AttachmentAddedEvent(),
         new AttachmentDeletedEvent(), new AttachmentUpdatedEvent());
+
+    private ExecutionContext getExecutionContext()
+    {
+        return this.execution.getContext();
+    }
+
+    public XWikiContext getXWikiContext()
+    {
+        XWikiContext context = (XWikiContext) execution.getContext().getProperty(XWikiContext.EXECUTIONCONTEXT_KEY);
+        if (context == null) {
+
+            context = this.contextProvider.createStubContext();
+            logger.info(context.toString());
+            getExecutionContext().setProperty(XWikiContext.EXECUTIONCONTEXT_KEY, context);
+        }
+        return context;
+    }
 
     /**
      * {@inheritDoc}
@@ -72,9 +89,19 @@ public abstract class AbstractSearch implements Search, EventListener
     @Override
     public int indexWiki() throws SearchIndexingException, XWikiException
     {
-        int docsCount = indexWiki(getXWikiContext().getWiki().getName());
+
+        String wikiName = getXWikiContext().getWiki().getName();
+        logger.info("Indexing wiki.." + wikiName);
+        int docsCount = this.indexWiki(wikiName);
+
         return docsCount;
     }
+
+    /**
+     * @param wikiName
+     * @return
+     */
+    protected abstract int indexWiki(String wikiName) throws XWikiException;
 
     /**
      * {@inheritDoc}
@@ -94,7 +121,6 @@ public abstract class AbstractSearch implements Search, EventListener
         }
         return totalDocCount;
     }
-
 
     /**
      * {@inheritDoc}
@@ -131,21 +157,4 @@ public abstract class AbstractSearch implements Search, EventListener
 
     }
 
-    protected XWikiContext getXWikiContext()
-    {
-        return (XWikiContext) this.execution.getContext().getProperty(XWikiContext.EXECUTIONCONTEXT_KEY);
-    }
-
-    protected abstract int indexWiki(String wikiName) throws XWikiException;
-
-    /**
-     * {@inheritDoc}
-     *
-     * @see org.xwiki.platform.search.Search#getCurrentIndexerProcess()
-     */
-    @Override
-    public IndexerProcess getCurrentIndexerProcess()
-    {
-        return indexerProcessor;
-    }
 }

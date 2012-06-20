@@ -19,26 +19,34 @@
  */
 package org.xwiki.platform.search.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
-import org.apache.solr.core.CoreContainer;
+import org.apache.solr.client.solrj.SolrServer;
+import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.manager.ComponentLookupException;
+import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
+import org.xwiki.platform.search.SearchEngine;
 import org.xwiki.platform.search.SearchException;
 import org.xwiki.platform.search.SearchResponse;
 import org.xwiki.platform.search.SolrQuery;
+import org.xwiki.platform.search.index.DocumentIndexer;
+import org.xwiki.platform.search.index.internal.SolrjDocumentIndexer;
+
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
+import org.xwiki.platform.search.*;
 
 /**
  * Search implementation with Solrj backend.
@@ -48,7 +56,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
 @Component
 @Named("solrj")
 @Singleton
-public class SolrjSearch extends AbstractSearch
+public class SolrjSearch extends AbstractSearch 
 {
 
     /**
@@ -59,9 +67,24 @@ public class SolrjSearch extends AbstractSearch
     private ConfigurationSource configuration;
 
     /**
-     * Solr Server.
+     * Document Indexer for solrj
      */
-    private static EmbeddedSolrServer solrServer;
+    @Inject
+    @Named(SolrjDocumentIndexer.HINT)
+    private DocumentIndexer indexer;
+
+    @Inject
+    private ComponentManager componentManager;
+
+    private SearchEngine searchEngine;
+
+    private SolrServer solrServer;
+
+    /**
+     * Document access bridge to retrieve documents.
+     */
+    @Inject
+    private DocumentAccessBridge documentAccessBridge;
 
     /**
      * {@inheritDoc}
@@ -72,36 +95,18 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public void initialize() throws SearchException
     {
-        String solrHome = null;
-
         try {
-            // Start embedded solr server.
-            logger.info("Starting embedded solr server..");
-            solrHome = configuration.getProperty("search.solr.home");
-            System.setProperty("solr.solr.home", solrHome);
-
-            /* Initialize the SOLR backend using an embedded server */
-            CoreContainer.Initializer initializer = new CoreContainer.Initializer();
-            CoreContainer container = initializer.initialize();
-            solrServer = new EmbeddedSolrServer(container, "");
-
-            // Delete the existing index.
-            solrServer.deleteByQuery("*:*");
-
-            // Index Wiki.
-            indexWiki();
-
-
-
-        } catch (Exception ex) {
-            throw new SearchException("Failed to initialize the solr embedded server with solr.solr.home [" + solrHome
-                + "].", ex);
+            this.indexWiki();
+        } catch (XWikiException e) {
+            logger.error("Failed to index current wiki");
         }
-
     }
 
+    @Override
     protected int indexWiki(String wikiName) throws XWikiException
     {
+        logger.info("Indexing wiki [" + wikiName + "]");
+
         final XWikiContext xcontext = getXWikiContext();
 
         String currentWikiName = xcontext.getWiki().getName();
@@ -110,38 +115,21 @@ public class SolrjSearch extends AbstractSearch
             xcontext.setDatabase(wikiName);
         }
 
-        // Total number of documents.
         String hql = "select doc.space, doc.name, doc.version, doc.language from XWikiDocument as doc";
         List<Object[]> documents = xcontext.getWiki().search(hql, xcontext);
 
-        int totalDocs = documents.size();
+        List<DocumentReference> docsList = new ArrayList<DocumentReference>();
 
-        try {
-            // A daemon thread to index wiki pages
-            Thread thread = new Thread(new Runnable()
-            {
+        for (Object[] document : documents) {
 
-                @Override
-                public void run()
-                {
-                    // TODO Auto-generated method stub
-                    xcontext.getWiki();
-
-                }
-
-            });
-            thread.setPriority(Thread.MIN_PRIORITY);
-            thread.setDaemon(true);
-            thread.setName("Indexing documents by solrj search");
-            thread.start();
-
-        } catch (Exception ex) {
-            logger.error("Exception while initializing embedded solr server.", ex.getMessage());
-        } finally {
-            xcontext.setDatabase(currentWikiName);
+            String spaceName = (String) document[0];
+            DocumentReference documentReference = new DocumentReference(wikiName, spaceName, (String) document[1]);
+            docsList.add(documentReference);
         }
 
-        return 0;
+        indexer.indexDocuments(docsList);
+
+        return docsList.size();
     }
 
     /**
@@ -155,9 +143,8 @@ public class SolrjSearch extends AbstractSearch
         XWikiDocument xdoc;
         try {
             xdoc = getXWikiContext().getWiki().getDocument(document, getXWikiContext());
-            solrServer.deleteById(xdoc.getId() + "");
         } catch (Exception e) {
-            logger.error("Failure in deleting the index for ["+document.getName()+"]", e);
+            logger.error("Failure in deleting the index for [" + document.getName() + "]", e);
         }
 
         return false;
@@ -195,7 +182,8 @@ public class SolrjSearch extends AbstractSearch
     public int indexDocuments(List<DocumentReference> documents)
     {
 
-        return 0;
+        indexer.indexDocuments(documents);
+        return documents.size();
     }
 
     /**
@@ -223,7 +211,7 @@ public class SolrjSearch extends AbstractSearch
         if (getXWikiContext().getWiki().isVirtualMode()) {
             try {
                 // Delete the existing index.
-                solrServer.deleteByQuery("*:*");
+                // solrServer.deleteByQuery("*:*");
                 docCount = indexWikiFarm();
             } catch (Exception e) {
                 logger.error("Failure in rebuilding the farm index.", e);
@@ -255,7 +243,7 @@ public class SolrjSearch extends AbstractSearch
         int docCount = 0;
         try {
             // Delete the existing index.
-            solrServer.deleteByQuery("*:*");
+            // solrServer.deleteByQuery("*:*");
             docCount = indexWiki();
         } catch (Exception e) {
             logger.error("Failure in rebuilding the farm index.", e);

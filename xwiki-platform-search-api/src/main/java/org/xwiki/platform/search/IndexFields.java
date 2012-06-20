@@ -124,4 +124,14 @@ public interface IndexFields
      * not in use
      */
     String KEYWORDS = "kw";
+    
+    /**
+     * For storing mimetype of the attachments.
+     */
+    String MIME_TYPE = "mimetype";
+    
+    /**
+     * For storing the doc reference . Used by attachments.
+     */
+    String DOC_REFERENCE = "docref";
 }

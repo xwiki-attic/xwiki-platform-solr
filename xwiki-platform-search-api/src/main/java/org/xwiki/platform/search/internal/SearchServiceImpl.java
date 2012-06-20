@@ -27,6 +27,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
+import org.xwiki.bridge.event.ApplicationReadyEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
@@ -34,10 +35,8 @@ import org.xwiki.component.phase.Initializable;
 import org.xwiki.component.phase.InitializationException;
 import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.observation.EventListener;
-import org.xwiki.observation.event.ApplicationStartedEvent;
 import org.xwiki.observation.event.Event;
 import org.xwiki.platform.search.Search;
-import org.xwiki.platform.search.SearchBackEnd;
 import org.xwiki.platform.search.SearchException;
 import org.xwiki.platform.search.SearchService;
 import org.xwiki.script.service.ScriptService;
@@ -85,7 +84,7 @@ public class SearchServiceImpl implements ScriptService, EventListener, Initiali
     @Override
     public List<Event> getEvents()
     {
-        return Collections.singletonList((Event) new ApplicationStartedEvent());
+        return Collections.singletonList((Event) new ApplicationReadyEvent());
     }
 
     /**
@@ -132,16 +131,11 @@ public class SearchServiceImpl implements ScriptService, EventListener, Initiali
     {
         logger.info("Initializing a Search component with hint[" + componentHint + "]");
         try {
-            if (SearchBackEnd.EMBEDDED_SOLR_SERVER.equalsIgnoreCase(componentHint)) {
 
-                search = componentManager.getInstance(Search.class, componentHint);
+            search = this.componentManager.getInstance(Search.class, componentHint);
 
-            } else if (SearchBackEnd.REMOTE_SOLR_SERVER.equalsIgnoreCase(componentHint)) {
-
-                // Do nothing // TODO
-            }
         } catch (ComponentLookupException e) {
-            logger.error("Error creating a Search component with hint[" + componentHint + "]", e);
+            logger.error("Error creating a Search component with hint[" + componentHint + "] :: " + e.getMessage());
             throw new SearchException("Error creating a Search component with hint[" + componentHint + "]", e);
         }
 

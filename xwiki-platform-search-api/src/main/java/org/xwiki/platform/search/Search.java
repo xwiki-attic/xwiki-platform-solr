@@ -45,13 +45,6 @@ public interface Search
     boolean deleteDocumentIndex(DocumentReference document);
 
     /**
-     * Object with indexing process metadata.
-     *
-     * @return IndexProcess object for the active indexing process.
-     */
-    IndexerProcess getCurrentIndexerProcess();
-
-    /**
      * Gets the backend implementation.It could be embedded Solr, remote Solr, internal Lucene, distributed Lucene.
      *
      * @return the implementation.
