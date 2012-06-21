@@ -17,27 +17,12 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.platform.search.index;
-
-import java.util.List;
-
-import org.xwiki.component.annotation.Role;
-import org.xwiki.model.reference.DocumentReference;
+package org.xwiki.platform.search;
 
 /**
  * @version $Id$
  */
-@Role
-public interface DocumentIndexer
+public interface SearchQuery
 {
 
-    boolean indexDocument(DocumentReference docs);
-
-    void indexDocuments(List<DocumentReference> docs);
-
-    boolean deleteIndex(DocumentReference doc);
-
-    void deleteIndex(List<DocumentReference> docs);
-
-    boolean deleteEntireIndex();
 }

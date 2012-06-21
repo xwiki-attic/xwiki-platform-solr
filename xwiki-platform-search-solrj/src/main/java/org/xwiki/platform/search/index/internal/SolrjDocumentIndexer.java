@@ -19,13 +19,22 @@
  */
 package org.xwiki.platform.search.index.internal;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.bridge.DocumentModelBridge;
@@ -35,6 +44,7 @@ import org.xwiki.context.ExecutionContext;
 import org.xwiki.context.ExecutionContextException;
 import org.xwiki.context.ExecutionContextManager;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.platform.search.IndexFields;
 import org.xwiki.platform.search.SearchEngine;
 import org.xwiki.platform.search.SearchException;
 import org.xwiki.platform.search.index.DocumentIndexer;
@@ -60,7 +70,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer, Runnable
 
     public static final String HINT = "solrjindexer";
 
-    List<DocumentReference> docs;
+    List<DocumentReference> docList;
 
     private SolrServer solrServer;
 
@@ -79,19 +89,21 @@ public class SolrjDocumentIndexer implements DocumentIndexer, Runnable
      * @see org.xwiki.platform.search.index.DocumentIndexer#indexDocuments(java.util.List)
      */
     @Override
-    public void indexDocuments(List<DocumentReference> docs)
+    public void indexDocuments(List<DocumentReference> docList)
     {
 
-        this.docs = docs;
-        try {
-            solrServer = (SolrServer) searchEngine.getSearchEngine();
-        } catch (SearchException e1) {
-            logger.error("Error retrieving Search engine object");
+        if (docList.size() > 0) {
+            this.docList = docList;
+            try {
+                solrServer = (SolrServer) searchEngine.getSearchEngine();
+            } catch (SearchException e1) {
+                logger.error("Error retrieving Search engine object");
+            }
+            thread = new Thread(this);
+            thread.setDaemon(true);
+            thread.setPriority(Thread.MIN_PRIORITY);
+            thread.start();
         }
-        thread = new Thread(this);
-        thread.setDaemon(true);
-        thread.setPriority(Thread.MIN_PRIORITY);
-        thread.start();
     }
 
     /**
@@ -103,7 +115,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer, Runnable
     public void run()
     {
 
-        logger.info(""+solrServer);
+        logger.info("" + solrServer);
 
         // Create a clean Execution Context
         ExecutionContext context = new ExecutionContext();
@@ -117,18 +129,101 @@ public class SolrjDocumentIndexer implements DocumentIndexer, Runnable
         this.execution.pushContext(context);
 
         try {
-            for (DocumentReference docRef : this.docs) {
+
+            int i = 500120;
+
+            for (DocumentReference docRef : this.docList) {
+
                 try {
                     DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(docRef);
-                    // logger.info("Document:" + documentModelBridge.getTitle());
+
+                    SolrInputDocument sdoc = getSolrInputDocument(docRef, documentModelBridge, null);
+                    i++;
+
+                    logger.info("Adding document " + docRef.getName());
+                    solrServer.add(sdoc);
+
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Error retrieving document.");
                 }
             }
+
+            try {
+                solrServer.commit();
+                logger.info("XWiki documents are successfully committed.");
+            } catch (SolrServerException e) {
+                logger.error(e.getMessage());
+            } catch (IOException e) {
+                logger.error(e.getMessage());
+            }
+
         } finally {
             this.execution.removeContext();
         }
 
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.xwiki.platform.search.index.DocumentIndexer#deleteIndex(java.util.List)
+     */
+    @Override
+    public void deleteIndex(List<DocumentReference> docList)
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.xwiki.platform.search.index.DocumentIndexer#indexDocument(org.xwiki.model.reference.DocumentReference)
+     */
+    @Override
+    public boolean indexDocument(DocumentReference doc)
+    {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.xwiki.platform.search.index.DocumentIndexer#deleteIndex(org.xwiki.model.reference.DocumentReference)
+     */
+    @Override
+    public boolean deleteIndex(DocumentReference doc)
+    {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.xwiki.platform.search.index.DocumentIndexer#deleteEntireIndex()
+     */
+    @Override
+    public boolean deleteEntireIndex()
+    {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    private SolrInputDocument getSolrInputDocument(DocumentReference docRef, DocumentModelBridge docModelBridge,
+        String language)
+    {
+        SolrInputDocument sdoc = new SolrInputDocument();
+        if (language == null || language.equals("")) {
+            language = "en";
+        }
+
+        sdoc.addField(IndexFields.DOCUMENT_NAME + "_" + language, docRef.getName());
+        sdoc.addField(IndexFields.DOCUMENT_TITLE + "_" + language, docModelBridge.getTitle());
+        sdoc.addField(IndexFields.FULLTEXT + "_" + language, docModelBridge.getContent());
+        ///sdoc.addField("id", i);
+
+        return sdoc;
+    }
 }

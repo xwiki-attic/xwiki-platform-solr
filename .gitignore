@@ -1,0 +1,28 @@
+# Java #
+*.class
+
+# Package Files #
+*.jar
+
+# Maven #
+target/
+
+# Eclipse #
+.project
+.metadata
+bin/**
+tmp/**
+tmp/**/*
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.classpath
+.settings/
+.loadpath
+
+# Locally stored "Eclipse launch configurations #
+*.launch
+
+.checkstyle

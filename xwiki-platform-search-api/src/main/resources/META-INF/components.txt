@@ -1,1 +1,1 @@
-org.xwiki.platform.search.internal.SearchServiceImpl
+org.xwiki.platform.search.internal.DefaultSearchService

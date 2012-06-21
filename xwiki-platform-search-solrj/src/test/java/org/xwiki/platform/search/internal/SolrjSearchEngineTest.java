@@ -23,17 +23,22 @@ import java.net.URL;
 
 import junit.framework.Assert;
 
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.junit.Before;
 import org.junit.Test;
-import org.xwiki.platform.search.Search;
+import org.xwiki.platform.search.SearchEngine;
 import org.xwiki.test.AbstractComponentTestCase;
 
 /**
  * @version $Id$
  */
-public class SolrjSearchTest extends AbstractComponentTestCase
+public class SolrjSearchEngineTest extends AbstractComponentTestCase
 {
-    protected Search search;
+
+    private SearchEngine searchEngine;
+
+    private SolrServer server;
 
     @Before
     @Override
@@ -41,18 +46,18 @@ public class SolrjSearchTest extends AbstractComponentTestCase
     {
         super.setUp();
         URL url = this.getClass().getClassLoader().getResource("solrhome");
-
-        Assert.assertNotNull(url);
-
         System.setProperty(SolrjSearchEngine.SOLR_HOME_KEY, url.getPath());
-        this.search = getComponentManager().getInstance(Search.class, "solrj");
-
+        this.searchEngine = getComponentManager().getInstance(SearchEngine.class, SolrjSearchEngine.HINT);
+        this.server = (SolrServer) searchEngine.getSearchEngine();
     }
 
     @Test
-    public void testSolrjSearchComponent()
+    public void testSolrServer() throws Exception
     {
-        Assert.assertNotNull(this.search);
-        Assert.assertEquals(this.search.getImplementation(), "Embedded Solr");
+        Assert.assertNotNull(this.searchEngine);
+        Assert.assertNotNull(this.server);
+        Assert.assertTrue(this.server instanceof EmbeddedSolrServer);
+
     }
+
 }

@@ -48,6 +48,8 @@ public class SolrjSearchEngine implements SearchEngine, Initializable
 
     private static SolrServer solrServer;
 
+    public static final String SOLR_HOME_KEY = "solr.solr.home";
+
     @Inject
     private Logger logger;
 
@@ -70,8 +72,10 @@ public class SolrjSearchEngine implements SearchEngine, Initializable
         try {
             // Start embedded solr server.
             logger.info("Starting embedded solr server..");
-            solrHome = configuration.getProperty("search.solr.home");
-            System.setProperty("solr.solr.home", solrHome);
+            if (System.getProperty(SOLR_HOME_KEY) == null) {
+                solrHome = configuration.getProperty("search.solr.home");
+                System.setProperty(SOLR_HOME_KEY, solrHome);
+            }
 
             /* Initialize the SOLR backend using an embedded server */
             CoreContainer.Initializer initializer = new CoreContainer.Initializer();

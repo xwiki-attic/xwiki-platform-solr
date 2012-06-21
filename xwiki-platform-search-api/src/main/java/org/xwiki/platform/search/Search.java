@@ -25,6 +25,8 @@ import org.xwiki.component.annotation.Role;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
+import org.xwiki.platform.search.SearchIndexingException;
+import org.xwiki.platform.search.SearchException;
 
 import com.xpn.xwiki.XWikiException;
 
@@ -97,7 +99,7 @@ public interface Search
      *
      * @return the solrQuery object.
      */
-    SolrQuery parseQuery();
+    SearchQuery parseQuery();
 
     /**
      * Searches the configured Indexes using the specified solrquery for documents in the given languages belonging to
@@ -144,7 +146,7 @@ public interface Search
      * @param query to be searched.
      * @return SearchResponse to the query searched.
      */
-    SearchResponse search(String query);
+    SearchResult search(String query);
 
     /**
      * Search for the query in the current wiki for given languages.
@@ -153,7 +155,7 @@ public interface Search
      * @param languages to be searched.
      * @return SearchResponse to the query searched.
      */
-    SearchResponse search(String query, List<String> languages);
+    SearchResult search(String query, List<String> languages);
 
     /**
      * Search for the query in the current wiki for given languages in a wiki.

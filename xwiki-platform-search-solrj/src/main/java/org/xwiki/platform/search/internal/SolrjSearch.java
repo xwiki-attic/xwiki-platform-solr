@@ -38,7 +38,8 @@ import org.xwiki.model.reference.WikiReference;
 import org.xwiki.platform.search.SearchEngine;
 import org.xwiki.platform.search.SearchException;
 import org.xwiki.platform.search.SearchResponse;
-import org.xwiki.platform.search.SolrQuery;
+import org.xwiki.platform.search.SearchQuery;
+import org.xwiki.platform.search.SearchResult;
 import org.xwiki.platform.search.index.DocumentIndexer;
 import org.xwiki.platform.search.index.internal.SolrjDocumentIndexer;
 
@@ -56,15 +57,8 @@ import org.xwiki.platform.search.*;
 @Component
 @Named("solrj")
 @Singleton
-public class SolrjSearch extends AbstractSearch 
+public class SolrjSearch extends AbstractSearch
 {
-
-    /**
-     * Properties.
-     */
-    @Inject
-    @Named("xwikiproperties")
-    private ConfigurationSource configuration;
 
     /**
      * Document Indexer for solrj
@@ -72,19 +66,6 @@ public class SolrjSearch extends AbstractSearch
     @Inject
     @Named(SolrjDocumentIndexer.HINT)
     private DocumentIndexer indexer;
-
-    @Inject
-    private ComponentManager componentManager;
-
-    private SearchEngine searchEngine;
-
-    private SolrServer solrServer;
-
-    /**
-     * Document access bridge to retrieve documents.
-     */
-    @Inject
-    private DocumentAccessBridge documentAccessBridge;
 
     /**
      * {@inheritDoc}
@@ -140,14 +121,7 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public boolean deleteDocumentIndex(DocumentReference document)
     {
-        XWikiDocument xdoc;
-        try {
-            xdoc = getXWikiContext().getWiki().getDocument(document, getXWikiContext());
-        } catch (Exception e) {
-            logger.error("Failure in deleting the index for [" + document.getName() + "]", e);
-        }
-
-        return false;
+        return indexer.deleteIndex(document);
     }
 
     /**
@@ -169,8 +143,7 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public boolean indexDocument(DocumentReference document)
     {
-        // TODO Auto-generated method stub
-        return false;
+        return indexer.indexDocument(document);
     }
 
     /**
@@ -181,7 +154,6 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public int indexDocuments(List<DocumentReference> documents)
     {
-
         indexer.indexDocuments(documents);
         return documents.size();
     }
@@ -192,9 +164,8 @@ public class SolrjSearch extends AbstractSearch
      * @see org.xwiki.platform.search.Search#parseQuery()
      */
     @Override
-    public SolrQuery parseQuery()
+    public SearchQuery parseQuery()
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -269,7 +240,7 @@ public class SolrjSearch extends AbstractSearch
      * @see org.xwiki.platform.search.Search#search(java.lang.String)
      */
     @Override
-    public SearchResponse search(String query)
+    public SearchResult search(String query)
     {
         // TODO Auto-generated method stub
         return null;
@@ -281,7 +252,7 @@ public class SolrjSearch extends AbstractSearch
      * @see org.xwiki.platform.search.Search#search(java.lang.String, java.util.List)
      */
     @Override
-    public SearchResponse search(String query, List<String> languages)
+    public SearchResult search(String query, List<String> languages)
     {
         // TODO Auto-generated method stub
         return null;

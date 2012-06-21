@@ -89,11 +89,9 @@ public abstract class AbstractSearch implements Search, EventListener
     @Override
     public int indexWiki() throws SearchIndexingException, XWikiException
     {
-
         String wikiName = getXWikiContext().getWiki().getName();
         logger.info("Indexing wiki.." + wikiName);
         int docsCount = this.indexWiki(wikiName);
-
         return docsCount;
     }
 

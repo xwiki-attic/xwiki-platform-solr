@@ -25,11 +25,13 @@ import java.util.List;
 
 import org.xwiki.model.reference.EntityReference;
 import javax.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
+import org.apache.solr.common.SolrInputDocument;
 import org.xwiki.context.Execution;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReferenceSerializer;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.platform.search.IndexFields;
 import org.xwiki.rendering.syntax.Syntax;
 
@@ -48,23 +50,23 @@ import org.apache.solr.common.SolrInputDocument;
 public class SolrDocData
 {
     private Object wikiobject;
-    
+
     private String docid;
-       
+
     private EntityReference Docref;
-    
+
     private String fulltext;
 
     private String language;
-    
-    
-    
+
+
+
     @Inject
    protected Execution execution;
-    
-    
+
+
     /*
-     * the object of the SolrDocData is created and added to the queue or any data structure(not decided yet) while indexing. 
+     * the object of the SolrDocData is created and added to the queue or any data structure(not decided yet) while indexing.
      * The XWikiDocument or XWikiAttachment and corresponding document reference is passed in the constructor.
      * Later the SolrDocData is retrieved and the getSolrdoc method is called to get the solrinputdocument.
      */
@@ -72,11 +74,11 @@ public class SolrDocData
     {
         wikiobject = obj;
         setEntityReference(entityReference);
-       
-        
+
+
     }
-             
-    
+
+
     /**
      * It gets the Unique id of the document: Is it needed??
      */
@@ -88,24 +90,24 @@ public class SolrDocData
 
         return retval.toString();
     }
-    
-    
+
+
     /*
-     * get and set methods fore entity reference member variable as XWikiDoc or 
+     * get and set methods fore entity reference member variable as XWikiDoc or
      * XWikiAttachment could be converted to SolrDoc
      */
-    
+
     public EntityReference getEntityReference()
     {
         return this.Docref;
     }
-    
+
    public void setEntityReference(EntityReference entityref)
    {
        this.Docref=entityref;
    }
 
-   
+
     public String getDocumentName()
     {
         EntityReference extract = getEntityReference().extractReference(EntityType.DOCUMENT);
@@ -113,24 +115,24 @@ public class SolrDocData
         return extract != null ? extract.getName() : null;
     }
 
-   
+
     public String getDocumentSpace()
     {
         EntityReference extract = getEntityReference().extractReference(EntityType.SPACE);
 
         return extract != null ? extract.getName() : null;
-       
+
     }
 
-  
+
     public String getWiki()
-    {   
+    {
         EntityReference extract = getEntityReference().extractReference(EntityType.WIKI);
 
         return extract != null ? extract.getName() : null;
-        
+
     }
-    
+
     /*
      * get and set methods for language of the docs or attachments
      */
@@ -146,14 +148,14 @@ public class SolrDocData
         } else {
             this.language = "default";
         }
-        
-    }   
+
+    }
 
     /*
      * Extracting the full text of the document including the document's object
      */
-    
-    public String getFullText(XWikiDocument doc)       
+
+    public String getFullText(XWikiDocument doc)
     {
         StringBuilder sb = new StringBuilder();
         sb.append(" ");
@@ -163,20 +165,20 @@ public class SolrDocData
         getObjectFullText(sb, doc);
         return sb.toString();
     }
-    
+
     /*
      * Add to the string builder the value of title,category,content and extract of XWiki.ArticleClass
      */
-    
+
     private void getObjectFullText(StringBuilder sb,XWikiDocument doc)
     {
         for (List<BaseObject> objects : doc.getXObjects().values()) {
             for (BaseObject obj : objects) {
                 extractObjectContent(sb, obj);
             }
-        } 
+        }
     }
-    
+
     private void extractObjectContent(StringBuilder contentText, BaseObject baseObject)
     {
         if (baseObject != null) {
@@ -187,8 +189,8 @@ public class SolrDocData
             }
         }
     }
-    
-    
+
+
     private void getObjectContentAsText(StringBuilder contentText, BaseObject baseObject, String property)
     {
         BaseProperty baseProperty = (BaseProperty) baseObject.getField(property);
@@ -198,44 +200,44 @@ public class SolrDocData
             }
         }
     }
-    
-    
-    
-    
+
+
+
+
     /*
      * Creating the SolrInputDocuments
      */
     public SolrInputDocument getSolrDocument()
-    
+
     {
         SolrInputDocument sdoc = new SolrInputDocument();
-        
+
         if(wikiobject instanceof XWikiDocument)
         {
              sdoc= getSolrDoc((XWikiDocument)wikiobject);
-           
+
         }
-        
+
         if(wikiobject instanceof XWikiAttachment)
         {
             sdoc= getSolrAttachment((XWikiAttachment)wikiobject);
             return sdoc;
         }
-        
+
         return sdoc;
-       
+
     }
-    
-    
+
+
     /*
      * creating solrdoc for XWikiDocuments
      */
     private SolrInputDocument getSolrDoc(XWikiDocument doc)
-    
+
     {
         SolrInputDocument sdoc = new SolrInputDocument();
-        
-        try{ 
+
+        try{
             XWikiDocument tdoc = doc.getTranslatedDocument(language, getXWikiContext());
             DocumentReference docRef = doc.getDocumentReference();
             String lang = "_" + language;
@@ -250,26 +252,26 @@ public class SolrDocData
             sdoc.addField(IndexFields.DOCUMENT_DATE, tdoc.getDate());
             sdoc.addField(IndexFields.DOCUMENT_VERSION, tdoc.getVersion());
             sdoc.addField(IndexFields.DOCUMENT_FULLNAME, tdoc.getFullName());
-            sdoc.addField(IndexFields.DOCUMENT_WIKI, tdoc.getWikiName());          
+            sdoc.addField(IndexFields.DOCUMENT_WIKI, tdoc.getWikiName());
         }
         catch(Exception e)
         {
-            e.printStackTrace(); 
+            e.printStackTrace();
         }
 
-        
+
         return sdoc;
     }
-    
-    
-    
+
+
+
     /*
      * creating solrdoc for XWikiAttachments-----> yet to implement
      */
     private SolrInputDocument getSolrAttachment(XWikiAttachment attachment)
     {
        SolrInputDocument sdoc = new SolrInputDocument();
-       try{ 
+       try{
            XWikiDocument doc = attachment.getDoc();
            XWikiDocument tdoc = doc.getTranslatedDocument(language, getXWikiContext());
            String lang = "_" + language;
@@ -282,24 +284,24 @@ public class SolrDocData
            sdoc.addField(IndexFields.DOCUMENT_DATE + lang , tdoc.getDate());
            sdoc.addField(IndexFields.DOCUMENT_VERSION + lang , tdoc.getVersion());
            sdoc.addField(IndexFields.DOCUMENT_FULLNAME + lang , tdoc.getFullName());
-           sdoc.addField(IndexFields.DOCUMENT_WIKI + lang , tdoc.getWikiName());  
-           sdoc.addField(IndexFields.FILENAME + lang , attachment.getFilename()); 
+           sdoc.addField(IndexFields.DOCUMENT_WIKI + lang , tdoc.getWikiName());
+           sdoc.addField(IndexFields.FILENAME + lang , attachment.getFilename());
            sdoc.addField(IndexFields.MIME_TYPE + lang , attachment.getMimeType(getXWikiContext()));
-           sdoc.addField(IndexFields.DOC_REFERENCE + lang , attachment.getDoc());        
-           
+           sdoc.addField(IndexFields.DOC_REFERENCE + lang , attachment.getDoc());
+
        }
        catch(Exception e)
        {
-           e.printStackTrace();   
+           e.printStackTrace();
        }
-        
+
         return sdoc;
     }
-    
+
     protected XWikiContext getXWikiContext()
     {
         return (XWikiContext) this.execution.getContext().getProperty(XWikiContext.EXECUTIONCONTEXT_KEY);
     }
 
-    
+
 }
