@@ -30,19 +30,21 @@ README
 
 6. Add configuration to xwiki.properties
 
-    #-------------------------------------------------------------------------------------¬
-    # Search¬
-    #-------------------------------------------------------------------------------------¬
-    #-# Search backend to be used by wiki search for indexing and search query retrieval.¬
+    ----------------------------------------------------------------------
+    Search
+    ----------------------------------------------------------------------
+    Search backend to be used by wiki search for indexing and search query retrieval.
 
-    #-# The possible options¬
-    #-# * solrj¬
-    #-# * lucene¬
-    #-# * solr-remote¬
-    search.backend = solrj¬
+     The possible options
+     
+     * solrj
+     * lucene
+     * solr-remote
+     * search.backend = solrj
 
-    #Solrj - Embedded solr server.¬
-    search.solr.home='/path/to/solr/home/'
+   Solrj - Embedded solr server.
+   
+   search.solr.home='/path/to/solr/home/
 
 
 
