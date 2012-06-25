@@ -154,7 +154,8 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
         String componentHint = null;
 
         try {
-
+             
+           
             // Read properties.
             componentHint = configuration.getProperty("search.backend");
             logger.info("Search backend specified in the configuration file - [" + componentHint + "]");

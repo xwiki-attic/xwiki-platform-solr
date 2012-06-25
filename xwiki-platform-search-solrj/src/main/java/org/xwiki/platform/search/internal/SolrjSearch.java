@@ -26,28 +26,29 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.solr.client.solrj.SolrServer;
-import org.xwiki.bridge.DocumentAccessBridge;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.xwiki.bridge.DocumentModelBridge;
+import org.xwiki.bridge.event.DocumentCreatedEvent;
+import org.xwiki.bridge.event.DocumentDeletedEvent;
+import org.xwiki.bridge.event.DocumentUpdatedEvent;
+import org.xwiki.bridge.event.WikiDeletedEvent;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.manager.ComponentLookupException;
-import org.xwiki.component.manager.ComponentManager;
-import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
+import org.xwiki.observation.event.Event;
 import org.xwiki.platform.search.SearchEngine;
 import org.xwiki.platform.search.SearchException;
-import org.xwiki.platform.search.SearchResponse;
 import org.xwiki.platform.search.SearchQuery;
-import org.xwiki.platform.search.SearchResult;
+import org.xwiki.platform.search.SearchResponse;
 import org.xwiki.platform.search.index.DocumentIndexer;
 import org.xwiki.platform.search.index.internal.SolrjDocumentIndexer;
 
-
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
-import com.xpn.xwiki.doc.XWikiDocument;
-import org.xwiki.platform.search.*;
+import com.xpn.xwiki.internal.event.AttachmentAddedEvent;
+import com.xpn.xwiki.internal.event.AttachmentDeletedEvent;
+import com.xpn.xwiki.internal.event.AttachmentUpdatedEvent;
 
 /**
  * Search implementation with Solrj backend.
@@ -55,10 +56,12 @@ import org.xwiki.platform.search.*;
  * @version $Id$
  */
 @Component
-@Named("solrj")
+@Named(SolrjSearch.HINT)
 @Singleton
 public class SolrjSearch extends AbstractSearch
 {
+
+    public static final String HINT = "solrj";
 
     /**
      * Document Indexer for solrj
@@ -66,6 +69,10 @@ public class SolrjSearch extends AbstractSearch
     @Inject
     @Named(SolrjDocumentIndexer.HINT)
     private DocumentIndexer indexer;
+
+    @Inject
+    @Named(SolrjSearchEngine.HINT)
+    private SearchEngine searchEngine;
 
     /**
      * {@inheritDoc}
@@ -77,12 +84,18 @@ public class SolrjSearch extends AbstractSearch
     public void initialize() throws SearchException
     {
         try {
+            indexer.setSearchEngineObject(searchEngine.getSearchEngine());
             this.indexWiki();
         } catch (XWikiException e) {
             logger.error("Failed to index current wiki");
         }
     }
-
+    
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#indexWiki(java.lang.String) 
+     */
     @Override
     protected int indexWiki(String wikiName) throws XWikiException
     {
@@ -240,10 +253,9 @@ public class SolrjSearch extends AbstractSearch
      * @see org.xwiki.platform.search.Search#search(java.lang.String)
      */
     @Override
-    public SearchResult search(String query)
+    public SearchResponse search(String query)
     {
-        // TODO Auto-generated method stub
-        return null;
+        return this.search(query, null);
     }
 
     /**
@@ -252,10 +264,9 @@ public class SolrjSearch extends AbstractSearch
      * @see org.xwiki.platform.search.Search#search(java.lang.String, java.util.List)
      */
     @Override
-    public SearchResult search(String query, List<String> languages)
+    public SearchResponse search(String query, List<String> languages)
     {
-        // TODO Auto-generated method stub
-        return null;
+        return this.search(query, languages, null);
     }
 
     /**
@@ -267,8 +278,7 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public SearchResponse search(String query, List<String> languages, WikiReference wikiReference)
     {
-        // TODO Auto-generated method stub
-        return null;
+        return this.search(query, languages, wikiReference, null);
     }
 
     /**
@@ -280,8 +290,42 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public SearchResponse search(String query, List<String> languages, WikiReference wiki, SpaceReference space)
     {
-        // TODO Auto-generated method stub
+        // SolrQuery
+
+        SolrQuery solrQuery = new SolrQuery();
+
+        solrQuery.setQuery(query);
+
         return null;
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.xwiki.observation.EventListener#onEvent(org.xwiki.observation.event.Event, java.lang.Object,
+     *      java.lang.Object)
+     */
+    @Override
+    public void onEvent(Event event, Object source, Object data)
+    {
+        try {
+            if (event instanceof DocumentUpdatedEvent || event instanceof DocumentCreatedEvent) {
+                indexDocument(((DocumentModelBridge) source).getDocumentReference());
+            } else if (event instanceof DocumentDeletedEvent) {
+                deleteDocumentIndex(((DocumentModelBridge) source).getDocumentReference());
+            }
+
+            else if (event instanceof AttachmentUpdatedEvent || event instanceof AttachmentAddedEvent) {
+
+            } else if (event instanceof AttachmentDeletedEvent) {
+
+            } else if (event instanceof WikiDeletedEvent) {
+
+            }
+        } catch (Exception e) {
+            logger.error("error in notify", e);
+        }
+    }
+
 
 }

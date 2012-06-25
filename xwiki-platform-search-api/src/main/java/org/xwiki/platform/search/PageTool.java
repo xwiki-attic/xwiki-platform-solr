@@ -19,14 +19,48 @@
  */
 package org.xwiki.platform.search;
 
+import org.xwiki.component.annotation.Role;
+
+/**
+ * 
+ * It is contains methods that gives the current page no, page count, results found, results per page 
+ * to the front end.
+ *
+ * @version $Id$
+ */
+@Role
 public interface PageTool
-{
+{   
+    /**
+     * It calculates the current page number.
+     *
+     * @param 
+     * @return the current page no.
+     */
     public int getCurrent_page_number();
-
+    
+    /**
+     * It calculates the page count
+     *
+     * @param 
+     * @return the page count.
+     */ 
     public int getPage_count();
-
+    
+    /**
+     * It gives the number of results found
+     *
+     * @param 
+     * @return the results found.
+     */ 
     public long getResults_found();
 
+    /**
+     * It gives the number of results to be displayed per page.
+     *
+     * @param 
+     * @return the number of results to be displayed in a page
+     */ 
     public int getResults_per_page();
 
     public long getStart();

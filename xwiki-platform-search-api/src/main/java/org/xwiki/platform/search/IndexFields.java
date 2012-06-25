@@ -31,7 +31,7 @@ public interface IndexFields
      * Keyword field, holds a string uniquely identifying a document across the index. this is used for finding old
      * versions of a document to be indexed.
      */
-    String DOCUMENT_ID = "_docid";
+    String DOCUMENT_ID = "id";
 
     /**
      * Keyword field, holds the name of the virtual wiki a document belongs to
@@ -47,12 +47,6 @@ public interface IndexFields
      * Name of the document
      */
     String DOCUMENT_NAME = "name";
-
-    /**
-     * Name of the web the document belongs to
-     */
-    @Deprecated
-    String DOCUMENT_WEB = "web";
 
     /**
      * Name of the space the document belongs to

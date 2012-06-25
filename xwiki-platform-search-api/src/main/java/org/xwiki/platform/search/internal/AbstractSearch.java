@@ -69,6 +69,10 @@ public abstract class AbstractSearch implements Search, EventListener
         return this.execution.getContext();
     }
 
+    /**
+     * gets the XWikiContext
+     * @return the XWikiContext
+     */
     public XWikiContext getXWikiContext()
     {
         XWikiContext context = (XWikiContext) execution.getContext().getProperty(XWikiContext.EXECUTIONCONTEXT_KEY);
@@ -97,7 +101,7 @@ public abstract class AbstractSearch implements Search, EventListener
 
     /**
      * @param wikiName
-     * @return
+     * @return 
      */
     protected abstract int indexWiki(String wikiName) throws XWikiException;
 

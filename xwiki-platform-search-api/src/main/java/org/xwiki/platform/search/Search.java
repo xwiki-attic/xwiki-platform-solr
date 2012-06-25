@@ -146,7 +146,7 @@ public interface Search
      * @param query to be searched.
      * @return SearchResponse to the query searched.
      */
-    SearchResult search(String query);
+    SearchResponse search(String query);
 
     /**
      * Search for the query in the current wiki for given languages.
@@ -155,7 +155,7 @@ public interface Search
      * @param languages to be searched.
      * @return SearchResponse to the query searched.
      */
-    SearchResult search(String query, List<String> languages);
+    SearchResponse search(String query, List<String> languages);
 
     /**
      * Search for the query in the current wiki for given languages in a wiki.

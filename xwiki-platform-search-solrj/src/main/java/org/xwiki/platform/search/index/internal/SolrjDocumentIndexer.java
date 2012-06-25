@@ -20,20 +20,14 @@
 package org.xwiki.platform.search.index.internal;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentAccessBridge;
@@ -44,11 +38,8 @@ import org.xwiki.context.ExecutionContext;
 import org.xwiki.context.ExecutionContextException;
 import org.xwiki.context.ExecutionContextManager;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.platform.search.IndexFields;
-import org.xwiki.platform.search.SearchEngine;
-import org.xwiki.platform.search.SearchException;
 import org.xwiki.platform.search.index.DocumentIndexer;
-import org.xwiki.platform.search.internal.SolrjSearchEngine;
+import org.xwiki.platform.search.internal.SolrDocData;
 
 /**
  * @version $Id$
@@ -77,11 +68,62 @@ public class SolrjDocumentIndexer implements DocumentIndexer, Runnable
     @Inject
     private Execution execution;
 
-    @Inject
-    @Named(SolrjSearchEngine.HINT)
-    private SearchEngine searchEngine;
-
     private Thread thread;
+
+
+    private class IndexThread implements Runnable{
+
+        /**
+         * {@inheritDoc}
+         *
+         * @see java.lang.Runnable#run()
+         */
+        @Override
+        public void run()
+        {
+            // TODO Auto-generated method stub
+            ExecutionContext context=new ExecutionContext();
+            // Create a SolrDocData object
+            SolrDocData solrdoc = new SolrDocData();
+
+            try {
+                executionContextManager.initialize(context);
+            } catch (ExecutionContextException e) {
+                throw new RuntimeException("Failed to initialize Solrj indexer's execution context", e);
+            }
+
+            execution.pushContext(context);
+
+            try {
+
+                for (DocumentReference docRef : docList) {
+
+                    try {
+                        DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(docRef);
+                        SolrInputDocument sdoc = solrdoc.getSolrInputDocument(docRef, documentModelBridge, null);
+                        logger.info("Adding document " + docRef.getName());
+                        solrServer.add(sdoc);
+
+                    } catch (Exception e) {
+                        logger.error("Error retrieving document." + e.getMessage());
+                    }
+                }
+
+                try {
+                    solrServer.commit();
+                    logger.info("XWiki documents are successfully committed.");
+                } catch (Exception e) {
+                    logger.error("Error commiting solr documents", e);
+                }
+
+            } finally {
+                execution.removeContext();
+            }
+
+        }
+
+    }
+
 
     /**
      * {@inheritDoc}
@@ -91,15 +133,10 @@ public class SolrjDocumentIndexer implements DocumentIndexer, Runnable
     @Override
     public void indexDocuments(List<DocumentReference> docList)
     {
-
         if (docList.size() > 0) {
             this.docList = docList;
-            try {
-                solrServer = (SolrServer) searchEngine.getSearchEngine();
-            } catch (SearchException e1) {
-                logger.error("Error retrieving Search engine object");
-            }
-            thread = new Thread(this);
+            IndexThread indexThread=new IndexThread();
+            thread = new Thread(indexThread);
             thread.setDaemon(true);
             thread.setPriority(Thread.MIN_PRIORITY);
             thread.start();
@@ -120,6 +157,9 @@ public class SolrjDocumentIndexer implements DocumentIndexer, Runnable
         // Create a clean Execution Context
         ExecutionContext context = new ExecutionContext();
 
+        // Create a SolrDocData object
+        SolrDocData solrdoc = new SolrDocData();
+
         try {
             this.executionContextManager.initialize(context);
         } catch (ExecutionContextException e) {
@@ -130,31 +170,24 @@ public class SolrjDocumentIndexer implements DocumentIndexer, Runnable
 
         try {
 
-            int i = 500120;
-
             for (DocumentReference docRef : this.docList) {
 
                 try {
                     DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(docRef);
-
-                    SolrInputDocument sdoc = getSolrInputDocument(docRef, documentModelBridge, null);
-                    i++;
-
+                    SolrInputDocument sdoc = solrdoc.getSolrInputDocument(docRef, documentModelBridge, null);
                     logger.info("Adding document " + docRef.getName());
                     solrServer.add(sdoc);
 
                 } catch (Exception e) {
-                    logger.error("Error retrieving document.");
+                    logger.error("Error retrieving document." + e.getMessage());
                 }
             }
 
             try {
                 solrServer.commit();
                 logger.info("XWiki documents are successfully committed.");
-            } catch (SolrServerException e) {
-                logger.error(e.getMessage());
-            } catch (IOException e) {
-                logger.error(e.getMessage());
+            } catch (Exception e) {
+                logger.error("Error commiting solr documents", e);
             }
 
         } finally {
@@ -183,7 +216,21 @@ public class SolrjDocumentIndexer implements DocumentIndexer, Runnable
     @Override
     public boolean indexDocument(DocumentReference doc)
     {
-        // TODO Auto-generated method stub
+        SolrDocData solrdoc = new SolrDocData();
+        try {
+            if (documentAccessBridge.exists(doc) && !doc.getName().contains("WatchList")) {
+
+                DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(doc);
+                SolrInputDocument sdoc = solrdoc.getSolrInputDocument(doc, documentModelBridge, null);
+                logger.info("Adding document " + doc.getName());
+                solrServer.add(sdoc);
+                solrServer.commit();
+                logger.debug("Document [" + doc.getName() + "] is added to solr index.");
+                return true;
+            }
+        } catch (Exception e) {
+            logger.error("Error indexing document - [" + doc.getName() + "]");
+        }
         return false;
     }
 
@@ -195,7 +242,25 @@ public class SolrjDocumentIndexer implements DocumentIndexer, Runnable
     @Override
     public boolean deleteIndex(DocumentReference doc)
     {
-        // TODO Auto-generated method stub
+        try {
+
+            DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(doc);
+            SolrDocData solrdoc = new SolrDocData();
+
+            logger.info("Adding document " + doc.getName());
+            solrServer.deleteById(solrdoc.getId(documentModelBridge));
+        } catch (Exception e) {
+            logger.error("Error deleting document.");
+        }
+        try {
+            solrServer.commit();
+            logger.info("XWiki documents are successfully committed.");
+            return true;
+        } catch (SolrServerException e) {
+            logger.error(e.getMessage());
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+        }
         return false;
     }
 
@@ -211,19 +276,18 @@ public class SolrjDocumentIndexer implements DocumentIndexer, Runnable
         return false;
     }
 
-    private SolrInputDocument getSolrInputDocument(DocumentReference docRef, DocumentModelBridge docModelBridge,
-        String language)
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.xwiki.platform.search.index.DocumentIndexer#setSearchEngineObject(java.lang.Object)
+     */
+    @Override
+    public void setSearchEngineObject(Object server)
     {
-        SolrInputDocument sdoc = new SolrInputDocument();
-        if (language == null || language.equals("")) {
-            language = "en";
+        if (server instanceof SolrServer) {
+            this.solrServer = (SolrServer) server;
         }
 
-        sdoc.addField(IndexFields.DOCUMENT_NAME + "_" + language, docRef.getName());
-        sdoc.addField(IndexFields.DOCUMENT_TITLE + "_" + language, docModelBridge.getTitle());
-        sdoc.addField(IndexFields.FULLTEXT + "_" + language, docModelBridge.getContent());
-        ///sdoc.addField("id", i);
-
-        return sdoc;
     }
+
 }

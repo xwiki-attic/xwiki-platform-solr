@@ -25,19 +25,56 @@ import org.xwiki.component.annotation.Role;
 import org.xwiki.model.reference.DocumentReference;
 
 /**
+ * XWiki DoucumentIndexer API
  * @version $Id$
  */
 @Role
 public interface DocumentIndexer
 {
-
+    /**
+     * Index the document.
+     *
+     * @param document reference to the document to be indexed.
+     * @return true if document indexing is successful.
+     */
     boolean indexDocument(DocumentReference docs);
 
+    /**
+     * Index the documents.
+     *
+     * @param documents List of documents to be indexed.
+     * @return the Number of documents scheduled for indexing. -1 in case of errors.
+     */
     void indexDocuments(List<DocumentReference> docs);
-
+      
+    /**
+     * Delete the index for document.
+     *
+     * @param doc List of document references to which index needs to be deleted.
+     * @return true if document index deletion is successful.
+     */
     boolean deleteIndex(DocumentReference doc);
-
+      
+    /**
+     * Delete the index for the given list of documents.
+     *
+     * @param document Document reference to which index needs to be deleted.
+     * @return true if document index deletion is successful.
+     */
     void deleteIndex(List<DocumentReference> docs);
-
+    
+    /**
+     * Deletes the entire index of the current wiki.
+     *
+     * @return true if the index deletion is successful.
+     */
     boolean deleteEntireIndex();
+
+    /**
+     * Sets the SearchEngineObject
+     *
+     *@param server reference to the backend used
+     */
+    void setSearchEngineObject(Object server);
+
 }
