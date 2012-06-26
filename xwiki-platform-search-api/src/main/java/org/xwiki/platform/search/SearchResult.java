@@ -22,7 +22,37 @@ package org.xwiki.platform.search;
 /**
  * @version $Id$
  */
-public class SearchResult
+public interface SearchResult
 {
+    /**
+     * @return the document id as indexed
+     */
+    public String getId();
+    
+    /**
+     * @return the title of the document.
+     */
+    public String getTitle();
+    
+    /**
+     * @return Returns the name of the document.
+     */
+    public String getName();
+    
+    /**
+     * @return Returns the score of this search result.Is a float between zero and 1.
+     */
+    public float getScore();
+    
+    /**
+     * @return the language of the Document
+     */
+    public String getLanguage();
+    
+    /**
+     * 
+     * @return Returns the Full name of the document
+     */
+    public String getFullName();
 
 }

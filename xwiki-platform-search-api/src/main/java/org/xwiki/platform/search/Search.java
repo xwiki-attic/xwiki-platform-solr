@@ -20,13 +20,14 @@
 package org.xwiki.platform.search;
 
 import java.util.List;
+import java.util.Map;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
-import org.xwiki.platform.search.SearchIndexingException;
-import org.xwiki.platform.search.SearchException;
+import org.xwiki.platform.search.index.DocumentIndexerStatus;
+import org.xwiki.platform.search.index.SearchIndexingException;
 
 import com.xpn.xwiki.XWikiException;
 
@@ -177,5 +178,7 @@ public interface Search
      * @return SearchResponse to the query searched.
      */
     SearchResponse search(String query, List<String> languages, WikiReference wiki, SpaceReference space);
+
+    Map<String, DocumentIndexerStatus> getStatus();
 
 }

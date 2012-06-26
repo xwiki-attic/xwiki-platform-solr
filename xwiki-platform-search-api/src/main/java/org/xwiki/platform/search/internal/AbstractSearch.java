@@ -34,7 +34,7 @@ import org.xwiki.context.ExecutionContext;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.event.Event;
 import org.xwiki.platform.search.Search;
-import org.xwiki.platform.search.SearchIndexingException;
+import org.xwiki.platform.search.index.SearchIndexingException;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;

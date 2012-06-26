@@ -20,12 +20,14 @@
 package org.xwiki.platform.search.index;
 
 import java.util.List;
+import java.util.Map;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.model.reference.DocumentReference;
 
 /**
  * XWiki DoucumentIndexer API
+ *
  * @version $Id$
  */
 @Role
@@ -46,7 +48,7 @@ public interface DocumentIndexer
      * @return the Number of documents scheduled for indexing. -1 in case of errors.
      */
     void indexDocuments(List<DocumentReference> docs);
-      
+
     /**
      * Delete the index for document.
      *
@@ -54,7 +56,7 @@ public interface DocumentIndexer
      * @return true if document index deletion is successful.
      */
     boolean deleteIndex(DocumentReference doc);
-      
+
     /**
      * Delete the index for the given list of documents.
      *
@@ -62,7 +64,7 @@ public interface DocumentIndexer
      * @return true if document index deletion is successful.
      */
     void deleteIndex(List<DocumentReference> docs);
-    
+
     /**
      * Deletes the entire index of the current wiki.
      *
@@ -73,8 +75,19 @@ public interface DocumentIndexer
     /**
      * Sets the SearchEngineObject
      *
-     *@param server reference to the backend used
+     * @param server reference to the backend used
      */
     void setSearchEngineObject(Object server);
+
+    /**
+     * @return status of indexing process as a Map of indexing thread and its status.
+     */
+    Map<String, DocumentIndexerStatus> getStatus();
+
+    /**
+     * @param threadId of Indexing thread.
+     * @return status of given thread.
+     */
+    DocumentIndexerStatus getStatus(String threadId);
 
 }

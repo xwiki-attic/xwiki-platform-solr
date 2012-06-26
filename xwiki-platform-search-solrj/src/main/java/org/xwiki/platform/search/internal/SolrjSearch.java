@@ -21,12 +21,15 @@ package org.xwiki.platform.search.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.xwiki.bridge.DocumentModelBridge;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.bridge.event.DocumentDeletedEvent;
@@ -42,6 +45,7 @@ import org.xwiki.platform.search.SearchException;
 import org.xwiki.platform.search.SearchQuery;
 import org.xwiki.platform.search.SearchResponse;
 import org.xwiki.platform.search.index.DocumentIndexer;
+import org.xwiki.platform.search.index.DocumentIndexerStatus;
 import org.xwiki.platform.search.index.internal.SolrjDocumentIndexer;
 
 import com.xpn.xwiki.XWikiContext;
@@ -90,11 +94,11 @@ public class SolrjSearch extends AbstractSearch
             logger.error("Failed to index current wiki");
         }
     }
-    
+
     /**
      * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.Search#indexWiki(java.lang.String) 
+     *
+     * @see org.xwiki.platform.search.Search#indexWiki(java.lang.String)
      */
     @Override
     protected int indexWiki(String wikiName) throws XWikiException
@@ -227,7 +231,6 @@ public class SolrjSearch extends AbstractSearch
         int docCount = 0;
         try {
             // Delete the existing index.
-            // solrServer.deleteByQuery("*:*");
             docCount = indexWiki();
         } catch (Exception e) {
             logger.error("Failure in rebuilding the farm index.", e);
@@ -291,12 +294,29 @@ public class SolrjSearch extends AbstractSearch
     public SearchResponse search(String query, List<String> languages, WikiReference wiki, SpaceReference space)
     {
         // SolrQuery
-
+        SolrServer solrserver;
+        SearchResponse searchresponse=null;
+        
         SolrQuery solrQuery = new SolrQuery();
-
-        solrQuery.setQuery(query);
-
-        return null;
+        QueryResponse response;
+        solrQuery.setQuery(query).setFacet(true)
+        .addFacetField("title_en", "title_fr", "title_es", "ft_en", "ft_fr", "ft_es");
+        solrQuery.setQueryType("edismax");
+        
+        logger.info("searching by using edismax parser ");
+        
+        try
+        {
+         solrserver =(SolrServer)searchEngine.getSearchEngine();
+         response= solrserver.query(solrQuery);
+         searchresponse=new SolrjSearchResponse(response);
+        }
+        catch(Exception e)
+        {
+            logger.info("Failed to retrieve the solrserver object");
+        }
+        
+        return searchresponse ;
     }
 
     /**
@@ -327,5 +347,15 @@ public class SolrjSearch extends AbstractSearch
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.xwiki.platform.search.Search#getStatus()
+     */
+    @Override
+    public Map<String, DocumentIndexerStatus> getStatus()
+    {
+        return indexer.getStatus();
+    }
 
 }

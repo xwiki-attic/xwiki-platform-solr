@@ -28,32 +28,104 @@ import org.xwiki.model.reference.DocumentReference;
  *
  * @version $Id$
  */
-public interface DocumentIndexerStatus
+public class DocumentIndexerStatus
 {
+    private long estimatedCompletionTime;
+
+    private double indexingSpeed;
+
+    private int lastIndexedDocumentIndex;
+
+    private int totalDocCount;
+
+    private long elapsedTime;
 
     /**
-     * @return the completion time stamp as a String.
+     * @return the lastIndexedDocumentIndex
      */
-    String getEstimatedCompletionTime();
+    public synchronized int getLastIndexedDocumentIndex()
+    {
+        return lastIndexedDocumentIndex;
+    }
 
     /**
-     * @return the indexing speed of the documents.
+     * @param lastIndexedDocumentIndex the lastIndexedDocumentIndex to set
      */
-    String getIndexingSpeed();
+    public synchronized void setLastIndexedDocumentIndex(int lastIndexedDocumentIndex)
+    {
+        this.lastIndexedDocumentIndex = lastIndexedDocumentIndex;
+    }
+
+    /**
+     * @return the totalDocCount
+     */
+    public synchronized int getTotalDocCount()
+    {
+        return totalDocCount;
+    }
+
+    /**
+     * @param totalDocCount the totalDocCount to set
+     */
+    public synchronized void setTotalDocCount(int totalDocCount)
+    {
+        this.totalDocCount = totalDocCount;
+    }
+
+    /**
+     * @param indexingSpeed the indexingSpeed to set
+     */
+    public synchronized void setIndexingSpeed(double indexingSpeed)
+    {
+        this.indexingSpeed = indexingSpeed;
+    }
+
+    /**
+     * @return the indexingSpeed
+     */
+    public synchronized double getIndexingSpeed()
+    {
+        return indexingSpeed;
+    }
+
+    /**
+     * @return the completion time stamp in milli seconds.
+     */
+    public synchronized long getEstimatedCompletionTime()
+    {
+        return this.elapsedTime;
+    }
 
     /**
      * @param count number of documents
      * @return the list of indexed documents.
      */
-    List<DocumentReference> getLastIndexedDocuments(int count);
-
-    /**
-     * @return pre-queue size of the indexing process.
-     */
-    int getPreQueueSize();
+    List<DocumentReference> getLastIndexedDocuments(int count)
+    {
+        return null;
+    }
 
     /**
      * @return queue size of the indexing process.
      */
-    int getQueueSize();
+    public synchronized int getQueueSize()
+    {
+        return (this.totalDocCount - this.lastIndexedDocumentIndex);
+    }
+
+    public synchronized void addStepDetails(long elapsedTime, int docsIndexed)
+    {
+        this.elapsedTime += elapsedTime;
+        this.lastIndexedDocumentIndex += docsIndexed;
+        System.out.println("Added details..");
+    }
+
+    public String toString()
+    {
+        String toStr =
+            "ElapsedTime:" + this.elapsedTime + ", LastIndexedDoc:" + lastIndexedDocumentIndex + ", TotalDoc:"
+                + totalDocCount;
+
+        return toStr;
+    }
 }
