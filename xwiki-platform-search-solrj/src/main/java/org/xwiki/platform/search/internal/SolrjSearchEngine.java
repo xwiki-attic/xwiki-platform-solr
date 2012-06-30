@@ -62,7 +62,7 @@ public class SolrjSearchEngine implements SearchEngine, Initializable
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.component.phase.Initializable#initialize()
      */
     @Override
@@ -91,7 +91,7 @@ public class SolrjSearchEngine implements SearchEngine, Initializable
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.SearchEngine#getSearchEngine()
      */
     @Override

@@ -19,6 +19,7 @@
  */
 package org.xwiki.platform.search.index.internal;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -31,8 +32,11 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.request.AbstractUpdateRequest;
+import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.util.ContentStreamBase;
 import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.bridge.DocumentModelBridge;
@@ -41,10 +45,14 @@ import org.xwiki.context.Execution;
 import org.xwiki.context.ExecutionContext;
 import org.xwiki.context.ExecutionContextException;
 import org.xwiki.context.ExecutionContextManager;
+import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.platform.search.index.DocumentIndexer;
 import org.xwiki.platform.search.index.DocumentIndexerStatus;
 import org.xwiki.platform.search.internal.SolrDocData;
+import org.xwiki.rendering.renderer.BlockRenderer;
+import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
+import org.xwiki.rendering.renderer.printer.WikiPrinter;
 
 /**
  * @version $Id$
@@ -72,6 +80,10 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     public static final String HINT = "solrjindexer";
 
     private SolrServer solrServer;
+    
+    @Inject
+    @Named("plain/1.0")
+    private BlockRenderer renderer;
 
     private Map<String, DocumentIndexerStatus> indexerStatusMap = Collections
         .synchronizedMap(new WeakHashMap<String, DocumentIndexerStatus>());
@@ -97,6 +109,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             indexerStatusMap.put(Thread.currentThread().getName(), indexerStatus);
 
             indexerStatus.setTotalDocCount(docList.size());
+            logger.info("Indexing a total of [" + docList.size() + "] documents.");
 
             try {
                 executionContextManager.initialize(context);
@@ -107,37 +120,49 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             execution.pushContext(context);
 
             try {
+                solrServer.deleteByQuery("*:*");
+                solrServer.commit();
+            } catch (Exception e) {
+                logger.error("Error while deleting the index");
+            }
 
+            long totalTime=0;
+
+            try {
                 for (int i = 0; i < docList.size(); i += 10) {
-
-                    long totalTime = 0;
                     int start = i;
                     int end = (i + 10) < docList.size() ? (i + 10) : (docList.size() - 1);
                     List<DocumentReference> subList = docList.subList(start, end);
-
+                    List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
+                    long startTime, endTime, fetchTime = 0;
                     for (DocumentReference docRef : subList) {
 
                         try {
-                            long startTime = new Date().getTime();
+                            startTime = new Date().getTime();
                             DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(docRef);
-                            SolrInputDocument sdoc = solrdoc.getSolrInputDocument(docRef, documentModelBridge, null);
-                            long endTime = new Date().getTime();
-                            UpdateResponse response = solrServer.add(sdoc);
-                            totalTime += (endTime - startTime) + response.getElapsedTime();
-                            logger.info("Added document " + docRef.getName() + " Elapsed time [" + totalTime + "] ms");
+                            
+                            //Convert the XWiki syntax of document to plain text.
+                            WikiPrinter printer=new DefaultWikiPrinter();
+                            renderer.render(documentModelBridge.getXDOM(), printer);
+                            
+                            SolrInputDocument sdoc = solrdoc.getSolrInputDocument(docRef, documentModelBridge, "en", printer.toString());
+                            docs.add(sdoc);
+                            endTime = new Date().getTime();
+                            fetchTime += (endTime - startTime);
+
                         } catch (Exception e) {
-                            logger.error("Error indexing document [" + docRef.getName() + "]", e);
+                            logger.error("Error fetching document [" + docRef.getName() + "]", e);
                         }
                     }
 
-                    // Send out a notification
-                    indexerStatus.addStepDetails(totalTime, 10);
-
                     try {
-                        UpdateResponse commitResponse = solrServer.commit();
+                        UpdateResponse updateResponse=solrServer.add(docs);
+                        UpdateResponse commitResponse=solrServer.commit();
+                        // Send out a notification
+                        indexerStatus.addStepDetails(fetchTime+updateResponse.getElapsedTime()+commitResponse.getElapsedTime(), 10);
+                        totalTime += fetchTime+updateResponse.getElapsedTime()+commitResponse.getElapsedTime();
                     } catch (Exception e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                        logger.error("Error commiting solr index updates");
                     }
 
                 }
@@ -147,7 +172,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             }
 
             logger.info("Total time taken to index [" + indexerStatus.getTotalDocCount() + "] documents is "
-                + indexerStatus.getEstimatedCompletionTime());
+                + totalTime);
 
             indexerStatusMap.remove(Thread.currentThread().getName());
 
@@ -167,7 +192,6 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         @Override
         public void run()
         {
-            // TODO Auto-generated method stub
             ExecutionContext context = new ExecutionContext();
             // Create a SolrDocData object
             SolrDocData solrdoc = new SolrDocData();
@@ -254,7 +278,10 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         try {
             if (documentAccessBridge.exists(doc) && !doc.getName().contains("WatchList")) {
                 DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(doc);
-                SolrInputDocument sdoc = solrdoc.getSolrInputDocument(doc, documentModelBridge, null);
+                //Convert the XWiki syntax of document to plain text.
+                WikiPrinter printer=new DefaultWikiPrinter();
+                renderer.render(documentModelBridge.getXDOM(), printer);
+                SolrInputDocument sdoc = solrdoc.getSolrInputDocument(doc, documentModelBridge, null,printer.toString());
                 logger.info("Adding document " + doc.getName());
                 solrServer.add(sdoc);
                 solrServer.commit();
@@ -277,7 +304,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         try {
             DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(doc);
             SolrDocData solrdoc = new SolrDocData();
-            logger.info("Adding document " + doc.getName());
+            logger.info("Deleting document " + doc.getName());
             solrServer.deleteById(solrdoc.getId(documentModelBridge));
             solrServer.commit();
             return true;
@@ -296,8 +323,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     public boolean deleteEntireIndex()
     {
         try {
-            // TODO : Fix the query param value
-            solrServer.deleteByQuery("*.*");
+            solrServer.deleteByQuery("*:*");
             solrServer.commit();
             return true;
         } catch (Exception e) {
@@ -305,6 +331,92 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         }
         return false;
     }
+    
+    
+    /**
+     * indexes the attachment using the Solr cell
+     * 
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.index.DocumentIndexer#indexAttachment(org.xwiki.model.reference.AttachmentReference, org.xwiki.bridge.DocumentModelBridge)
+     */
+    public boolean indexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
+    {   
+        try
+        {
+        
+        //get the attachment url(this method has bug. Couldn't  retrieve the full url).
+        //shouldn't store content for jpeg- yet to implement    
+        String attachment_url= "http://localhost:8080"+documentAccessBridge.getAttachmentURL(attachment,true);
+        
+        logger.info(attachment_url);
+        URL  url = new URL(attachment_url);
+       
+        ContentStreamUpdateRequest up = new ContentStreamUpdateRequest("/update/extract");
+      
+        ContentStreamBase.URLStream contentStream = new ContentStreamBase.URLStream(url);
+        up.addContentStream(contentStream);
+        
+        up.setParam("literal.id", getAttachmentID(doc,attachment));
+        up.setParam("literal.docref", attachment.getParent().getName());
+        up.setParam("literal.mimetype",attachment.getType().name());
+        up.setParam("literal.filename",attachment.getName());
+        up.setParam("fmap.content","ft");
+        up.setParam("uprefix", "ignored_");                 
+        AbstractUpdateRequest updateReq = up.setAction(AbstractUpdateRequest.ACTION.COMMIT, true, true);
+      
+        logger.info("successful indexing attachments"+updateReq.toString());
+        
+        solrServer.request(up);
+        
+        return true;
+        }
+        
+        catch(Exception e)
+        {
+          e.printStackTrace();  
+        }
+        
+        return false;
+        
+    }
+    
+   
+    /**
+     *could refactor the code by removing DocumentModelbridge..
+     *
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.index.DocumentIndexer#deleteIndexAttachment(org.xwiki.model.reference.AttachmentReference, org.xwiki.bridge.DocumentModelBridge)
+     */
+    public  boolean deleteIndexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
+    {
+        try {
+            solrServer.deleteById(getAttachmentID(doc,attachment));
+            solrServer.commit();
+           
+            logger.info("deleted attachment with id"+getAttachmentID(doc,attachment));
+            
+            return true;
+        } catch (Exception e) {
+            logger.error("Error deleting attachment.");
+        }
+        return false;
+    }
+      
+    
+    
+    // get the attachment unique id
+       private String getAttachmentID(DocumentModelBridge doc,AttachmentReference attachment)
+       {   
+           StringBuilder retval = new StringBuilder();
+           retval.append(doc.getDocumentReference().getName()).append(".");
+           retval.append(doc.getDocumentReference().getLastSpaceReference().getName()).append(".");
+           retval.append(doc.getDocumentReference().getWikiReference().getName()).append(".");
+           retval.append(doc.getRealLanguage());
+           retval.toString();
+           return retval.append(".file.").append(attachment.getName()).toString();
+       }
 
     /**
      * {@inheritDoc}

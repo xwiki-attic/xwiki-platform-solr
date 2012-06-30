@@ -26,6 +26,7 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.xwiki.platform.search.Search;
+import org.xwiki.platform.search.SearchResponse;
 import org.xwiki.test.AbstractComponentTestCase;
 
 /**
@@ -54,5 +55,13 @@ public class SolrjSearchTest extends AbstractComponentTestCase
     {
         Assert.assertNotNull(this.search);
         Assert.assertEquals(this.search.getImplementation(), "Embedded Solr");
+    }
+
+
+    @Test
+    public void testSearchResponseComponet() throws Exception{
+	SearchResponse response=getComponentManager().getInstance(SearchResponse.class,"solrsearchresponse");
+        Assert.assertNotNull(response);
+
     }
 }
