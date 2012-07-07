@@ -265,7 +265,7 @@ public class SolrjSearch extends AbstractSearch
      */
     @Override
     public SearchResponse search(String query, List<String> languages, EntityReference entityReference,
-        Map<String, String> searchParameters)
+        Map<String,String> searchParameters)
     {
         // SolrQuery
         SolrServer solrserver;

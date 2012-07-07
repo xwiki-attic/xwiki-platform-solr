@@ -43,7 +43,7 @@ import org.xwiki.script.service.ScriptService;
 
 /**
  * Implementation of {@link SearchService}.
- *
+ * 
  * @version $Id$
  */
 @Component
@@ -78,7 +78,7 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.observation.EventListener#getEvents()
      */
     @Override
@@ -89,7 +89,7 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.observation.EventListener#getName()
      */
     @Override
@@ -100,7 +100,7 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.SearchService#getSearch()
      */
     @Override
@@ -111,7 +111,7 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.component.phase.Initializable#initialize()
      */
     @Override
@@ -123,7 +123,7 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
 
     /**
      * Instantiate Search component based on the component hint.
-     *
+     * 
      * @param componentHint hint to identify the component implementation.
      * @throws SearchException Exception in case of errors in initialization.
      */
@@ -143,7 +143,7 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.observation.EventListener#onEvent(org.xwiki.observation.event.Event, java.lang.Object,
      *      java.lang.Object)
      */
@@ -154,8 +154,7 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
         String componentHint = null;
 
         try {
-             
-           
+
             // Read properties.
             componentHint = configuration.getProperty("search.backend");
             logger.info("Search backend specified in the configuration file - [" + componentHint + "]");

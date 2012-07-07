@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.platform.search.index.DocumentIndexerStatus;
@@ -80,6 +81,13 @@ public interface Search
     int indexWiki() throws SearchIndexingException, XWikiException;
 
     /**
+     * @return
+     * @throws SearchIndexingException
+     * @throws XWikiException
+     */
+    boolean deleteindexWiki() throws SearchIndexingException, XWikiException;
+
+    /**
      * Build the index for the current wiki farm.
      *
      * @return number of documents to index.
@@ -96,18 +104,11 @@ public interface Search
     void initialize() throws SearchException;
 
     /**
-     * Parses the query entered by the user into the Solrquery object.
-     *
-     * @return the solrQuery object.
-     */
-    SearchQuery parseQuery();
-
-    /**
      * Searches the configured Indexes using the specified solrquery for documents in the given languages belonging to
      * one of the given virtual wikis.Searches the configured Indexes using the specified query for documents in the
      * given languages.With virtual wikis enabled in your xwiki installation this will deliver results from all virtual
      * wikis.
-     *
+     * 
      * @return the search response.
      */
 
@@ -147,7 +148,7 @@ public interface Search
      * @param query to be searched.
      * @return SearchResponse to the query searched.
      */
-    SearchResponse search(String query);
+    SearchResponse search(String query, Map<String, String> searchParameters);
 
     /**
      * Search for the query in the current wiki for given languages.
@@ -156,28 +157,18 @@ public interface Search
      * @param languages to be searched.
      * @return SearchResponse to the query searched.
      */
-    SearchResponse search(String query, List<String> languages);
+    SearchResponse search(String query, List<String> languages, Map<String, String> searchParameters);
 
     /**
      * Search for the query in the current wiki for given languages in a wiki.
      *
      * @param query to be searched.
      * @param languages Wiki reference to be searched for the query.
-     * @param wikiReference Space reference to be searched for the query.
+     * @param reference Entiy reference ( Space or Wiki ) to be searched for the query.
      * @return SearchResponse to the query searched.
      */
-    SearchResponse search(String query, List<String> languages, WikiReference wikiReference);
-
-    /**
-     * Search for the query in the current wiki for given languages in a wiki and space.
-     *
-     * @param query to be searched.
-     * @param languages List of document languages to search
-     * @param wiki Wiki reference to be searched for the query.
-     * @param space Space reference to be searched for the query.
-     * @return SearchResponse to the query searched.
-     */
-    SearchResponse search(String query, List<String> languages, WikiReference wiki, SpaceReference space);
+    SearchResponse search(String query, List<String> languages, EntityReference reference,
+        Map<String, String> searchParameters);
 
     Map<String, DocumentIndexerStatus> getStatus();
 

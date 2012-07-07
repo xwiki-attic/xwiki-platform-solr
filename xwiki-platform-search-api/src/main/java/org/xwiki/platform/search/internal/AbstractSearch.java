@@ -21,6 +21,7 @@ package org.xwiki.platform.search.internal;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -34,6 +35,7 @@ import org.xwiki.context.ExecutionContext;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.event.Event;
 import org.xwiki.platform.search.Search;
+import org.xwiki.platform.search.SearchResponse;
 import org.xwiki.platform.search.index.SearchIndexingException;
 
 import com.xpn.xwiki.XWikiContext;
@@ -71,6 +73,7 @@ public abstract class AbstractSearch implements Search, EventListener
 
     /**
      * gets the XWikiContext
+     *
      * @return the XWikiContext
      */
     public XWikiContext getXWikiContext()
@@ -101,7 +104,7 @@ public abstract class AbstractSearch implements Search, EventListener
 
     /**
      * @param wikiName
-     * @return 
+     * @return
      */
     protected abstract int indexWiki(String wikiName) throws XWikiException;
 
@@ -149,14 +152,23 @@ public abstract class AbstractSearch implements Search, EventListener
     /**
      * {@inheritDoc}
      *
-     * @see org.xwiki.observation.EventListener#onEvent(org.xwiki.observation.event.Event, java.lang.Object,
-     *      java.lang.Object)
+     * @see org.xwiki.platform.search.Search#search(java.lang.String)
      */
     @Override
-    public void onEvent(Event event, Object source, Object data)
+    public SearchResponse search(String query, Map<String, String> searchParameters)
     {
-        // TODO Auto-generated method stub
+        return this.search(query, null, searchParameters);
+    }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.xwiki.platform.search.Search#search(java.lang.String, java.util.List)
+     */
+    @Override
+    public SearchResponse search(String query, List<String> languages, Map<String, String> searchParameters)
+    {
+        return this.search(query, languages, null, searchParameters);
     }
 
 }

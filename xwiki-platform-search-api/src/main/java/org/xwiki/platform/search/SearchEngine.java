@@ -23,7 +23,7 @@ import org.xwiki.component.annotation.Role;
 
 /**
  * XWiki search engine used for indexing wiki documents and querying data.
- *
+ * 
  * @version $Id$
  */
 @Role
@@ -31,7 +31,7 @@ public interface SearchEngine
 {
     /**
      * Initializes and returns the search enigne based on the component.
-     *
+     * 
      * @return instance of the search engine
      * @throws SearchException Exception if there is an error during initialization.
      */

@@ -93,7 +93,7 @@ public class DocumentIndexerStatus
      */
     public synchronized long getEstimatedCompletionTime()
     {
-        return this.elapsedTime;
+        return this.estimatedCompletionTime;
     }
 
     /**
@@ -113,9 +113,9 @@ public class DocumentIndexerStatus
         return (this.totalDocCount - this.lastIndexedDocumentIndex);
     }
 
-    public synchronized void addStepDetails(long elapsedTime, int docsIndexed)
+    public synchronized void addStepDetails(long elapsedTime1, int docsIndexed)
     {
-        this.elapsedTime += elapsedTime;
+        this.elapsedTime += elapsedTime1;
         this.lastIndexedDocumentIndex += docsIndexed;
         System.out.println("Added details..");
     }
@@ -128,4 +128,5 @@ public class DocumentIndexerStatus
 
         return toStr;
     }
+
 }

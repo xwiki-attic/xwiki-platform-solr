@@ -30,6 +30,10 @@ import static org.xwiki.platform.search.DocumentField.TITLE;
 import static org.xwiki.platform.search.DocumentField.VERSION;
 import static org.xwiki.platform.search.DocumentField.WIKI;
 import static org.xwiki.platform.search.DocumentField.SPACE_FACET;
+import static org.xwiki.platform.search.DocumentField.TYPE;
+import static org.xwiki.platform.search.DocumentField.DOC_REFERENCE;
+import static org.xwiki.platform.search.DocumentField.FILENAME;
+import static org.xwiki.platform.search.DocumentField.MIME_TYPE;
 
 import org.apache.solr.common.SolrInputDocument;
 import org.xwiki.bridge.DocumentModelBridge;
@@ -39,16 +43,24 @@ import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 
 
+
+
 /**
  * Helper class to retrieve the SolrDocuments.
  *
  * @version $Id$
  */
+
 @Component
 
 public class SolrDocData
 {
  
+    StringBuilder retval = new StringBuilder();
+    
+
+    
+    
     /**
      * It gets the Unique id of the document
      *
@@ -56,7 +68,7 @@ public class SolrDocData
      */
     public String getId(DocumentModelBridge doc)
     {
-        StringBuilder retval = new StringBuilder();
+        
         retval.append(doc.getDocumentReference().getName()).append(".");
         retval.append(doc.getDocumentReference().getLastSpaceReference().getName()).append(".");
         retval.append(doc.getDocumentReference().getWikiReference().getName()).append(".");
@@ -65,12 +77,7 @@ public class SolrDocData
 
     }
     
-    public String getAttachmentID(DocumentModelBridge doc,AttachmentReference attachment)
-    {   
-        return new StringBuffer(getId(doc)).append(".file.").append(attachment.getName()).toString();
-    }
-
-    
+     
     /**
      * It retrieves the solrInput Document which could be added to the SolrServer. Have done partial Indexing of the
      * document.
@@ -96,8 +103,53 @@ public class SolrDocData
         sdoc.addField(SPACE + lang, docref.getLastSpaceReference().getName());
         sdoc.addField(SPACE_FACET + lang, docref.getLastSpaceReference().getName());
         sdoc.addField(FULLNAME + lang, doc.getDocumentReference());
+        sdoc.addField(TYPE, docref.getType().name());
 
         return sdoc;
     }
+    
+    /**
+     * 
+     * @param attachment
+     * @param doc
+     * @param language
+     * @return
+     */
+    public SolrInputDocument getSolrInputAttachment(AttachmentReference attachment, DocumentModelBridge doc, String language, String textContent)
+    {
+        SolrInputDocument sdoc = new SolrInputDocument();
+        if (language == null || language.equals("")) {
+            language = "en";
+        }
+        
+        DocumentReference docref = doc.getDocumentReference();
+       
+        String lang = "_" + language;
+        sdoc.addField(ID, getAttachmentID(doc,attachment));
+        sdoc.addField(DOC_REFERENCE + lang, attachment.getParent().getName());
+        sdoc.addField(NAME + lang, attachment.getParent().getName());
+        sdoc.addField(FULLTEXT + lang, textContent);
+        sdoc.addField(LANGUAGE, doc.getRealLanguage());
+        sdoc.addField(MIME_TYPE + lang, attachment.getType().name());
+        sdoc.addField(WIKI + lang, docref.getWikiReference().getName());
+        sdoc.addField(SPACE + lang, docref.getLastSpaceReference().getName());
+        sdoc.addField(FILENAME + lang, attachment.getName());
+        sdoc.addField(FULLNAME + lang, doc.getDocumentReference());
+        sdoc.addField(TYPE, attachment.getType().name());
+        return sdoc;
+    }
+    
+/**
+ * 
+ * @param doc
+ * @param attachment
+ * @return
+ */
+    private String getAttachmentID(DocumentModelBridge doc,AttachmentReference attachment)
+    {   
+
+        return retval.append(getId(doc)).append(".file.").append(attachment.getName()).toString();
+    }
+    
     
 }

@@ -27,6 +27,9 @@ import static org.xwiki.platform.search.DocumentField.SCORE;
 import static org.xwiki.platform.search.DocumentField.SPACE;
 import static org.xwiki.platform.search.DocumentField.TITLE;
 import static org.xwiki.platform.search.DocumentField.WIKI;
+import static org.xwiki.platform.search.DocumentField.TYPE;
+import static org.xwiki.platform.search.DocumentField.FILENAME;
+import static org.xwiki.platform.search.DocumentField.DOC_REFERENCE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,10 +46,15 @@ import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
+import org.xwiki.context.Execution;
+import org.xwiki.context.ExecutionContext;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.platform.search.SearchResponse;
 import org.xwiki.platform.search.SearchResult;
+
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.util.XWikiStubContextProvider;
 
 /**
  * SearchResponse implementation.
@@ -61,6 +69,12 @@ public class SolrjSearchResponse implements SearchResponse
 
     @Inject
     private Logger logger;
+    
+    @Inject
+    protected Execution execution;
+    
+    @Inject
+    protected XWikiStubContextProvider contextProvider;
 
     public static final String HINT = "solrsearchresponse";
 
@@ -213,46 +227,67 @@ public class SolrjSearchResponse implements SearchResponse
     private SearchResult getSearchResult(SolrDocument solrDoc)
     {
         try {
-
+            
             String language = (String) solrDoc.getFieldValue(LANGUAGE);
+            
             if (language == null || language.trim().equals("")) {
                 language = "en";
             }
 
             String id = getStringValue(solrDoc.getFieldValue(ID));
-            String wikiName = getStringValue(solrDoc.getFieldValue(WIKI + "_" + language));
-            String spaceName = getStringValue(solrDoc.getFieldValue(SPACE + "_" + language));
-            String pageName = getStringValue(solrDoc.getFieldValue(NAME + "_" + language));
-            String title = getStringValue(solrDoc.getFieldValue(TITLE + "_" + language));
-            String fulltext = getStringValue(solrDoc.getFieldValue(FULLTEXT + "_" + language));
-            float score = (Float) solrDoc.getFieldValue(SCORE);
+           
+            String wikiName = getStringValue(solrDoc.getFieldValue(WIKI + "_" + language));           
+            String spaceName = getStringValue(solrDoc.getFieldValue(SPACE + "_" + language));           
+            String pageName = getStringValue(solrDoc.getFieldValue(NAME + "_" + language));          
+            String fulltext = getStringValue(solrDoc.getFieldValue(FULLTEXT + "_" + language));           
+            float score = (Float) solrDoc.getFieldValue(SCORE);           
+            SearchResult searchResult = new SearchResult(id, wikiName, spaceName, pageName,language);
+            searchResult.setScore(score);   
+            searchResult.setContent(fulltext);
+                       
+            if(getStringValue(solrDoc.getFieldValue(TYPE)).equals("DOCUMENT"))
+            {   
+                
+                String title = getStringValue(solrDoc.getFieldValue(TITLE + "_" + language));
+                searchResult.setTitle(title);
+                if (this.highlightingMap != null) {
+                    Map<String, List<String>> docMap = this.highlightingMap.get(id);
+                    if (docMap != null && docMap.containsKey(FULLTEXT + "_" + language)) {
+                        fulltext = cleanUp(docMap.get(FULLTEXT + "_" + language).toString());
+                    }
 
-            if (this.highlightingMap != null) {
-                Map<String, List<String>> docMap = this.highlightingMap.get(id);
-                if (docMap != null && docMap.containsKey(FULLTEXT + "_" + language)) {
-                    fulltext = cleanUp(docMap.get(FULLTEXT + "_" + language).toString());
-                }
-
-                if (docMap != null && docMap.containsKey(TITLE + "_" + language)) {
-                    title = cleanUp(docMap.get(TITLE + "_" + language).toString());
-                }
+                    if (docMap != null && docMap.containsKey(TITLE + "_" + language)) {
+                        title = cleanUp(docMap.get(TITLE + "_" + language).toString());
+                    }
+                }                
+            }
+           
+            if(getStringValue(solrDoc.getFieldValue(TYPE)).equals("ATTACHMENT"))
+            {
+                
+                String filename = getStringValue(solrDoc.getFieldValue(FILENAME +"_" + language));
+                XWikiContext context = getXWikiContext();
+                String fullname= new StringBuffer(wikiName).append(":").append(spaceName).append(".").append(pageName).toString();
+                String url=context.getWiki().getAttachmentURL(fullname, filename, context);
+                url="http://localhost:8080"+url;
+                searchResult.setURL(url);
             }
 
-            SearchResult searchResult = new SearchResult(id, wikiName, spaceName, pageName, language);
-            searchResult.setScore(score);
-            searchResult.setTitle(title);
-            searchResult.setContent(fulltext);
-
+           
+           
+            
             DocumentReference docref = new DocumentReference(wikiName, spaceName, pageName);
-
+            
             // checks if the user has access to view the page.
             if ((documentAccessBridge.exists(docref)) && (documentAccessBridge.isDocumentViewable(docref))) {
                 return searchResult;
             }
-            return searchResult;
+            
+            
+           
 
         } catch (Exception ex) {
-            // Do Nothing
+           logger.info("error while retieving search result");
         }
 
         return null;
@@ -290,5 +325,22 @@ public class SolrjSearchResponse implements SearchResponse
     {
         EntityReference reference = docRef.extractReference(parentRef.getType());
         return parentRef.equals(reference);
+    }
+    
+    public XWikiContext getXWikiContext()
+    {
+        XWikiContext context = (XWikiContext) execution.getContext().getProperty(XWikiContext.EXECUTIONCONTEXT_KEY);
+        if (context == null) {
+
+            context = this.contextProvider.createStubContext();
+            logger.info(context.toString());
+            getExecutionContext().setProperty(XWikiContext.EXECUTIONCONTEXT_KEY, context);
+        }
+        return context;
+    }
+    
+    private ExecutionContext getExecutionContext()
+    {
+        return this.execution.getContext();
     }
 }

@@ -19,40 +19,196 @@
  */
 package org.xwiki.platform.search;
 
+import org.xwiki.model.reference.DocumentReference;
+
 /**
  * @version $Id$
  */
-public interface SearchResult
+public class SearchResult
 {
+
+    private String id;
+
+    private DocumentReference reference;
+
+    private String title;
+
+    private float score;
+
+    private String content;
+
+    private String wikiName;
+
+    private String spaceName;
+
+    private String pageName;
+
+    private String highlightText;
+
+    private String language;
+    
+    private String url;
+
+    public SearchResult(String id, String wikiName, String spaceName, String pageName, String language)
+    {
+        this.reference = new DocumentReference(wikiName, spaceName, pageName, language);
+        this.wikiName = wikiName;
+        this.spaceName = spaceName;
+        this.pageName = pageName;
+        this.id = id;
+    }
+
     /**
-     * @return the document id as indexed
+     * @return the title
      */
-    public String getId();
+    public String getTitle()
+    {
+        return title;
+    }
+
+    /**
+     * @param title the title to set
+     */
+    public void setTitle(String title)
+    {
+        this.title = title;
+    }
+
+    /**
+     * @return the score
+     */
+    public float getScore()
+    {
+        return score;
+    }
+
+    /**
+     * @param score the score to set
+     */
+    public void setScore(float score)
+    {
+        this.score = score;
+    }
+
+    /**
+     * @return the content
+     */
+    public String getContent()
+    {
+        return content;
+    }
+
+    /**
+     * @param content the content to set
+     */
+    public void setContent(String content)
+    {
+        this.content = content;
+    }
+
     
     /**
-     * @return the title of the document.
+     * @return the reference
      */
-    public String getTitle();
-    
+    public DocumentReference getReference()
+    {   
+        
+        return reference;
+    }
+
+    public String getDocumentLink()
+    {
+        String link = "";
+        if (this.wikiName != null) {
+            link += this.wikiName + ":";
+        }
+
+        if (this.spaceName != null) {
+            link += this.spaceName + ".";
+        }
+        return "[[" + link + this.pageName + "]]";
+    }
+
     /**
-     * @return Returns the name of the document.
+     * @return the wikiName
      */
-    public String getName();
-    
+    public String getWikiName()
+    {
+        return wikiName;
+    }
+
     /**
-     * @return Returns the score of this search result.Is a float between zero and 1.
+     * @return the spaceName
      */
-    public float getScore();
-    
+    public String getSpaceName()
+    {
+        return spaceName;
+    }
+
     /**
-     * @return the language of the Document
+     * @return the pageName
      */
-    public String getLanguage();
+    public String getPageName()
+    {
+        return pageName;
+    }
+
+    /**
+     * @return the id
+     */
+    public String getId()
+    {
+        return id;
+    }
+
+    /**
+     * @return the highlightText
+     */
+    public String getHighlightText()
+    {
+        return highlightText;
+    }
+
+    /**
+     * @param highlightText the highlightText to set
+     */
+    public void setHighlightText(String highlightText)
+    {
+        this.highlightText = highlightText;
+    }
+
+    /**
+     * @return the language
+     */
+    public String getLanguage()
+    {
+        return language;
+    }
     
     /**
      * 
-     * @return Returns the Full name of the document
+     * @param pageName 
      */
-    public String getFullName();
+    public void setPageName(String pageName)
+    {
+        this.pageName = pageName;
+    }
+    
+    /**
+     * 
+     * @param url
+     */
+    public void setURL(String url)
+    {
+        this.url=url;
+    }
+    
+    /**
+     * 
+     * @return the Url
+     */
+    public String getURL(){
+        return this.url;
+    }
 
 }

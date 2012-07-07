@@ -22,9 +22,12 @@ package org.xwiki.platform.search;
 
 import java.util.List;
 
+import org.xwiki.component.annotation.Role;
+
 /**
  * @version $Id$
  */
+@Role
 public interface SearchResponse
 {
     /**
@@ -35,11 +38,18 @@ public interface SearchResponse
     int getEndIndex(int beginIndex, int items);
 
     /**
-     * Hit count of search result.
-     * 
-     * @return total number of search results the user is allowed to view.
+     * Max score of the search results
+     *
+     * @return maximum score of the search results.
      */
-    int getHitcount();
+    float getMaxScore();
+
+    /**
+     * Total search results.
+     *
+     * @return total number of search results.
+     */
+    long getTotalNumber();
 
     /**
      * @param beginIndex start index of search results set.
@@ -57,19 +67,11 @@ public interface SearchResponse
      */
     int getPreviousIndex(int beginIndex, int items);
 
-    /**
-     * This method preprocess the results obtained from the QueryResponse object based on score, XWiki Rights Object.
-     * This method is not exposed to scripting language but called from getResults method.
-     * 
-     * @return A list containing the searchResult instances. The searchResult class contains the index fields as member
-     *         variables and the get methods to access them.
-     */
-    List<SearchResult> getRelevantResult();
 
     /**
      * Returns a list of search results. According to beginIndex and endIndex, only a subset of the results is returned.
      * To get the first ten results, one would use beginIndex=1 and items=10.
-     * 
+     *
      * @param beginIndex start index of search results set.
      * @param items number of results to return
      * @return List of SearchResult instances starting at beginIndex and containing up to items elements.
@@ -78,7 +80,7 @@ public interface SearchResponse
 
     /**
      * This method returns all the relevant results.
-     * 
+     *
      * @return A list containing the searchResult instances. The searchResult class contains the index fields as member
      *         variables and the get methods to access them.
      */

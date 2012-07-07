@@ -19,6 +19,18 @@
  */
 package org.xwiki.platform.search.index.internal;
 
+import static org.xwiki.platform.search.DocumentField.DOC_REFERENCE;
+import static org.xwiki.platform.search.DocumentField.FILENAME;
+import static org.xwiki.platform.search.DocumentField.FULLNAME;
+import static org.xwiki.platform.search.DocumentField.FULLTEXT;
+import static org.xwiki.platform.search.DocumentField.ID;
+import static org.xwiki.platform.search.DocumentField.LANGUAGE;
+import static org.xwiki.platform.search.DocumentField.MIME_TYPE;
+import static org.xwiki.platform.search.DocumentField.SPACE;
+import static org.xwiki.platform.search.DocumentField.TYPE;
+import static org.xwiki.platform.search.DocumentField.WIKI;
+
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,12 +43,15 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest;
 import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.util.ContentStreamBase;
+import org.apache.tika.Tika;
+import org.apache.tika.metadata.Metadata;
 import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.bridge.DocumentModelBridge;
@@ -53,6 +68,7 @@ import org.xwiki.platform.search.internal.SolrDocData;
 import org.xwiki.rendering.renderer.BlockRenderer;
 import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
 import org.xwiki.rendering.renderer.printer.WikiPrinter;
+
 
 /**
  * @version $Id$
@@ -84,7 +100,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     @Inject
     @Named("plain/1.0")
     private BlockRenderer renderer;
-
+    StringBuilder retval = new StringBuilder();
     private Map<String, DocumentIndexerStatus> indexerStatusMap = Collections
         .synchronizedMap(new WeakHashMap<String, DocumentIndexerStatus>());
 
@@ -109,8 +125,9 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             indexerStatusMap.put(Thread.currentThread().getName(), indexerStatus);
 
             indexerStatus.setTotalDocCount(docList.size());
-            logger.info("Indexing a total of [" + docList.size() + "] documents.");
-
+            
+            logger.info("Indexing a total of [" + docList.size() + "] documents testing");
+            
             try {
                 executionContextManager.initialize(context);
             } catch (ExecutionContextException e) {
@@ -127,6 +144,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             }
 
             long totalTime=0;
+            
 
             try {
                 for (int i = 0; i < docList.size(); i += 10) {
@@ -149,7 +167,15 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                             docs.add(sdoc);
                             endTime = new Date().getTime();
                             fetchTime += (endTime - startTime);
-
+                            
+                            //indexing attachments
+                            List<AttachmentReference> attachReferences=documentAccessBridge.getAttachmentReferences(docRef);
+                            
+                            for(AttachmentReference attachReference:attachReferences)
+                            {   
+                                indexAttachment(attachReference,documentModelBridge);
+                                logger.info("successful indexing attachments");
+                            }
                         } catch (Exception e) {
                             logger.error("Error fetching document [" + docRef.getName() + "]", e);
                         }
@@ -209,9 +235,20 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                 for (DocumentReference docRef : docList) {
 
                     try {
+                        
+                        //deleting the index of the documents
                         DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(docRef);
                         String id = solrdoc.getId(documentModelBridge);
                         ids.add(id);
+                        
+                        //deleting the indexes of the attachments
+                        List<AttachmentReference> attachReferences=documentAccessBridge.getAttachmentReferences(docRef);
+                        for(AttachmentReference attachReference:attachReferences)
+                        {
+                            String attachId = getAttachmentID(documentModelBridge,attachReference);
+                            ids.add(attachId);
+                        }
+                        
                     } catch (Exception e) {
                         logger.error("Error retrieving document." + e.getMessage());
                     }
@@ -282,6 +319,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                 WikiPrinter printer=new DefaultWikiPrinter();
                 renderer.render(documentModelBridge.getXDOM(), printer);
                 SolrInputDocument sdoc = solrdoc.getSolrInputDocument(doc, documentModelBridge, null,printer.toString());
+               
                 logger.info("Adding document " + doc.getName());
                 solrServer.add(sdoc);
                 solrServer.commit();
@@ -341,49 +379,27 @@ public class SolrjDocumentIndexer implements DocumentIndexer
      * @see org.xwiki.platform.search.index.DocumentIndexer#indexAttachment(org.xwiki.model.reference.AttachmentReference, org.xwiki.bridge.DocumentModelBridge)
      */
     public boolean indexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
-    {   
+    {  
+        SolrDocData solrdoc = new SolrDocData();
+        
         try
         {
-        
-        //get the attachment url(this method has bug. Couldn't  retrieve the full url).
-        //shouldn't store content for jpeg- yet to implement    
-        String attachment_url= "http://localhost:8080"+documentAccessBridge.getAttachmentURL(attachment,true);
-        
-        logger.info(attachment_url);
-        URL  url = new URL(attachment_url);
-       
-        ContentStreamUpdateRequest up = new ContentStreamUpdateRequest("/update/extract");
-      
-        ContentStreamBase.URLStream contentStream = new ContentStreamBase.URLStream(url);
-        up.addContentStream(contentStream);
-        
-        up.setParam("literal.id", getAttachmentID(doc,attachment));
-        up.setParam("literal.docref", attachment.getParent().getName());
-        up.setParam("literal.mimetype",attachment.getType().name());
-        up.setParam("literal.filename",attachment.getName());
-        up.setParam("fmap.content","ft");
-        up.setParam("uprefix", "ignored_");                 
-        AbstractUpdateRequest updateReq = up.setAction(AbstractUpdateRequest.ACTION.COMMIT, true, true);
-      
-        logger.info("successful indexing attachments"+updateReq.toString());
-        
-        solrServer.request(up);
-        
+        String Content = getFullText(attachment); 
+        SolrInputDocument sdoc = solrdoc.getSolrInputAttachment(attachment, doc, null, Content);
+        logger.info("Adding document " + attachment.getName());
+        solrServer.add(sdoc);
+        solrServer.commit();
         return true;
-        }
-        
-        catch(Exception e)
-        {
-          e.printStackTrace();  
-        }
-        
+        } 
+       catch (Exception e) {
+        logger.error("Error indexing document - [" + attachment.getName() + "]");
+        }      
         return false;
         
     }
     
    
     /**
-     *could refactor the code by removing DocumentModelbridge..
      *
      * {@inheritDoc}
      * 
@@ -453,4 +469,48 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     {
         return indexerStatusMap.get(threadId);
     }
+    
+    private String getFullText(AttachmentReference attachment)
+    {
+        
+        String contentText = getContentAsText(attachment);
+          
+        if (contentText != null) {
+            if (retval.length() > 0) {
+                retval.append(" ");
+            }
+            
+        }
+        return (retval.append(contentText)).toString();
+    }
+
+    /**
+     * 
+     * @param attachment
+     * @return
+     */
+    private String getContentAsText(AttachmentReference attachment)
+    {
+        String contentText = null;
+
+        try {
+           
+            logger.info("begining to parse the attachment");
+
+            Tika tika = new Tika();
+
+            Metadata metadata = new Metadata();
+            metadata.set(Metadata.RESOURCE_NAME_KEY,attachment.getName());
+            
+            InputStream in =documentAccessBridge.getAttachmentContent(attachment);
+
+            contentText = StringUtils.lowerCase(tika.parseToString(in,metadata ));
+        } catch (Throwable ex) {
+           logger.info(contentText);
+                
+        }
+
+        return contentText;
+    }
+    
 }

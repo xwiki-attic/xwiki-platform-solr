@@ -22,12 +22,14 @@ package org.xwiki.platform.search.index;
 import java.util.List;
 import java.util.Map;
 
+import org.xwiki.bridge.DocumentModelBridge;
 import org.xwiki.component.annotation.Role;
+import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 
 /**
  * XWiki DoucumentIndexer API
- *
+ * 
  * @version $Id$
  */
 @Role
@@ -35,7 +37,7 @@ public interface DocumentIndexer
 {
     /**
      * Index the document.
-     *
+     * 
      * @param document reference to the document to be indexed.
      * @return true if document indexing is successful.
      */
@@ -43,7 +45,7 @@ public interface DocumentIndexer
 
     /**
      * Index the documents.
-     *
+     * 
      * @param documents List of documents to be indexed.
      * @return the Number of documents scheduled for indexing. -1 in case of errors.
      */
@@ -51,7 +53,7 @@ public interface DocumentIndexer
 
     /**
      * Delete the index for document.
-     *
+     * 
      * @param doc List of document references to which index needs to be deleted.
      * @return true if document index deletion is successful.
      */
@@ -59,7 +61,7 @@ public interface DocumentIndexer
 
     /**
      * Delete the index for the given list of documents.
-     *
+     * 
      * @param document Document reference to which index needs to be deleted.
      * @return true if document index deletion is successful.
      */
@@ -67,14 +69,14 @@ public interface DocumentIndexer
 
     /**
      * Deletes the entire index of the current wiki.
-     *
+     * 
      * @return true if the index deletion is successful.
      */
     boolean deleteEntireIndex();
 
     /**
      * Sets the SearchEngineObject
-     *
+     * 
      * @param server reference to the backend used
      */
     void setSearchEngineObject(Object server);
@@ -89,5 +91,21 @@ public interface DocumentIndexer
      * @return status of given thread.
      */
     DocumentIndexerStatus getStatus(String threadId);
+    
+    /**
+     * 
+     * @param attachment attachment reference of the files
+     * @param doc parent document
+     * @return boolean value
+     */
+     boolean indexAttachment(AttachmentReference attachment, DocumentModelBridge doc);
+     
+    /**
+     * 
+     * @param attachment attachment reference of the files
+     * @param doc parent document
+     * @return boolean value
+     */
+     boolean deleteIndexAttachment(AttachmentReference attachment, DocumentModelBridge doc);
 
 }
