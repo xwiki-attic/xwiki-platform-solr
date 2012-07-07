@@ -30,30 +30,36 @@ README
 
 6. Add configuration to xwiki.properties
 
-    ----------------------------------------------------------------------
     Search
-    ----------------------------------------------------------------------
+   
     Search backend to be used by wiki search for indexing and search query retrieval.
 
      The possible options
      
-     * solrj
-     * lucene
-     * solr-remote
-     * search.backend = solrj
+       solrj
+       lucene
+       solr-remote
+       search.backend = solrj
 
    Solrj - Embedded solr server.
    
    search.solr.home='/path/to/solr/home/
 
+7. Copy solrconfig.xml and schema.xml from the solr folder provided in the repository. Modify the following in the solrconfig.xml
+   
+
+    lib dir="/Users/administrator/apache-solr-3.6.0/dist/" regex="apache-solr-cell-\d.*\.jar" 
+
+    lib dir="/Users/administrator/apache-solr-3.6.0/contrib/extraction/lib" regex=".*\.jar"  
+    
+    Replace the above with the path where the dist and contrib folders are present.
+
+8. Build the code and copy xwiki-platform-search-api-3.6-SNAPSHOT.jar and xwiki-platform-search-api-4.2-SNAPSHOT.jar to the XWiki Eneterprise lib directory.
 
 
-7. Build the code and copy xwiki-platform-search-api-3.6-SNAPSHOT.jar and xwiki-platform-search-api-4.2-SNAPSHOT.jar to the XWiki Eneterprise lib directory.
+9. Start the Server using start_xwiki.sh or start_xwiki.bat
 
-
-8. Start the Server using start_xwiki.sh or start_xwiki.bat
-
-9. Create a page in Sandbox - SearchPage
+10. Create a page in Sandbox - SearchPage
    Copy the content of https://gist.github.com/2295648
 
-10. Save and View the SearchPage, Start searching. 
+11. Save and View the SearchPage, Start searching. 
