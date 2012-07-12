@@ -19,19 +19,9 @@
  */
 package org.xwiki.platform.search.index.internal;
 
-import static org.xwiki.platform.search.DocumentField.DOC_REFERENCE;
-import static org.xwiki.platform.search.DocumentField.FILENAME;
-import static org.xwiki.platform.search.DocumentField.FULLNAME;
-import static org.xwiki.platform.search.DocumentField.FULLTEXT;
-import static org.xwiki.platform.search.DocumentField.ID;
-import static org.xwiki.platform.search.DocumentField.LANGUAGE;
-import static org.xwiki.platform.search.DocumentField.MIME_TYPE;
-import static org.xwiki.platform.search.DocumentField.SPACE;
-import static org.xwiki.platform.search.DocumentField.TYPE;
-import static org.xwiki.platform.search.DocumentField.WIKI;
+
 
 import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -45,11 +35,8 @@ import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.request.AbstractUpdateRequest;
-import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.util.ContentStreamBase;
 import org.apache.tika.Tika;
 import org.apache.tika.metadata.Metadata;
 import org.slf4j.Logger;
@@ -163,7 +150,14 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                             WikiPrinter printer=new DefaultWikiPrinter();
                             renderer.render(documentModelBridge.getXDOM(), printer);
                             
-                            SolrInputDocument sdoc = solrdoc.getSolrInputDocument(docRef, documentModelBridge, "en", printer.toString());
+                            //get the language
+                            String language = documentModelBridge.getRealLanguage();
+                            if (language == null || language == "")
+                            {
+                                language = "en";
+                            }
+                            
+                            SolrInputDocument sdoc = solrdoc.getSolrInputDocument(docRef, documentModelBridge, language, printer.toString());
                             docs.add(sdoc);
                             endTime = new Date().getTime();
                             fetchTime += (endTime - startTime);
@@ -318,7 +312,14 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                 //Convert the XWiki syntax of document to plain text.
                 WikiPrinter printer=new DefaultWikiPrinter();
                 renderer.render(documentModelBridge.getXDOM(), printer);
-                SolrInputDocument sdoc = solrdoc.getSolrInputDocument(doc, documentModelBridge, null,printer.toString());
+                
+              //get the language
+                String language = documentModelBridge.getRealLanguage();
+                if (language == null || language == "")
+                {
+                    language = "en";
+                }
+                SolrInputDocument sdoc = solrdoc.getSolrInputDocument(doc, documentModelBridge, language,printer.toString());
                
                 logger.info("Adding document " + doc.getName());
                 solrServer.add(sdoc);
@@ -384,8 +385,16 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         
         try
         {
-        String Content = getFullText(attachment); 
-        SolrInputDocument sdoc = solrdoc.getSolrInputAttachment(attachment, doc, null, Content);
+        String Content = getFullText(attachment);
+        
+      //get the language
+        String language = doc.getRealLanguage();
+        if (language == null || language == "")
+        {
+            language = "en";
+        }
+        
+        SolrInputDocument sdoc = solrdoc.getSolrInputAttachment(attachment, doc, language, Content);
         logger.info("Adding document " + attachment.getName());
         solrServer.add(sdoc);
         solrServer.commit();

@@ -85,7 +85,7 @@ public interface Search
      * @throws SearchIndexingException
      * @throws XWikiException
      */
-    boolean deleteindexWiki() throws SearchIndexingException, XWikiException;
+    boolean deleteindexWiki(String wiki) throws SearchIndexingException, XWikiException;
 
     /**
      * Build the index for the current wiki farm.
@@ -108,7 +108,7 @@ public interface Search
      * one of the given virtual wikis.Searches the configured Indexes using the specified query for documents in the
      * given languages.With virtual wikis enabled in your xwiki installation this will deliver results from all virtual
      * wikis.
-     * 
+     *
      * @return the search response.
      */
 
@@ -169,6 +169,19 @@ public interface Search
      */
     SearchResponse search(String query, List<String> languages, EntityReference reference,
         Map<String, String> searchParameters);
+
+    /**
+     * Search for the query in the current wiki for given languages in a wiki.
+     *
+     * @param query to be searched.
+     * @param languages Wiki reference to be searched for the query.
+     * @param reference Entiy reference ( Space or Wiki ) to be searched for the query.
+     * @param searchParameters
+     * @param filterParameters
+     * @return SearchResponse to the query searched.
+     */
+    SearchResponse search(String query, List<String> languages, EntityReference reference,
+        Map<String, String> searchParameters,Map<String,String> filterParameters);
 
     Map<String, DocumentIndexerStatus> getStatus();
 

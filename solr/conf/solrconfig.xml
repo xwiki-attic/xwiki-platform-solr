@@ -739,12 +739,14 @@
        <str name="title">Solritas</str>
 
        <str name="qf">
-          name_en^3.0 title_en^2.0 ft_en^3.0 space_en^1.2 wiki_en^1.4 
+          name_en^3.0 title_en^2.0 ft_en^3.0 filename_en^3.0
+          name_fr^3.0 title_fr^2.0 ft_fr^3.0 filename_fr^3.0
        </str>
 
        <str name="facet">on</str>
-       <str name="facet.field">space_en</str>
-       <str name="facet.field">space_facet</str>
+       <str name="facet.field">space</str>
+       <str name="facet.field">wiki</str>
+       <str name="facet.field">lang</str>
 
        <!-- Highlighting defaults -->
        <str name="hl">on</str>
@@ -883,8 +885,7 @@
   <requestHandler name="/update/extract" class="org.apache.solr.handler.extraction.ExtractingRequestHandler">
     <lst name="defaults">
       <str name="fmap.Last-Modified">last_modified</str>
-      <str name="fmap.content">ft</str>
-      <str name="uprefix">ignored_</str>
+           <str name="uprefix">ignored_</str>
     </lst>
     <!--Optional.  Specify a path to a tika configuration file.  See the Tika docs for details.-->
     <!--<str name="tika.config">/my/path/to/tika.config</str>-->

@@ -211,4 +211,8 @@ public class SearchResult
         return this.url;
     }
 
+    public String toString()
+    {
+        return pageName;
+    }
 }

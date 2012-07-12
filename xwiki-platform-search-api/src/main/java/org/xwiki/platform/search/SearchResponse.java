@@ -21,8 +21,10 @@
 package org.xwiki.platform.search;
 
 import java.util.List;
+import java.util.Map;
 
 import org.xwiki.component.annotation.Role;
+import org.xwiki.model.reference.EntityReference;
 
 /**
  * @version $Id$
@@ -98,5 +100,13 @@ public interface SearchResponse
      * @return true when there is a page before the one currently displayed, that is, when <code>beginIndex > 1</code>.
      */
     boolean hasPrevious(int beginIndex);
+
+    /**
+     * @param queryResponse
+     * @param languages
+     * @param entityReference
+     * @param searchParams
+     */
+    void processQueryResult(Object queryResponse);
 
 }

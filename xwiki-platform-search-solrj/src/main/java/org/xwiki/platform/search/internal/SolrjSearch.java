@@ -20,6 +20,7 @@
 package org.xwiki.platform.search.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -31,6 +32,7 @@ import javax.inject.Singleton;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.bridge.DocumentModelBridge;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.bridge.event.DocumentDeletedEvent;
@@ -46,6 +48,7 @@ import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.event.Event;
 import org.xwiki.platform.search.SearchEngine;
 import org.xwiki.platform.search.SearchException;
+import org.xwiki.platform.search.SearchQuery;
 import org.xwiki.platform.search.SearchResponse;
 import org.xwiki.platform.search.index.DocumentIndexer;
 import org.xwiki.platform.search.index.DocumentIndexerStatus;
@@ -84,6 +87,9 @@ public class SolrjSearch extends AbstractSearch
 
     @Inject
     private ComponentManager componentManager;
+
+    @Inject
+    private DocumentAccessBridge documentAccessBridge;
 
     /**
      * {@inheritDoc}
@@ -176,9 +182,40 @@ public class SolrjSearch extends AbstractSearch
      * @see org.xwiki.platform.search.Search#deleteindexWiki()
      */
     @Override
-    public boolean deleteindexWiki()
-    {
-        return indexer.deleteEntireIndex();
+    public boolean deleteindexWiki(String wiki) throws XWikiException
+    {   
+        try
+        {
+            //gets the final index Wiki
+         final XWikiContext xcontext = getXWikiContext();     
+        String wikiName = xcontext.getWiki().getName();
+        logger.info("Deleting wiki.." + wikiName);
+        
+        if (!wikiName.equalsIgnoreCase(wiki)) {
+            xcontext.setDatabase(wikiName);
+        }
+       
+        
+        String hql = "select doc.space, doc.name, doc.version, doc.language from XWikiDocument as doc";
+        List<Object[]> documents = xcontext.getWiki().search(hql, xcontext);
+
+        List<DocumentReference> docsList = new ArrayList<DocumentReference>();
+
+        for (Object[] document : documents) {
+
+            String spaceName = (String) document[0];
+            DocumentReference documentReference = new DocumentReference(wikiName, spaceName, (String) document[1]);
+            docsList.add(documentReference);
+        }
+
+        indexer.deleteIndex(docsList);
+          return true;
+        }
+        catch(Exception e)
+        {
+          return false;  
+        }
+    
     }
 
     /**
@@ -206,7 +243,7 @@ public class SolrjSearch extends AbstractSearch
         if (getXWikiContext().getWiki().isVirtualMode()) {
             try {
                 // Delete the existing index.
-                // solrServer.deleteByQuery("*:*");
+                indexer.deleteEntireIndex();
                 docCount = indexWikiFarm();
             } catch (Exception e) {
                 logger.error("Failure in rebuilding the farm index.", e);
@@ -223,8 +260,25 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public int rebuildFarmIndex(List<WikiReference> wikis)
     {
-        // TODO Auto-generated method stub
-        return 0;
+        int docCount=0;
+        if (getXWikiContext().getWiki().isVirtualMode()) {
+            try {
+             for(WikiReference wiki : wikis)
+             {
+               //delete the wiki indexes
+                 boolean result =deleteindexWiki(wiki.getName()); 
+                 //build index
+                 if(result==true)
+                     docCount = indexWiki(wiki.getName()); 
+                docCount=docCount+docCount; 
+            }
+        }
+        catch(Exception e)
+        {
+           logger.info("error during rebuildFarmIndex"+e); 
+        }
+        }
+        return docCount;
     }
 
     /**
@@ -237,7 +291,10 @@ public class SolrjSearch extends AbstractSearch
     {
         int docCount = 0;
         try {
-            // Delete the existing index.
+            //delete existing index
+            boolean result =deleteindexWiki(getXWikiContext().getWiki().getName());
+            //build index
+            if(result==true)
             docCount = indexWiki();
         } catch (Exception e) {
             logger.error("Failure in rebuilding the farm index.", e);
@@ -253,8 +310,8 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public int rebuildWikiIndex(List<SpaceReference> spaces)
     {
-        // TODO Auto-generated method stub
-        return 0;
+        int docCount = 0;
+        return docCount;
     }
 
     /**
@@ -264,15 +321,37 @@ public class SolrjSearch extends AbstractSearch
      *      org.xwiki.model.reference.WikiReference)
      */
     @Override
-    public SearchResponse search(String query, List<String> languages, EntityReference entityReference,
-        Map<String,String> searchParameters)
+    public SearchResponse search(String query, List<String> languages, EntityReference reference,
+        Map<String, String> searchParameters)
     {
+        return this.search(query, languages, reference, searchParameters, Collections.EMPTY_MAP);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.xwiki.platform.search.Search#search(java.lang.String, java.util.List,
+     *      org.xwiki.model.reference.EntityReference, java.util.Map, java.util.Map)
+     */
+    @Override
+    public SearchResponse search(String query, List<String> languages, EntityReference reference,
+        Map<String, String> searchParameters, Map<String, String> filterParameters)
+    {
+        logger.info("Searching for the query string :" + query + " Languages:" + languages + " in entity reference "
+            + reference);
+        logger.info("Search parameters : " + searchParameters);
         // SolrQuery
         SolrServer solrserver;
         QueryResponse queryResponse;
         SolrjSearchResponse searchResponse;
         try {
-            SolrQuery solrQuery = new SolrQuery(query);
+            StringBuilder queryString = new StringBuilder();
+            queryString.append(query);
+            for (Entry<String, String> entry : filterParameters.entrySet()) {
+                queryString.append(" " + entry.getKey() + ":" + entry.getValue());
+            }
+            SolrQuery solrQuery = new SolrQuery(queryString.toString());
+
             if (searchParameters != null && searchParameters.size() > 0) {
                 for (Entry<String, String> entry : searchParameters.entrySet()) {
                     solrQuery.add(entry.getKey(), entry.getValue());
@@ -280,21 +359,19 @@ public class SolrjSearch extends AbstractSearch
             }
             solrserver = (SolrServer) searchEngine.getSearchEngine();
             queryResponse = solrserver.query(solrQuery);
+            //logger.info(queryResponse.getResults().toString());
             searchResponse = this.componentManager.getInstance(SearchResponse.class, SolrjSearchResponse.HINT);
-            searchResponse.processQueryResult(queryResponse,languages,entityReference);
-	    return searchResponse;
+            searchResponse.processQueryResult(queryResponse);
+            logger.info("Returning search response : \n" + searchResponse);
+            return searchResponse;
 
         } catch (Exception e) {
             logger.info("Failed to retrieve the solrserver object");
         }
-
         return null;
-
     }
-    
-    
+
     /**
-     * 
      * @param attachment
      * @param doc
      * @return the boolean true if successfully indexed
@@ -303,8 +380,8 @@ public class SolrjSearch extends AbstractSearch
     {
         return indexer.indexAttachment(attachment, doc);
     }
-    
-    public  boolean deleteIndexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
+
+    public boolean deleteIndexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
     {
         return indexer.deleteIndexAttachment(attachment, doc);
     }
@@ -326,16 +403,18 @@ public class SolrjSearch extends AbstractSearch
             }
 
             else if (event instanceof AttachmentUpdatedEvent || event instanceof AttachmentAddedEvent) {
-                
-             AttachmentReference attachref=new AttachmentReference(((AbstractAttachmentEvent)
-                 event).getName(), ((DocumentModelBridge)source).getDocumentReference());
-             indexAttachment(attachref, (DocumentModelBridge)source);
+
+                AttachmentReference attachref =
+                    new AttachmentReference(((AbstractAttachmentEvent) event).getName(),
+                        ((DocumentModelBridge) source).getDocumentReference());
+                indexAttachment(attachref, (DocumentModelBridge) source);
 
             } else if (event instanceof AttachmentDeletedEvent) {
-                  
-                AttachmentReference attachref=new AttachmentReference(((AbstractAttachmentEvent)
-                    event).getName(), ((DocumentModelBridge)source).getDocumentReference());
-                deleteIndexAttachment(attachref,(DocumentModelBridge)source); 
+
+                AttachmentReference attachref =
+                    new AttachmentReference(((AbstractAttachmentEvent) event).getName(),
+                        ((DocumentModelBridge) source).getDocumentReference());
+                deleteIndexAttachment(attachref, (DocumentModelBridge) source);
 
             } else if (event instanceof WikiDeletedEvent) {
 

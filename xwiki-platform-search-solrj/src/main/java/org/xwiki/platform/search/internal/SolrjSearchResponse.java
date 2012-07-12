@@ -19,6 +19,8 @@
  */
 package org.xwiki.platform.search.internal;
 
+import static org.xwiki.platform.search.DocumentField.DOC_REFERENCE;
+import static org.xwiki.platform.search.DocumentField.FILENAME;
 import static org.xwiki.platform.search.DocumentField.FULLTEXT;
 import static org.xwiki.platform.search.DocumentField.ID;
 import static org.xwiki.platform.search.DocumentField.LANGUAGE;
@@ -26,10 +28,8 @@ import static org.xwiki.platform.search.DocumentField.NAME;
 import static org.xwiki.platform.search.DocumentField.SCORE;
 import static org.xwiki.platform.search.DocumentField.SPACE;
 import static org.xwiki.platform.search.DocumentField.TITLE;
-import static org.xwiki.platform.search.DocumentField.WIKI;
 import static org.xwiki.platform.search.DocumentField.TYPE;
-import static org.xwiki.platform.search.DocumentField.FILENAME;
-import static org.xwiki.platform.search.DocumentField.DOC_REFERENCE;
+import static org.xwiki.platform.search.DocumentField.WIKI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,10 +69,10 @@ public class SolrjSearchResponse implements SearchResponse
 
     @Inject
     private Logger logger;
-    
+
     @Inject
     protected Execution execution;
-    
+
     @Inject
     protected XWikiStubContextProvider contextProvider;
 
@@ -103,7 +103,14 @@ public class SolrjSearchResponse implements SearchResponse
      */
     public int getEndIndex(int beginIndex, int items)
     {
-        return 0;
+
+        int retval = beginIndex + items - 1;
+        final int resultcount = (int) getTotalNumber();
+        if (retval > resultcount) {
+            return resultcount;
+        }
+
+        return retval;
     }
 
     /**
@@ -123,7 +130,11 @@ public class SolrjSearchResponse implements SearchResponse
      */
     public int getNextIndex(int beginIndex, int items)
     {
-        return 0;
+        final int itemCount = items;
+        final int resultcount = (int) getTotalNumber();
+        int retval = beginIndex + itemCount;
+
+        return retval > resultcount ? (resultcount - itemCount + 1) : retval;
     }
 
     /**
@@ -133,7 +144,9 @@ public class SolrjSearchResponse implements SearchResponse
      */
     public int getPreviousIndex(int beginIndex, int items)
     {
-        return 0;
+        int retval = beginIndex - items;
+
+        return 0 < retval ? retval : 1;
     }
 
     /**
@@ -164,7 +177,11 @@ public class SolrjSearchResponse implements SearchResponse
      */
     public boolean hasNext(int beginIndex, int items)
     {
-        return false;
+        final int itemCount = items;
+        final int begin = beginIndex;
+
+        return begin + itemCount - 1 < getTotalNumber();
+
     }
 
     /**
@@ -174,7 +191,7 @@ public class SolrjSearchResponse implements SearchResponse
      */
     public boolean hasPrevious(int beginIndex)
     {
-        return false;
+        return beginIndex > 1;
     }
 
     /**
@@ -226,29 +243,33 @@ public class SolrjSearchResponse implements SearchResponse
 
     private SearchResult getSearchResult(SolrDocument solrDoc)
     {
+        SearchResult searchResult = null;
+
         try {
             
             String language = (String) solrDoc.getFieldValue(LANGUAGE);
-            
+
             if (language == null || language.trim().equals("")) {
                 language = "en";
             }
 
             String id = getStringValue(solrDoc.getFieldValue(ID));
-           
-            String wikiName = getStringValue(solrDoc.getFieldValue(WIKI + "_" + language));           
-            String spaceName = getStringValue(solrDoc.getFieldValue(SPACE + "_" + language));           
-            String pageName = getStringValue(solrDoc.getFieldValue(NAME + "_" + language));          
-            String fulltext = getStringValue(solrDoc.getFieldValue(FULLTEXT + "_" + language));           
-            float score = (Float) solrDoc.getFieldValue(SCORE);           
-            SearchResult searchResult = new SearchResult(id, wikiName, spaceName, pageName,language);
-            searchResult.setScore(score);   
-            searchResult.setContent(fulltext);
-                       
-            if(getStringValue(solrDoc.getFieldValue(TYPE)).equals("DOCUMENT"))
-            {   
-                
-                String title = getStringValue(solrDoc.getFieldValue(TITLE + "_" + language));
+
+            String wikiName = getStringValue(solrDoc.getFieldValue(WIKI));
+            String spaceName = getStringValue(solrDoc.getFieldValue(SPACE));
+            String pageName = getStringValue(solrDoc.getFieldValue(NAME + "_" + language));
+            String fulltext = getStringValue(solrDoc.getFieldValue(FULLTEXT + "_" + language));
+            String title = getStringValue(solrDoc.getFieldValue(TITLE + "_" + language));
+            float score = (Float) solrDoc.getFieldValue(SCORE);
+            searchResult = new SearchResult(id, wikiName, spaceName, pageName, language);
+            searchResult.setScore(score);
+
+            if (solrDoc.getFieldValue(TYPE).equals("DOCUMENT")) {
+                pageName = getStringValue(solrDoc.getFieldValue(NAME + "_" + language));
+                searchResult = new SearchResult(id, wikiName, spaceName, pageName, language);
+                searchResult.setScore(score);
+                searchResult.setContent(fulltext);
+                title = getStringValue(solrDoc.getFieldValue(TITLE + "_" + language));
                 searchResult.setTitle(title);
                 if (this.highlightingMap != null) {
                     Map<String, List<String>> docMap = this.highlightingMap.get(id);
@@ -259,17 +280,17 @@ public class SolrjSearchResponse implements SearchResponse
                     if (docMap != null && docMap.containsKey(TITLE + "_" + language)) {
                         title = cleanUp(docMap.get(TITLE + "_" + language).toString());
                     }
-                }                
-            }
-           
-            if(getStringValue(solrDoc.getFieldValue(TYPE)).equals("ATTACHMENT"))
-            {
-                
-                String filename = getStringValue(solrDoc.getFieldValue(FILENAME +"_" + language));
+                }
+            } else if (solrDoc.getFieldValue(TYPE).equals("ATTACHMENT")) {
+                pageName = getStringValue(solrDoc.getFieldValue(DOC_REFERENCE + "_" + language));
+                String filename = getStringValue(solrDoc.getFieldValue(FILENAME + "_" + language));
+                searchResult = new SearchResult(id, wikiName, spaceName, pageName, language);
+                searchResult.setScore(score);
                 XWikiContext context = getXWikiContext();
-                String fullname= new StringBuffer(wikiName).append(":").append(spaceName).append(".").append(pageName).toString();
-                String url=context.getWiki().getAttachmentURL(fullname, filename, context);
-                url="http://localhost:8080"+url;
+                String fullname =
+                    new StringBuffer(wikiName).append(":").append(spaceName).append(".").append(pageName).toString();
+                String url = context.getWiki().getAttachmentURL(fullname, filename, context);
+                url = "http://localhost:8080" + url;
                 searchResult.setURL(url);
             }
 
@@ -277,7 +298,9 @@ public class SolrjSearchResponse implements SearchResponse
            
             
             DocumentReference docref = new DocumentReference(wikiName, spaceName, pageName);
-            
+            searchResult.setContent(fulltext);
+            searchResult.setTitle(title);
+
             // checks if the user has access to view the page.
             if ((documentAccessBridge.exists(docref)) && (documentAccessBridge.isDocumentViewable(docref))) {
                 return searchResult;
@@ -287,45 +310,14 @@ public class SolrjSearchResponse implements SearchResponse
            
 
         } catch (Exception ex) {
-           logger.info("error while retieving search result");
+            logger.info("Error while retieving search result" + ex.getMessage(), ex);
         }
 
         return null;
     }
 
-    /**
-     * @param queryResponse
-     * @param languages
-     * @param entityReference
-     */
-    public void processQueryResult(QueryResponse queryResponse, List<String> languages, EntityReference entityReference)
-    {
-        this.queryResponse = queryResponse;
-        this.languages = languages;
-        this.entityReference = entityReference;
 
-        this.solrDocumentList = queryResponse.getResults();
-        this.highlightingMap = queryResponse.getHighlighting();
-
-        this.searchResults = new ArrayList<SearchResult>();
-
-        if (solrDocumentList != null) {
-            for (SolrDocument solrDoc : solrDocumentList) {
-                SearchResult searchResult = getSearchResult(solrDoc);
-                //&& !isDocumentInParentEntity(searchResult.getReference(), entityReference)
-                //&& languages.contains(searchResult.getLanguage())
-                if (searchResult != null ) {
-                    this.searchResults.add(searchResult);
-                }
-            }
-        }
-    }
-
-    private boolean isDocumentInParentEntity(DocumentReference docRef, EntityReference parentRef)
-    {
-        EntityReference reference = docRef.extractReference(parentRef.getType());
-        return parentRef.equals(reference);
-    }
+        
     
     public XWikiContext getXWikiContext()
     {
@@ -338,9 +330,38 @@ public class SolrjSearchResponse implements SearchResponse
         }
         return context;
     }
-    
+
     private ExecutionContext getExecutionContext()
     {
         return this.execution.getContext();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.xwiki.platform.search.SearchResponse#processQueryResult(java.lang.Object)
+     */
+    @Override
+    public void processQueryResult(Object queryResponse)
+    {
+        if (queryResponse instanceof QueryResponse) {
+            this.queryResponse = (QueryResponse) queryResponse;
+        }
+
+        this.solrDocumentList = this.queryResponse.getResults();
+        this.highlightingMap = this.queryResponse.getHighlighting();
+
+        this.searchResults = new ArrayList<SearchResult>();
+
+        if (solrDocumentList != null) {
+            for (SolrDocument solrDoc : solrDocumentList) {
+                SearchResult searchResult = this.getSearchResult(solrDoc);
+                // && !isDocumentInParentEntity(searchResult.getReference(), entityReference)
+                // && languages.contains(searchResult.getLanguage())
+                if (searchResult != null) {
+                    this.searchResults.add(searchResult);
+                }
+            }
+        }
     }
 }
