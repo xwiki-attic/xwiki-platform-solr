@@ -19,15 +19,13 @@
  */
 package org.xwiki.platform.search.index.internal;
 
-
-
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -87,9 +85,11 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     @Inject
     @Named("plain/1.0")
     private BlockRenderer renderer;
+
     StringBuilder retval = new StringBuilder();
+
     private Map<String, DocumentIndexerStatus> indexerStatusMap = Collections
-        .synchronizedMap(new WeakHashMap<String, DocumentIndexerStatus>());
+        .synchronizedMap(new HashMap<String, DocumentIndexerStatus>());
 
     private class IndexThread implements Runnable
     {
@@ -112,9 +112,9 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             indexerStatusMap.put(Thread.currentThread().getName(), indexerStatus);
 
             indexerStatus.setTotalDocCount(docList.size());
-            
+
             logger.info("Indexing a total of [" + docList.size() + "] documents testing");
-            
+
             try {
                 executionContextManager.initialize(context);
             } catch (ExecutionContextException e) {
@@ -130,8 +130,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                 logger.error("Error while deleting the index");
             }
 
-            long totalTime=0;
-            
+            long totalTime = 0;
 
             try {
                 for (int i = 0; i < docList.size(); i += 10) {
@@ -145,30 +144,29 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                         try {
                             startTime = new Date().getTime();
                             DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(docRef);
-                            
-                            //Convert the XWiki syntax of document to plain text.
-                            WikiPrinter printer=new DefaultWikiPrinter();
+
+                            // Convert the XWiki syntax of document to plain text.
+                            WikiPrinter printer = new DefaultWikiPrinter();
                             renderer.render(documentModelBridge.getXDOM(), printer);
-                            
-                            //get the language
+
+                            // get the language
                             String language = documentModelBridge.getRealLanguage();
-                            if (language == null || language == "")
-                            {
+                            if (language == null || language == "") {
                                 language = "en";
                             }
-                            
-                            SolrInputDocument sdoc = solrdoc.getSolrInputDocument(docRef, documentModelBridge, language, printer.toString());
+
+                            SolrInputDocument sdoc =
+                                solrdoc.getSolrInputDocument(docRef, documentModelBridge, language, printer.toString());
                             docs.add(sdoc);
                             endTime = new Date().getTime();
                             fetchTime += (endTime - startTime);
-                            
-                            //indexing attachments
-                            List<AttachmentReference> attachReferences=documentAccessBridge.getAttachmentReferences(docRef);
-                            
-                            for(AttachmentReference attachReference:attachReferences)
-                            {   
-                                indexAttachment(attachReference,documentModelBridge);
-                                logger.info("successful indexing attachments");
+
+                            // indexing attachments
+                            List<AttachmentReference> attachReferences =
+                                documentAccessBridge.getAttachmentReferences(docRef);
+
+                            for (AttachmentReference attachReference : attachReferences) {
+                                indexAttachment(attachReference, documentModelBridge);
                             }
                         } catch (Exception e) {
                             logger.error("Error fetching document [" + docRef.getName() + "]", e);
@@ -229,20 +227,20 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                 for (DocumentReference docRef : docList) {
 
                     try {
-                        
-                        //deleting the index of the documents
+
+                        // deleting the index of the documents
                         DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(docRef);
                         String id = solrdoc.getId(documentModelBridge);
                         ids.add(id);
-                        
-                        //deleting the indexes of the attachments
-                        List<AttachmentReference> attachReferences=documentAccessBridge.getAttachmentReferences(docRef);
-                        for(AttachmentReference attachReference:attachReferences)
-                        {
-                            String attachId = getAttachmentID(documentModelBridge,attachReference);
+
+                        // deleting the indexes of the attachments
+                        List<AttachmentReference> attachReferences =
+                            documentAccessBridge.getAttachmentReferences(docRef);
+                        for (AttachmentReference attachReference : attachReferences) {
+                            String attachId = getAttachmentID(documentModelBridge, attachReference);
                             ids.add(attachId);
                         }
-                        
+
                     } catch (Exception e) {
                         logger.error("Error retrieving document." + e.getMessage());
                     }
@@ -265,7 +263,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.index.DocumentIndexer#indexDocuments(java.util.List)
      */
     @Override
@@ -274,6 +272,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         if (docList.size() > 0) {
             IndexThread indexThread = new IndexThread(docList);
             thread = new Thread(indexThread);
+            thread.setName("Solrj indexer - " + indexThread.hashCode());
             thread.setDaemon(true);
             thread.setPriority(Thread.MIN_PRIORITY);
             thread.start();
@@ -282,7 +281,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.index.DocumentIndexer#deleteIndex(java.util.List)
      */
     @Override
@@ -299,7 +298,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.index.DocumentIndexer#indexDocument(org.xwiki.model.reference.DocumentReference)
      */
     @Override
@@ -309,18 +308,18 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         try {
             if (documentAccessBridge.exists(doc) && !doc.getName().contains("WatchList")) {
                 DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(doc);
-                //Convert the XWiki syntax of document to plain text.
-                WikiPrinter printer=new DefaultWikiPrinter();
+                // Convert the XWiki syntax of document to plain text.
+                WikiPrinter printer = new DefaultWikiPrinter();
                 renderer.render(documentModelBridge.getXDOM(), printer);
-                
-              //get the language
+
+                // get the language
                 String language = documentModelBridge.getRealLanguage();
-                if (language == null || language == "")
-                {
+                if (language == null || language == "") {
                     language = "en";
                 }
-                SolrInputDocument sdoc = solrdoc.getSolrInputDocument(doc, documentModelBridge, language,printer.toString());
-               
+                SolrInputDocument sdoc =
+                    solrdoc.getSolrInputDocument(doc, documentModelBridge, language, printer.toString());
+
                 logger.info("Adding document " + doc.getName());
                 solrServer.add(sdoc);
                 solrServer.commit();
@@ -334,7 +333,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.index.DocumentIndexer#deleteIndex(org.xwiki.model.reference.DocumentReference)
      */
     @Override
@@ -343,7 +342,6 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         try {
             DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(doc);
             SolrDocData solrdoc = new SolrDocData();
-            logger.info("Deleting document " + doc.getName());
             solrServer.deleteById(solrdoc.getId(documentModelBridge));
             solrServer.commit();
             return true;
@@ -370,82 +368,70 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         }
         return false;
     }
-    
-    
+
     /**
-     * indexes the attachment using the Solr cell
+     * indexes the attachment using the Solr cell {@inheritDoc}
      * 
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.index.DocumentIndexer#indexAttachment(org.xwiki.model.reference.AttachmentReference, org.xwiki.bridge.DocumentModelBridge)
+     * @see org.xwiki.platform.search.index.DocumentIndexer#indexAttachment(org.xwiki.model.reference.AttachmentReference,
+     *      org.xwiki.bridge.DocumentModelBridge)
      */
     public boolean indexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
-    {  
+    {
         SolrDocData solrdoc = new SolrDocData();
-        
-        try
-        {
-        String Content = getFullText(attachment);
-        
-      //get the language
-        String language = doc.getRealLanguage();
-        if (language == null || language == "")
-        {
-            language = "en";
+
+        try {
+            String Content = getFullText(attachment);
+
+            // get the language
+            String language = doc.getRealLanguage();
+            if (language == null || language == "") {
+                language = "en";
+            }
+
+            SolrInputDocument sdoc = solrdoc.getSolrInputAttachment(attachment, doc, language, Content);
+            solrServer.add(sdoc);
+            solrServer.commit();
+            return true;
+        } catch (Exception e) {
+            logger.error("Error indexing document - [" + attachment.getName() + "]");
         }
-        
-        SolrInputDocument sdoc = solrdoc.getSolrInputAttachment(attachment, doc, language, Content);
-        logger.info("Adding document " + attachment.getName());
-        solrServer.add(sdoc);
-        solrServer.commit();
-        return true;
-        } 
-       catch (Exception e) {
-        logger.error("Error indexing document - [" + attachment.getName() + "]");
-        }      
         return false;
-        
+
     }
-    
-   
+
     /**
-     *
      * {@inheritDoc}
      * 
-     * @see org.xwiki.platform.search.index.DocumentIndexer#deleteIndexAttachment(org.xwiki.model.reference.AttachmentReference, org.xwiki.bridge.DocumentModelBridge)
+     * @see org.xwiki.platform.search.index.DocumentIndexer#deleteIndexAttachment(org.xwiki.model.reference.AttachmentReference,
+     *      org.xwiki.bridge.DocumentModelBridge)
      */
-    public  boolean deleteIndexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
+    public boolean deleteIndexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
     {
         try {
-            solrServer.deleteById(getAttachmentID(doc,attachment));
+            solrServer.deleteById(getAttachmentID(doc, attachment));
             solrServer.commit();
-           
-            logger.info("deleted attachment with id"+getAttachmentID(doc,attachment));
-            
             return true;
         } catch (Exception e) {
             logger.error("Error deleting attachment.");
         }
         return false;
     }
-      
-    
-    
+
     // get the attachment unique id
-       private String getAttachmentID(DocumentModelBridge doc,AttachmentReference attachment)
-       {   
-           StringBuilder retval = new StringBuilder();
-           retval.append(doc.getDocumentReference().getName()).append(".");
-           retval.append(doc.getDocumentReference().getLastSpaceReference().getName()).append(".");
-           retval.append(doc.getDocumentReference().getWikiReference().getName()).append(".");
-           retval.append(doc.getRealLanguage());
-           retval.toString();
-           return retval.append(".file.").append(attachment.getName()).toString();
-       }
+    private String getAttachmentID(DocumentModelBridge doc, AttachmentReference attachment)
+    {
+        StringBuilder retval = new StringBuilder();
+        retval.append(doc.getDocumentReference().getName()).append(".");
+        retval.append(doc.getDocumentReference().getLastSpaceReference().getName()).append(".");
+        retval.append(doc.getDocumentReference().getWikiReference().getName()).append(".");
+        retval.append(doc.getRealLanguage());
+        retval.toString();
+        return retval.append(".file.").append(attachment.getName()).toString();
+    }
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.index.DocumentIndexer#setSearchEngineObject(java.lang.Object)
      */
     @Override
@@ -459,7 +445,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.index.DocumentIndexer#getStatus()
      */
     @Override
@@ -470,7 +456,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.index.DocumentIndexer#getStatus(java.lang.String)
      */
     @Override
@@ -478,23 +464,22 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     {
         return indexerStatusMap.get(threadId);
     }
-    
+
     private String getFullText(AttachmentReference attachment)
     {
-        
+
         String contentText = getContentAsText(attachment);
-          
+
         if (contentText != null) {
             if (retval.length() > 0) {
                 retval.append(" ");
             }
-            
+
         }
         return (retval.append(contentText)).toString();
     }
 
     /**
-     * 
      * @param attachment
      * @return
      */
@@ -503,23 +488,22 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         String contentText = null;
 
         try {
-           
+
             logger.info("begining to parse the attachment");
 
             Tika tika = new Tika();
 
             Metadata metadata = new Metadata();
-            metadata.set(Metadata.RESOURCE_NAME_KEY,attachment.getName());
-            
-            InputStream in =documentAccessBridge.getAttachmentContent(attachment);
+            metadata.set(Metadata.RESOURCE_NAME_KEY, attachment.getName());
 
-            contentText = StringUtils.lowerCase(tika.parseToString(in,metadata ));
+            InputStream in = documentAccessBridge.getAttachmentContent(attachment);
+
+            contentText = StringUtils.lowerCase(tika.parseToString(in, metadata));
         } catch (Throwable ex) {
-           logger.info(contentText);
-                
+            logger.info(contentText);
         }
 
         return contentText;
     }
-    
+
 }

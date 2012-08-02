@@ -184,5 +184,7 @@ public interface Search
         Map<String, String> searchParameters,Map<String,String> filterParameters);
 
     Map<String, DocumentIndexerStatus> getStatus();
+    
+    String getThreadStatus();
 
 }

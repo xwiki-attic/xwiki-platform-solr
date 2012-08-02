@@ -19,6 +19,8 @@
  */
 package org.xwiki.platform.search.internal;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -432,7 +434,59 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public Map<String, DocumentIndexerStatus> getStatus()
     {
+
         return indexer.getStatus();
+    }
+
+    public String getThreadStatus()
+    {
+        StringBuffer buf = new StringBuffer();
+        Thread[] daemonThreads=getAllDaemonThreads();
+        for(Thread thread:daemonThreads){
+            if(thread.getName().contains("Solrj")){
+                buf.append(thread.getName()+"--"+thread+"\n");
+            }
+        }
+        return buf.toString();
+    }
+
+    ThreadGroup rootThreadGroup = null;
+
+    ThreadGroup getRootThreadGroup()
+    {
+        if (rootThreadGroup != null)
+            return rootThreadGroup;
+        ThreadGroup tg = Thread.currentThread().getThreadGroup();
+        ThreadGroup ptg;
+        while ((ptg = tg.getParent()) != null)
+            tg = ptg;
+        return tg;
+    }
+
+    Thread[] getAllThreads()
+    {
+        final ThreadGroup root = getRootThreadGroup();
+        final ThreadMXBean thbean = ManagementFactory.getThreadMXBean();
+        int nAlloc = thbean.getThreadCount();
+        int n = 0;
+        Thread[] threads;
+        do {
+            nAlloc *= 2;
+            threads = new Thread[nAlloc];
+            n = root.enumerate(threads, true);
+        } while (n == nAlloc);
+        return java.util.Arrays.copyOf(threads, n);
+    }
+
+    Thread[] getAllDaemonThreads()
+    {
+        final Thread[] allThreads = getAllThreads();
+        final Thread[] daemons = new Thread[allThreads.length];
+        int nDaemon = 0;
+        for (Thread thread : allThreads)
+            if (thread.isDaemon())
+                daemons[nDaemon++] = thread;
+        return java.util.Arrays.copyOf(daemons, nDaemon);
     }
 
 }
