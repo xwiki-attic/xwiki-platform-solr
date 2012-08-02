@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xwikidoc>
+  <web>XWiki</web>
+  <name>SearchCode</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <parent>Main.WebHome</parent>
+  <creator>xwiki:XWiki.Admin</creator>
+  <author>xwiki:XWiki.Admin</author>
+  <customClass/>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <creationDate>1272532474000</creationDate>
+  <date>1273048678000</date>
+  <contentUpdateDate>1273048678000</contentUpdateDate>
+  <version>1.1</version>
+  <title/>
+  <template/>
+  <defaultTemplate/>
+  <validationScript/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.0</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity output="false"}}
+#set($searchConfigDoc = $xwiki.getDocument('XWiki.SearchConfig'))
+#set($searchConfigClass = $xwiki.getDocument('XWiki.SearchConfigClass').xWikiClass)
+#set($searchConfigObj = $searchConfigDoc.getObject($searchConfigClass.name))
+#set($searchEngine = $!searchConfigObj.getProperty('engine').value)
+#if (!$searchEngine || $searchEngine == '')
+  #set($searchEngine = 'solrj')
+#end
+#set($searchPage = "Main.${searchEngine.substring(0, 1).toUpperCase()}${searchEngine.substring(1)}Search")
+{{/velocity}}</content>
+</xwikidoc>
