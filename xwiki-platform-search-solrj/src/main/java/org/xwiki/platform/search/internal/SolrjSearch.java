@@ -65,7 +65,7 @@ import com.xpn.xwiki.internal.event.AttachmentUpdatedEvent;
 
 /**
  * Search implementation with Solrj backend.
- *
+ * 
  * @version $Id$
  */
 @Component
@@ -95,7 +95,7 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @throws SearchException
      * @see org.xwiki.platform.search.Search#initialize()
      */
@@ -112,7 +112,7 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#indexWiki(java.lang.String)
      */
     @Override
@@ -147,7 +147,7 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#deleteDocumentIndex(org.xwiki.model.reference.DocumentReference)
      */
     @Override
@@ -158,7 +158,7 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#getImplementation()
      */
     @Override
@@ -169,7 +169,7 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#indexDocument(org.xwiki.model.reference.DocumentReference)
      */
     @Override
@@ -180,49 +180,45 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#deleteindexWiki()
      */
     @Override
     public boolean deleteindexWiki(String wiki) throws XWikiException
-    {   
-        try
-        {
-            //gets the final index Wiki
-         final XWikiContext xcontext = getXWikiContext();     
-        String wikiName = xcontext.getWiki().getName();
-        logger.info("Deleting wiki.." + wikiName);
-        
-        if (!wikiName.equalsIgnoreCase(wiki)) {
-            xcontext.setDatabase(wikiName);
-        }
-       
-        
-        String hql = "select doc.space, doc.name, doc.version, doc.language from XWikiDocument as doc";
-        List<Object[]> documents = xcontext.getWiki().search(hql, xcontext);
+    {
+        try {
+            // gets the final index Wiki
+            final XWikiContext xcontext = getXWikiContext();
+            String wikiName = xcontext.getWiki().getName();
+            logger.info("Deleting wiki.." + wikiName);
 
-        List<DocumentReference> docsList = new ArrayList<DocumentReference>();
+            if (!wikiName.equalsIgnoreCase(wiki)) {
+                xcontext.setDatabase(wikiName);
+            }
 
-        for (Object[] document : documents) {
+            String hql = "select doc.space, doc.name, doc.version, doc.language from XWikiDocument as doc";
+            List<Object[]> documents = xcontext.getWiki().search(hql, xcontext);
 
-            String spaceName = (String) document[0];
-            DocumentReference documentReference = new DocumentReference(wikiName, spaceName, (String) document[1]);
-            docsList.add(documentReference);
+            List<DocumentReference> docsList = new ArrayList<DocumentReference>();
+
+            for (Object[] document : documents) {
+
+                String spaceName = (String) document[0];
+                DocumentReference documentReference = new DocumentReference(wikiName, spaceName, (String) document[1]);
+                docsList.add(documentReference);
+            }
+
+            indexer.deleteIndex(docsList);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
 
-        indexer.deleteIndex(docsList);
-          return true;
-        }
-        catch(Exception e)
-        {
-          return false;  
-        }
-    
     }
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#indexDocuments(java.util.List)
      */
     @Override
@@ -234,7 +230,7 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#rebuildFarmIndex()
      */
     @Override
@@ -256,36 +252,33 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#rebuildFarmIndex(java.util.List)
      */
     @Override
     public int rebuildFarmIndex(List<WikiReference> wikis)
     {
-        int docCount=0;
+        int docCount = 0;
         if (getXWikiContext().getWiki().isVirtualMode()) {
             try {
-             for(WikiReference wiki : wikis)
-             {
-               //delete the wiki indexes
-                 boolean result =deleteindexWiki(wiki.getName()); 
-                 //build index
-                 if(result==true)
-                     docCount = indexWiki(wiki.getName()); 
-                docCount=docCount+docCount; 
+                for (WikiReference wiki : wikis) {
+                    // delete the wiki indexes
+                    boolean result = deleteindexWiki(wiki.getName());
+                    // build index
+                    if (result == true)
+                        docCount = indexWiki(wiki.getName());
+                    docCount = docCount + docCount;
+                }
+            } catch (Exception e) {
+                logger.info("error during rebuildFarmIndex" + e);
             }
-        }
-        catch(Exception e)
-        {
-           logger.info("error during rebuildFarmIndex"+e); 
-        }
         }
         return docCount;
     }
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#rebuildWikiIndex()
      */
     @Override
@@ -293,11 +286,11 @@ public class SolrjSearch extends AbstractSearch
     {
         int docCount = 0;
         try {
-            //delete existing index
-            boolean result =deleteindexWiki(getXWikiContext().getWiki().getName());
-            //build index
-            if(result==true)
-            docCount = indexWiki();
+            // delete existing index
+            boolean result = deleteindexWiki(getXWikiContext().getWiki().getName());
+            // build index
+            if (result == true)
+                docCount = indexWiki();
         } catch (Exception e) {
             logger.error("Failure in rebuilding the farm index.", e);
         }
@@ -306,7 +299,7 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#rebuildWikiIndex(java.util.List)
      */
     @Override
@@ -318,7 +311,7 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#search(java.lang.String, java.util.List,
      *      org.xwiki.model.reference.WikiReference)
      */
@@ -331,7 +324,7 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#search(java.lang.String, java.util.List,
      *      org.xwiki.model.reference.EntityReference, java.util.Map, java.util.Map)
      */
@@ -361,7 +354,7 @@ public class SolrjSearch extends AbstractSearch
             }
             solrserver = (SolrServer) searchEngine.getSearchEngine();
             queryResponse = solrserver.query(solrQuery);
-            //logger.info(queryResponse.getResults().toString());
+            // logger.info(queryResponse.getResults().toString());
             searchResponse = this.componentManager.getInstance(SearchResponse.class, SolrjSearchResponse.HINT);
             searchResponse.processQueryResult(queryResponse);
             logger.info("Returning search response : \n" + searchResponse);
@@ -390,7 +383,7 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.observation.EventListener#onEvent(org.xwiki.observation.event.Event, java.lang.Object,
      *      java.lang.Object)
      */
@@ -428,7 +421,7 @@ public class SolrjSearch extends AbstractSearch
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.Search#getStatus()
      */
     @Override
@@ -441,10 +434,10 @@ public class SolrjSearch extends AbstractSearch
     public String getThreadStatus()
     {
         StringBuffer buf = new StringBuffer();
-        Thread[] daemonThreads=getAllDaemonThreads();
-        for(Thread thread:daemonThreads){
-            if(thread.getName().contains("Solrj")){
-                buf.append(thread.getName()+"--"+thread+"\n");
+        Thread[] daemonThreads = getAllDaemonThreads();
+        for (Thread thread : daemonThreads) {
+            if (thread.getName().contains("Solrj")) {
+                buf.append(thread.getName() + "--" + thread + "\n");
             }
         }
         return buf.toString();
@@ -488,5 +481,12 @@ public class SolrjSearch extends AbstractSearch
                 daemons[nDaemon++] = thread;
         return java.util.Arrays.copyOf(daemons, nDaemon);
     }
+
+    @Override
+    public DocumentAccessBridge getDocumentAccessBridge()
+    {
+        return documentAccessBridge;
+    }
+
 
 }

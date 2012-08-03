@@ -3,3 +3,4 @@ org.xwiki.platform.search.internal.SolrjSearchEngine
 org.xwiki.platform.search.internal.SolrjSearchResponse
 org.xwiki.platform.search.internal.SolrjSearchRequest
 org.xwiki.platform.search.index.internal.SolrjDocumentIndexer
+org.xwiki.platform.search.index.internal.SolrjDocumentData

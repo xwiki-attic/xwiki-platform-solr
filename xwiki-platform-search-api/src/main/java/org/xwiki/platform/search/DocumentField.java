@@ -22,7 +22,7 @@ package org.xwiki.platform.search;
 /**
  * Contains constants naming the Lucene index fields used by this Plugin and some helper methods for proper handling of
  * special field values like dates.
- *
+ * 
  * @version $Id$
  */
 public interface DocumentField
@@ -85,6 +85,11 @@ public interface DocumentField
     String OBJECT = "object";
 
     /**
+     * XWiki object type, only used for objects
+     */
+    String OBJECT_CONTENT = "objtxt";
+
+    /**
      * Last modifier
      */
     String AUTHOR = "author";
@@ -133,4 +138,9 @@ public interface DocumentField
      * For storing the doc reference . Used by attachments.
      */
     String DOC_REFERENCE = "docref";
+
+    /**
+     * For storing the comments.
+     */
+    String COMMENT = "comment";
 }

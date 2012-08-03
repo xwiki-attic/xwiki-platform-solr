@@ -44,17 +44,13 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 
-
-
-
 /**
  * Helper class to retrieve the SolrDocuments.
- *
+ * 
  * @version $Id$
  */
 
 @Component
-
 public class SolrDocData
 {
 
@@ -62,13 +58,10 @@ public class SolrDocData
     private DocumentAccessBridge documentAccessBridge;
 
     StringBuilder retval = new StringBuilder();
-    
 
-    
-    
     /**
      * It gets the Unique id of the document
-     *
+     * 
      * @return Gives the unique ID of the document
      */
     public String getId(DocumentModelBridge doc)
@@ -85,7 +78,7 @@ public class SolrDocData
     /**
      * It retrieves the solrInput Document which could be added to the SolrServer. Have done partial Indexing of the
      * document.
-     *
+     * 
      * @param org.xwiki.model.reference.DocumentReference,org.xwiki.bridge.DocumentModelBridge,java.lang.String
      * @return the SolrInputDocument
      */
@@ -113,7 +106,6 @@ public class SolrDocData
     }
 
     /**
-     * 
      * @param attachment
      * @param doc
      * @param language

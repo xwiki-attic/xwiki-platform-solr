@@ -19,7 +19,6 @@
  */
 package org.xwiki.platform.search.index.internal;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -31,29 +30,27 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.tika.Tika;
-import org.apache.tika.metadata.Metadata;
 import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.bridge.DocumentModelBridge;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.context.Execution;
 import org.xwiki.context.ExecutionContext;
 import org.xwiki.context.ExecutionContextException;
 import org.xwiki.context.ExecutionContextManager;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.platform.search.index.DocumentData;
 import org.xwiki.platform.search.index.DocumentIndexer;
 import org.xwiki.platform.search.index.DocumentIndexerStatus;
 import org.xwiki.platform.search.internal.SolrDocData;
 import org.xwiki.rendering.renderer.BlockRenderer;
 import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
 import org.xwiki.rendering.renderer.printer.WikiPrinter;
-
 
 /**
  * @version $Id$
@@ -68,9 +65,6 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     private Logger logger;
 
     @Inject
-    private DocumentAccessBridge documentAccessBridge;
-
-    @Inject
     private ExecutionContextManager executionContextManager;
 
     @Inject
@@ -81,12 +75,16 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     public static final String HINT = "solrjindexer";
 
     private SolrServer solrServer;
-    
+
     @Inject
     @Named("plain/1.0")
     private BlockRenderer renderer;
 
-    StringBuilder retval = new StringBuilder();
+    @Inject
+    private ComponentManager componentManager;
+
+    @Inject
+    private DocumentAccessBridge documentAccessBridge;
 
     private Map<String, DocumentIndexerStatus> indexerStatusMap = Collections
         .synchronizedMap(new HashMap<String, DocumentIndexerStatus>());
@@ -143,42 +141,29 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
                         try {
                             startTime = new Date().getTime();
-                            DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(docRef);
 
-                            // Convert the XWiki syntax of document to plain text.
-                            WikiPrinter printer = new DefaultWikiPrinter();
-                            renderer.render(documentModelBridge.getXDOM(), printer);
-
-                            // get the language
-                            String language = documentModelBridge.getRealLanguage();
-                            if (language == null || language == "") {
-                                language = "en";
-                            }
-
-                            SolrInputDocument sdoc =
-                                solrdoc.getSolrInputDocument(docRef, documentModelBridge, language, printer.toString());
-                            docs.add(sdoc);
                             endTime = new Date().getTime();
                             fetchTime += (endTime - startTime);
 
-                            // indexing attachments
-                            List<AttachmentReference> attachReferences =
-                                documentAccessBridge.getAttachmentReferences(docRef);
+                            // Index Documents
 
-                            for (AttachmentReference attachReference : attachReferences) {
-                                indexAttachment(attachReference, documentModelBridge);
-                            }
+                            // Index Attachments
+
+                            // Index Objects
+
+                            // Index Properties
                         } catch (Exception e) {
                             logger.error("Error fetching document [" + docRef.getName() + "]", e);
                         }
                     }
 
                     try {
-                        UpdateResponse updateResponse=solrServer.add(docs);
-                        UpdateResponse commitResponse=solrServer.commit();
+                        UpdateResponse updateResponse = solrServer.add(docs);
+                        UpdateResponse commitResponse = solrServer.commit();
                         // Send out a notification
-                        indexerStatus.addStepDetails(fetchTime+updateResponse.getElapsedTime()+commitResponse.getElapsedTime(), 10);
-                        totalTime += fetchTime+updateResponse.getElapsedTime()+commitResponse.getElapsedTime();
+                        indexerStatus.addStepDetails(
+                            fetchTime + updateResponse.getElapsedTime() + commitResponse.getElapsedTime(), 10);
+                        totalTime += fetchTime + updateResponse.getElapsedTime() + commitResponse.getElapsedTime();
                     } catch (Exception e) {
                         logger.error("Error commiting solr index updates");
                     }
@@ -237,7 +222,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                         List<AttachmentReference> attachReferences =
                             documentAccessBridge.getAttachmentReferences(docRef);
                         for (AttachmentReference attachReference : attachReferences) {
-                            String attachId = getAttachmentID(documentModelBridge, attachReference);
+                            String attachId = "";
                             ids.add(attachId);
                         }
 
@@ -304,24 +289,26 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     @Override
     public boolean indexDocument(DocumentReference doc)
     {
-        SolrDocData solrdoc = new SolrDocData();
+
         try {
             if (documentAccessBridge.exists(doc) && !doc.getName().contains("WatchList")) {
-                DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(doc);
-                // Convert the XWiki syntax of document to plain text.
-                WikiPrinter printer = new DefaultWikiPrinter();
-                renderer.render(documentModelBridge.getXDOM(), printer);
+                SolrjDocumentData sdocdata =
+                    this.componentManager.getInstance(DocumentData.class, SolrjDocumentData.HINT);
 
-                // get the language
-                String language = documentModelBridge.getRealLanguage();
-                if (language == null || language == "") {
-                    language = "en";
-                }
-                SolrInputDocument sdoc =
-                    solrdoc.getSolrInputDocument(doc, documentModelBridge, language, printer.toString());
-
-                logger.info("Adding document " + doc.getName());
+                // Document
+                SolrInputDocument sdoc = sdocdata.getInputDocument(doc);
                 solrServer.add(sdoc);
+
+                // Attachments
+
+                // Objects
+                List<SolrInputDocument> objDocs = sdocdata.getInputObjects(doc);
+                solrServer.add(objDocs);
+
+                // Properties
+                List<SolrInputDocument> propDocs = sdocdata.getInputProperties(doc);
+                solrServer.add(propDocs);
+
                 solrServer.commit();
                 return true;
             }
@@ -340,9 +327,8 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     public boolean deleteIndex(DocumentReference doc)
     {
         try {
-            DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(doc);
-            SolrDocData solrdoc = new SolrDocData();
-            solrServer.deleteById(solrdoc.getId(documentModelBridge));
+            SolrjDocumentData sdocdata = this.componentManager.getInstance(DocumentData.class, SolrjDocumentData.HINT);
+            solrServer.deleteById(sdocdata.getDocumentId(doc));
             solrServer.commit();
             return true;
         } catch (Exception e) {
@@ -353,7 +339,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.index.DocumentIndexer#deleteEntireIndex()
      */
     @Override
@@ -380,7 +366,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         SolrDocData solrdoc = new SolrDocData();
 
         try {
-            String Content = getFullText(attachment);
+            // String Content = getFullText(attachment);
 
             // get the language
             String language = doc.getRealLanguage();
@@ -388,7 +374,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                 language = "en";
             }
 
-            SolrInputDocument sdoc = solrdoc.getSolrInputAttachment(attachment, doc, language, Content);
+            SolrInputDocument sdoc = null;
             solrServer.add(sdoc);
             solrServer.commit();
             return true;
@@ -408,25 +394,14 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     public boolean deleteIndexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
     {
         try {
-            solrServer.deleteById(getAttachmentID(doc, attachment));
+            SolrjDocumentData sdocdata = this.componentManager.getInstance(DocumentData.class, SolrjDocumentData.HINT);
+            solrServer.deleteById(sdocdata.getAttachmentId(attachment));
             solrServer.commit();
             return true;
         } catch (Exception e) {
             logger.error("Error deleting attachment.");
         }
         return false;
-    }
-
-    // get the attachment unique id
-    private String getAttachmentID(DocumentModelBridge doc, AttachmentReference attachment)
-    {
-        StringBuilder retval = new StringBuilder();
-        retval.append(doc.getDocumentReference().getName()).append(".");
-        retval.append(doc.getDocumentReference().getLastSpaceReference().getName()).append(".");
-        retval.append(doc.getDocumentReference().getWikiReference().getName()).append(".");
-        retval.append(doc.getRealLanguage());
-        retval.toString();
-        return retval.append(".file.").append(attachment.getName()).toString();
     }
 
     /**
@@ -463,47 +438,6 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     public DocumentIndexerStatus getStatus(String threadId)
     {
         return indexerStatusMap.get(threadId);
-    }
-
-    private String getFullText(AttachmentReference attachment)
-    {
-
-        String contentText = getContentAsText(attachment);
-
-        if (contentText != null) {
-            if (retval.length() > 0) {
-                retval.append(" ");
-            }
-
-        }
-        return (retval.append(contentText)).toString();
-    }
-
-    /**
-     * @param attachment
-     * @return
-     */
-    private String getContentAsText(AttachmentReference attachment)
-    {
-        String contentText = null;
-
-        try {
-
-            logger.info("begining to parse the attachment");
-
-            Tika tika = new Tika();
-
-            Metadata metadata = new Metadata();
-            metadata.set(Metadata.RESOURCE_NAME_KEY, attachment.getName());
-
-            InputStream in = documentAccessBridge.getAttachmentContent(attachment);
-
-            contentText = StringUtils.lowerCase(tika.parseToString(in, metadata));
-        } catch (Throwable ex) {
-            logger.info(contentText);
-        }
-
-        return contentText;
     }
 
 }

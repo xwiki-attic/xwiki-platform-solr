@@ -117,7 +117,6 @@ public class DocumentIndexerStatus
     {
         this.elapsedTime += elapsedTime1;
         this.lastIndexedDocumentIndex += docsIndexed;
-        System.out.println("Added details..");
     }
 
     public String toString()
