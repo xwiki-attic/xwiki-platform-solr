@@ -92,16 +92,12 @@ public class SolrjDocumentData extends AbstractDocumentData
             // Convert the XWiki syntax of document to plain text.
             WikiPrinter printer = new DefaultWikiPrinter();
             renderer.render(documentModelBridge.getXDOM(), printer);
-            String language = getLanguage(documentReference);
-            String lang = "_" + language;
+            String lang = "_" + getLanguage(documentReference);
             sdoc.addField(ID, getDocumentId(documentReference));
-            sdoc.addField(NAME + lang, documentReference.getName());
+            addDocumentReferenceFields(documentReference, sdoc, getLanguage(documentReference));
             sdoc.addField(TITLE + lang, documentModelBridge.getTitle());
             sdoc.addField(FULLTEXT + lang, printer.toString());
-            sdoc.addField(LANGUAGE, language);
             sdoc.addField(VERSION, documentModelBridge.getVersion());
-            sdoc.addField(WIKI, documentReference.getWikiReference().getName());
-            sdoc.addField(SPACE, documentReference.getLastSpaceReference().getName());
             sdoc.addField(FULLNAME + lang, serializer.serialize(documentReference));
             sdoc.addField(TYPE, documentReference.getType().name());
 
@@ -166,8 +162,7 @@ public class SolrjDocumentData extends AbstractDocumentData
         sdoc.addField(WIKI, documentReference.getWikiReference().getName());
         sdoc.addField(SPACE, documentReference.getLastSpaceReference().getName());
         sdoc.addField(FILENAME + lang, attachmentReference.getName());
-        Object[] object = null;
-        sdoc.addField(FULLNAME + lang, serializer.serialize(attachmentReference, object));
+        sdoc.addField(FULLNAME + lang, serializer.serialize(attachmentReference));
         sdoc.addField(TYPE, attachmentReference.getType().name());
 
         // XWiki Deprecated code.
@@ -204,6 +199,7 @@ public class SolrjDocumentData extends AbstractDocumentData
                             }
                         }
                         sdoc.addField(ID, getObjectId(documentReference, object));
+                        addDocumentReferenceFields(documentReference, sdoc, getLanguage(documentReference));
                         sdoc.addField(OBJECT, docRef.getLastSpaceReference().getName() + "." + docRef.getName());
                         sdoc.addField(OBJECT_CONTENT + "_" + getLanguage(documentReference), buffer.toString());
                         sdoc.addField(TYPE, "OBJECT");
@@ -246,6 +242,7 @@ public class SolrjDocumentData extends AbstractDocumentData
                                 sdoc.addField(docRef.getLastSpaceReference().getName() + "." + docRef.getName() + "."
                                     + property.getName() + "_" + getLanguage(documentReference), property.getValue());
                                 sdoc.addField(TYPE, "PROPERTY");
+                                addDocumentReferenceFields(documentReference, sdoc, getLanguage(documentReference));
                                 inputProperties.add(sdoc);
                             }
                         }
@@ -286,4 +283,13 @@ public class SolrjDocumentData extends AbstractDocumentData
         return contentText;
     }
 
+    private void addDocumentReferenceFields(DocumentReference documentReference, SolrInputDocument sdoc, String lang)
+    {
+
+        logger.info("Language of the document [" + documentReference.getName() + "] is [" + lang + "]");
+        sdoc.addField(NAME + "_" + lang, documentReference.getName());
+        sdoc.addField(WIKI, documentReference.getWikiReference().getName());
+        sdoc.addField(SPACE, documentReference.getLastSpaceReference().getName());
+        sdoc.addField(LANGUAGE, lang);
+    }
 }

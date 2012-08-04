@@ -24,6 +24,7 @@ import java.util.Locale;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.context.Execution;
@@ -150,9 +151,12 @@ public abstract class AbstractDocumentData implements DocumentData
 
     protected String getLanguage(DocumentReference documentReference)
     {
-        String language = getXWikiContext().getLanguage();
+        String language = null;
         try {
             language = documentAccessBridge.getDocument(documentReference).getRealLanguage();
+            if (StringUtils.isEmpty(language) || !StringUtils.isAlpha(language)) {
+                language = getXWikiContext().getLanguage();
+            }
         } catch (Exception e) {
             logger.error("Exception while fetching the language of the document - " + documentReference);
         }

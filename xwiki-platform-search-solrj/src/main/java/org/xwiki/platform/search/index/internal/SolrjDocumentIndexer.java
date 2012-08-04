@@ -145,13 +145,23 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                             endTime = new Date().getTime();
                             fetchTime += (endTime - startTime);
 
-                            // Index Documents
+                            SolrjDocumentData sdocdata =
+                                componentManager.getInstance(DocumentData.class, SolrjDocumentData.HINT);
 
-                            // Index Attachments
+                            // Document
+                            SolrInputDocument sdoc = sdocdata.getInputDocument(docRef);
+                            docs.add(sdoc);
 
-                            // Index Objects
+                            // Attachments
 
-                            // Index Properties
+                            // Objects
+                            List<SolrInputDocument> objDocs = sdocdata.getInputObjects(docRef);
+                            docs.addAll(objDocs);
+
+                            // Properties
+                            List<SolrInputDocument> propDocs = sdocdata.getInputProperties(docRef);
+                            docs.addAll(propDocs);
+
                         } catch (Exception e) {
                             logger.error("Error fetching document [" + docRef.getName() + "]", e);
                         }
