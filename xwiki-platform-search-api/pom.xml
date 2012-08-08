@@ -69,6 +69,13 @@
 			<artifactId>xwiki-commons-script</artifactId>
 			<version>4.0</version>
 		</dependency>
+		<!-- Gson: Java to Json conversion -->
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.2.2</version>
+			<scope>compile</scope>
+		</dependency>
 		<!-- Testing dependencies -->
 		<dependency>
 			<groupId>org.xwiki.commons</groupId>

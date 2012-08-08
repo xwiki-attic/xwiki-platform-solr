@@ -83,6 +83,16 @@ public interface Search
     int indexWiki() throws SearchIndexingException, XWikiException;
 
     /**
+     * Build the index for the give space.
+     * 
+     * @param reference SpaceReference
+     * @return number of documents to index.
+     * @throws SearchIndexingException Exception thrown in case of indexing errors.
+     * @throws XWikiException
+     */
+    int indexSpace(SpaceReference reference) throws SearchIndexingException, XWikiException;
+
+    /**
      * @return
      * @throws SearchIndexingException
      * @throws XWikiException
@@ -187,8 +197,8 @@ public interface Search
 
     Map<String, DocumentIndexerStatus> getStatus();
 
-    String getThreadStatus();
+    String getStatusAsJson();
 
-    DocumentAccessBridge getDocumentAccessBridge();
+    Object getVelocityUtils();
 
 }

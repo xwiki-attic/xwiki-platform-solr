@@ -48,6 +48,8 @@ public class SolrjSearchEngine implements SearchEngine, Initializable
 
     private static SolrServer solrServer;
 
+    private static CoreContainer coreContainer;
+
     public static final String SOLR_HOME_KEY = "solr.solr.home";
 
     @Inject
@@ -79,8 +81,8 @@ public class SolrjSearchEngine implements SearchEngine, Initializable
 
             /* Initialize the SOLR backend using an embedded server */
             CoreContainer.Initializer initializer = new CoreContainer.Initializer();
-            CoreContainer container = initializer.initialize();
-            solrServer = new EmbeddedSolrServer(container, "");
+            coreContainer = initializer.initialize();
+            solrServer = new EmbeddedSolrServer(coreContainer, "");
 
         } catch (Exception e) {
             logger.error("Failed to initialize the solr embedded server with solr.solr.home [" + solrHome + "] :: "
@@ -95,9 +97,14 @@ public class SolrjSearchEngine implements SearchEngine, Initializable
      * @see org.xwiki.platform.search.SearchEngine#getSearchEngine()
      */
     @Override
-    public SolrServer getSearchEngine() throws SearchException
+    public SolrServer getSearchEngine()
     {
         return solrServer;
+    }
+
+    public CoreContainer getCoreContainer()
+    {
+        return coreContainer;
     }
 
 }

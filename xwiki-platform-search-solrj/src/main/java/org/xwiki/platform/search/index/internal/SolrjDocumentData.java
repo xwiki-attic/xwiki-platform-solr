@@ -19,15 +19,15 @@
  */
 package org.xwiki.platform.search.index.internal;
 
+import static org.xwiki.platform.search.DocumentField.ATTACHMENT_CONTENT;
 import static org.xwiki.platform.search.DocumentField.AUTHOR;
 import static org.xwiki.platform.search.DocumentField.COMMENT;
 import static org.xwiki.platform.search.DocumentField.CREATIONDATE;
 import static org.xwiki.platform.search.DocumentField.CREATOR;
 import static org.xwiki.platform.search.DocumentField.DATE;
-import static org.xwiki.platform.search.DocumentField.DOC_REFERENCE;
+import static org.xwiki.platform.search.DocumentField.DOCUMENT_CONTENT;
 import static org.xwiki.platform.search.DocumentField.FILENAME;
 import static org.xwiki.platform.search.DocumentField.FULLNAME;
-import static org.xwiki.platform.search.DocumentField.FULLTEXT;
 import static org.xwiki.platform.search.DocumentField.ID;
 import static org.xwiki.platform.search.DocumentField.LANGUAGE;
 import static org.xwiki.platform.search.DocumentField.MIME_TYPE;
@@ -43,6 +43,7 @@ import static org.xwiki.platform.search.DocumentField.WIKI;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -96,7 +97,7 @@ public class SolrjDocumentData extends AbstractDocumentData
             sdoc.addField(ID, getDocumentId(documentReference));
             addDocumentReferenceFields(documentReference, sdoc, getLanguage(documentReference));
             sdoc.addField(TITLE + lang, documentModelBridge.getTitle());
-            sdoc.addField(FULLTEXT + lang, printer.toString());
+            sdoc.addField(DOCUMENT_CONTENT + lang, printer.toString());
             sdoc.addField(VERSION, documentModelBridge.getVersion());
             sdoc.addField(FULLNAME + lang, serializer.serialize(documentReference));
             sdoc.addField(TYPE, documentReference.getType().name());
@@ -134,20 +135,28 @@ public class SolrjDocumentData extends AbstractDocumentData
      * @see org.xwiki.platform.search.index.DocumentData#getInputAttachments(org.xwiki.model.reference.AttachmentReference)
      */
     @Override
-    public List< ? > getInputAttachments(DocumentReference documentReference)
+    public List<SolrInputDocument> getInputAttachments(DocumentReference documentReference)
     {
+        List<SolrInputDocument> docs = null;
         try {
             List<AttachmentReference> attachmentReferences =
                 documentAccessBridge.getAttachmentReferences(documentReference);
+            if (attachmentReferences != null) {
+                docs = new ArrayList<SolrInputDocument>();
+                for (AttachmentReference attachmentReference : attachmentReferences) {
+                    docs.add(getSolrInputAttachment(attachmentReference));
+                }
+
+            }
 
         } catch (Exception e) {
             logger.error("Exception while fetching input document for " + documentReference.getName());
         }
 
-        return null;
+        return docs;
     }
 
-    public SolrInputDocument getSolrInputAttachment(AttachmentReference attachmentReference, String textContent)
+    public SolrInputDocument getSolrInputAttachment(AttachmentReference attachmentReference)
     {
         SolrInputDocument sdoc = new SolrInputDocument();
 
@@ -155,15 +164,12 @@ public class SolrjDocumentData extends AbstractDocumentData
 
         String lang = "_" + getLanguage(documentReference);
         sdoc.addField(ID, getAttachmentId(attachmentReference));
-        sdoc.addField(DOC_REFERENCE + lang, documentReference.getName());
-        sdoc.addField(FULLTEXT + lang, getContentAsText(attachmentReference));
-        sdoc.addField(LANGUAGE, getLanguage(documentReference));
-        sdoc.addField(MIME_TYPE, attachmentReference.getType().name());
-        sdoc.addField(WIKI, documentReference.getWikiReference().getName());
-        sdoc.addField(SPACE, documentReference.getLastSpaceReference().getName());
+        sdoc.addField(ATTACHMENT_CONTENT + lang, getContentAsText(attachmentReference));
+        sdoc.addField(MIME_TYPE, getMimeType(attachmentReference));
         sdoc.addField(FILENAME + lang, attachmentReference.getName());
         sdoc.addField(FULLNAME + lang, serializer.serialize(attachmentReference));
         sdoc.addField(TYPE, attachmentReference.getType().name());
+        addDocumentReferenceFields(documentReference, sdoc, getLanguage(documentReference));
 
         // XWiki Deprecated code.
 
@@ -178,7 +184,7 @@ public class SolrjDocumentData extends AbstractDocumentData
     @Override
     public List<SolrInputDocument> getInputObjects(DocumentReference documentReference)
     {
-        List<SolrInputDocument> inputObjects = null;
+        List<SolrInputDocument> inputObjects = Collections.EMPTY_LIST;
         // Index objects
         try {
             XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
@@ -221,7 +227,7 @@ public class SolrjDocumentData extends AbstractDocumentData
     @Override
     public List<SolrInputDocument> getInputProperties(DocumentReference documentReference)
     {
-        List<SolrInputDocument> inputProperties = null;
+        List<SolrInputDocument> inputProperties = Collections.EMPTY_LIST;
         // Index objects
         try {
             XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
@@ -291,5 +297,15 @@ public class SolrjDocumentData extends AbstractDocumentData
         sdoc.addField(WIKI, documentReference.getWikiReference().getName());
         sdoc.addField(SPACE, documentReference.getLastSpaceReference().getName());
         sdoc.addField(LANGUAGE, lang);
+    }
+
+    private String getMimeType(AttachmentReference reference)
+    {
+        String mimetype = getXWikiContext().getEngineContext().getMimeType(reference.getName().toLowerCase());
+        if (mimetype != null) {
+            return mimetype;
+        } else {
+            return "application/octet-stream";
+        }
     }
 }

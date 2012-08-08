@@ -19,8 +19,6 @@
  */
 package org.xwiki.platform.search.internal;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +32,7 @@ import javax.inject.Singleton;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.core.CoreContainer;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.bridge.DocumentModelBridge;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
@@ -50,12 +49,14 @@ import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.event.Event;
 import org.xwiki.platform.search.SearchEngine;
 import org.xwiki.platform.search.SearchException;
-import org.xwiki.platform.search.SearchQuery;
+import org.xwiki.platform.search.SearchRequest;
 import org.xwiki.platform.search.SearchResponse;
 import org.xwiki.platform.search.index.DocumentIndexer;
 import org.xwiki.platform.search.index.DocumentIndexerStatus;
+import org.xwiki.platform.search.index.SearchIndexingException;
 import org.xwiki.platform.search.index.internal.SolrjDocumentIndexer;
 
+import com.google.gson.Gson;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.internal.event.AbstractAttachmentEvent;
@@ -92,6 +93,10 @@ public class SolrjSearch extends AbstractSearch
 
     @Inject
     private DocumentAccessBridge documentAccessBridge;
+    
+    @Inject
+    @Named(SolrjSearchRequest.HINT)
+    private SearchRequest searchRequest;
 
     /**
      * {@inheritDoc}
@@ -140,7 +145,48 @@ public class SolrjSearch extends AbstractSearch
             docsList.add(documentReference);
         }
 
-        indexer.indexDocuments(docsList);
+        WikiReference wikiReference = new WikiReference(wikiName);
+        indexer.indexDocuments(wikiReference, docsList);
+
+        return docsList.size();
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#indexSpace(org.xwiki.model.reference.SpaceReference)
+     */
+    @Override
+    public int indexSpace(SpaceReference reference) throws SearchIndexingException, XWikiException
+    {
+        logger.info("Indexing space [" + reference.getName() + "]");
+
+        final XWikiContext xcontext = getXWikiContext();
+
+        WikiReference wikiReference = (WikiReference) reference.getParent();
+
+        String currentWikiName = xcontext.getWiki().getName();
+
+        if (!currentWikiName.equalsIgnoreCase(wikiReference.getName())) {
+            xcontext.setDatabase(wikiReference.getName());
+        }
+
+        String hql =
+            "select doc.space, doc.name, doc.version, doc.language from XWikiDocument as doc where doc.space='"
+                + reference.getName() + "'";
+        List<Object[]> documents = xcontext.getWiki().search(hql, xcontext);
+
+        List<DocumentReference> docsList = new ArrayList<DocumentReference>();
+
+        for (Object[] document : documents) {
+
+            String spaceName = (String) document[0];
+            DocumentReference documentReference =
+                new DocumentReference(wikiReference.getName(), spaceName, (String) document[1]);
+            docsList.add(documentReference);
+        }
+
+        indexer.indexDocuments(reference, docsList);
 
         return docsList.size();
     }
@@ -207,8 +253,8 @@ public class SolrjSearch extends AbstractSearch
                 DocumentReference documentReference = new DocumentReference(wikiName, spaceName, (String) document[1]);
                 docsList.add(documentReference);
             }
-
-            indexer.deleteIndex(docsList);
+            WikiReference wikiReference=new WikiReference(wikiName);
+            indexer.deleteIndex(wikiReference,docsList);
             return true;
         } catch (Exception e) {
             return false;
@@ -345,7 +391,7 @@ public class SolrjSearch extends AbstractSearch
             for (Entry<String, String> entry : filterParameters.entrySet()) {
                 queryString.append(" " + entry.getKey() + ":" + entry.getValue());
             }
-            SolrQuery solrQuery = new SolrQuery(queryString.toString());
+            SolrQuery solrQuery = new SolrQuery(searchRequest.processRequestQuery(queryString.toString()));
 
             if (searchParameters != null && searchParameters.size() > 0) {
                 for (Entry<String, String> entry : searchParameters.entrySet()) {
@@ -354,7 +400,6 @@ public class SolrjSearch extends AbstractSearch
             }
             solrserver = (SolrServer) searchEngine.getSearchEngine();
             queryResponse = solrserver.query(solrQuery);
-            // logger.info(queryResponse.getResults().toString());
             searchResponse = this.componentManager.getInstance(SearchResponse.class, SolrjSearchResponse.HINT);
             searchResponse.processQueryResult(queryResponse);
             logger.info("Returning search response : \n" + searchResponse);
@@ -427,66 +472,20 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public Map<String, DocumentIndexerStatus> getStatus()
     {
-
         return indexer.getStatus();
     }
 
-    public String getThreadStatus()
-    {
-        StringBuffer buf = new StringBuffer();
-        Thread[] daemonThreads = getAllDaemonThreads();
-        for (Thread thread : daemonThreads) {
-            if (thread.getName().contains("Solrj")) {
-                buf.append(thread.getName() + "--" + thread + "\n");
-            }
-        }
-        return buf.toString();
-    }
-
-    ThreadGroup rootThreadGroup = null;
-
-    ThreadGroup getRootThreadGroup()
-    {
-        if (rootThreadGroup != null)
-            return rootThreadGroup;
-        ThreadGroup tg = Thread.currentThread().getThreadGroup();
-        ThreadGroup ptg;
-        while ((ptg = tg.getParent()) != null)
-            tg = ptg;
-        return tg;
-    }
-
-    Thread[] getAllThreads()
-    {
-        final ThreadGroup root = getRootThreadGroup();
-        final ThreadMXBean thbean = ManagementFactory.getThreadMXBean();
-        int nAlloc = thbean.getThreadCount();
-        int n = 0;
-        Thread[] threads;
-        do {
-            nAlloc *= 2;
-            threads = new Thread[nAlloc];
-            n = root.enumerate(threads, true);
-        } while (n == nAlloc);
-        return java.util.Arrays.copyOf(threads, n);
-    }
-
-    Thread[] getAllDaemonThreads()
-    {
-        final Thread[] allThreads = getAllThreads();
-        final Thread[] daemons = new Thread[allThreads.length];
-        int nDaemon = 0;
-        for (Thread thread : allThreads)
-            if (thread.isDaemon())
-                daemons[nDaemon++] = thread;
-        return java.util.Arrays.copyOf(daemons, nDaemon);
-    }
-
     @Override
-    public DocumentAccessBridge getDocumentAccessBridge()
+    public String getStatusAsJson()
     {
-        return documentAccessBridge;
+        Gson gson = new Gson();
+        return gson.toJson(indexer.getStatus());
     }
 
-
+    public VelocityUtils getVelocityUtils()
+    {
+        CoreContainer container = (CoreContainer) searchEngine.getCoreContainer();
+        SolrServer server = (SolrServer) searchEngine.getSearchEngine();
+        return new VelocityUtils(container, server);
+    }
 }

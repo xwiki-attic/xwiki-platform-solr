@@ -122,7 +122,12 @@ public interface DocumentField
     /**
      * Fulltext content, not stored (and can therefore not be restored from the index).
      */
-    String FULLTEXT = "ft";
+    String DOCUMENT_CONTENT = "doccontent";
+
+    /**
+     * Attachment content
+     */
+    String ATTACHMENT_CONTENT = "attcontent";
 
     /**
      * not in use

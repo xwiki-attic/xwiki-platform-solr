@@ -46,8 +46,18 @@ public class SearchResult
     private String highlightText;
 
     private String language;
-    
+
     private String url;
+
+    private String type;
+
+    private String fileName;
+
+    private String mimeType;
+
+    private String objectName;
+
+    private String propertyName;
 
     public SearchResult(String id, String wikiName, String spaceName, String pageName, String language)
     {
@@ -106,13 +116,12 @@ public class SearchResult
         this.content = content;
     }
 
-    
     /**
      * @return the reference
      */
     public DocumentReference getReference()
-    {   
-        
+    {
+
         return reference;
     }
 
@@ -184,30 +193,28 @@ public class SearchResult
     {
         return language;
     }
-    
+
     /**
-     * 
-     * @param pageName 
+     * @param pageName
      */
     public void setPageName(String pageName)
     {
         this.pageName = pageName;
     }
-    
+
     /**
-     * 
      * @param url
      */
     public void setURL(String url)
     {
-        this.url=url;
+        this.url = url;
     }
-    
+
     /**
-     * 
      * @return the Url
      */
-    public String getURL(){
+    public String getURL()
+    {
         return this.url;
     }
 
@@ -215,4 +222,85 @@ public class SearchResult
     {
         return pageName;
     }
+
+    /**
+     * @return the type
+     */
+    public String getType()
+    {
+        return type;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType(String type)
+    {
+        this.type = type;
+    }
+
+    /**
+     * @return the fileName
+     */
+    public String getFileName()
+    {
+        return fileName;
+    }
+
+    /**
+     * @param fileName the fileName to set
+     */
+    public void setFileName(String fileName)
+    {
+        this.fileName = fileName;
+    }
+
+    /**
+     * @return the mimeType
+     */
+    public String getMimeType()
+    {
+        return mimeType;
+    }
+
+    /**
+     * @param mimeType the mimeType to set
+     */
+    public void setMimeType(String mimeType)
+    {
+        this.mimeType = mimeType;
+    }
+
+    /**
+     * @return the objectName
+     */
+    public String getObjectName()
+    {
+        return objectName;
+    }
+
+    /**
+     * @param objectName the objectName to set
+     */
+    public void setObjectName(String objectName)
+    {
+        this.objectName = objectName;
+    }
+
+    /**
+     * @return the propertyName
+     */
+    public String getPropertyName()
+    {
+        return propertyName;
+    }
+
+    /**
+     * @param propertyName the propertyName to set
+     */
+    public void setPropertyName(String propertyName)
+    {
+        this.propertyName = propertyName;
+    }
+
 }

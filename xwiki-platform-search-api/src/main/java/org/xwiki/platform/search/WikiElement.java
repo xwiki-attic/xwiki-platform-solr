@@ -19,22 +19,25 @@
  */
 package org.xwiki.platform.search;
 
-import org.xwiki.component.annotation.Role;
-
 /**
- * XWiki search engine used for indexing wiki documents and querying data.
- * 
  * @version $Id$
  */
-@Role
-public interface SearchEngine
+public enum WikiElement
 {
-    /**
-     * Initializes and returns the search enigne based on the component.
-     * 
-     * @return instance of the search engine
-     */
-    Object getSearchEngine();
+    DOCUMENT(1),
+    ATTACHMENT(2),
+    OBJECT(3),
+    PROPERTY(4);
 
-    Object getCoreContainer();
+    private int id;
+
+    WikiElement(int id)
+    {
+        this.id = id;
+    }
+
+    public int getId()
+    {
+        return this.id;
+    }
 }

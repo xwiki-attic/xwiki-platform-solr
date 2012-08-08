@@ -29,6 +29,11 @@ import org.xwiki.component.annotation.Role;
 public interface SearchRequest
 {
 
-    String getString();
+    /**
+     * 
+     * @param query
+     * @return
+     */
+    String processRequestQuery(String query);
 
 }

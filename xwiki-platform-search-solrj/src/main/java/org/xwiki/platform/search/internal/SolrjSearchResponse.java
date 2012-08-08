@@ -19,12 +19,14 @@
  */
 package org.xwiki.platform.search.internal;
 
-import static org.xwiki.platform.search.DocumentField.DOC_REFERENCE;
+import static org.xwiki.platform.search.DocumentField.ATTACHMENT_CONTENT;
+import static org.xwiki.platform.search.DocumentField.DOCUMENT_CONTENT;
 import static org.xwiki.platform.search.DocumentField.FILENAME;
-import static org.xwiki.platform.search.DocumentField.FULLTEXT;
 import static org.xwiki.platform.search.DocumentField.ID;
 import static org.xwiki.platform.search.DocumentField.LANGUAGE;
 import static org.xwiki.platform.search.DocumentField.NAME;
+import static org.xwiki.platform.search.DocumentField.OBJECT;
+import static org.xwiki.platform.search.DocumentField.OBJECT_CONTENT;
 import static org.xwiki.platform.search.DocumentField.SCORE;
 import static org.xwiki.platform.search.DocumentField.SPACE;
 import static org.xwiki.platform.search.DocumentField.TITLE;
@@ -48,6 +50,7 @@ import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
 import org.xwiki.context.Execution;
 import org.xwiki.context.ExecutionContext;
+import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.platform.search.SearchResponse;
@@ -58,7 +61,7 @@ import com.xpn.xwiki.util.XWikiStubContextProvider;
 
 /**
  * SearchResponse implementation.
- *
+ * 
  * @version $Id$
  */
 @Component
@@ -98,7 +101,7 @@ public class SolrjSearchResponse implements SearchResponse
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.SearchResponse#getEndIndex(int, int)
      */
     public int getEndIndex(int beginIndex, int items)
@@ -115,7 +118,7 @@ public class SolrjSearchResponse implements SearchResponse
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.SearchResponse#getMaxScore()
      */
     public float getMaxScore()
@@ -125,7 +128,7 @@ public class SolrjSearchResponse implements SearchResponse
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.SearchResponse#getNextIndex(int, int)
      */
     public int getNextIndex(int beginIndex, int items)
@@ -139,7 +142,7 @@ public class SolrjSearchResponse implements SearchResponse
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.SearchResponse#getPreviousIndex(int, int)
      */
     public int getPreviousIndex(int beginIndex, int items)
@@ -151,7 +154,7 @@ public class SolrjSearchResponse implements SearchResponse
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.SearchResponse#getResults(int, int)
      */
     public List<SearchResult> getResults(int beginIndex, int items)
@@ -162,7 +165,7 @@ public class SolrjSearchResponse implements SearchResponse
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.SearchResponse#getTotalResults()
      */
     public List<SearchResult> getTotalResults()
@@ -172,7 +175,7 @@ public class SolrjSearchResponse implements SearchResponse
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.SearchResponse#hasNext(int, int)
      */
     public boolean hasNext(int beginIndex, int items)
@@ -186,7 +189,7 @@ public class SolrjSearchResponse implements SearchResponse
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.SearchResponse#hasPrevious(int)
      */
     public boolean hasPrevious(int beginIndex)
@@ -196,7 +199,7 @@ public class SolrjSearchResponse implements SearchResponse
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.SearchResponse#getTotalNumber()
      */
     @Override
@@ -246,68 +249,62 @@ public class SolrjSearchResponse implements SearchResponse
         SearchResult searchResult = null;
 
         try {
-            
-            String language = (String) solrDoc.getFieldValue(LANGUAGE);
 
-            if (language == null || language.trim().equals("")) {
-                language = "en";
-            }
+            String language = (String) solrDoc.getFieldValue(LANGUAGE);
+            String type = (String) solrDoc.getFieldValue(TYPE);
 
             String id = getStringValue(solrDoc.getFieldValue(ID));
-
             String wikiName = getStringValue(solrDoc.getFieldValue(WIKI));
             String spaceName = getStringValue(solrDoc.getFieldValue(SPACE));
             String pageName = getStringValue(solrDoc.getFieldValue(NAME + "_" + language));
-            String fulltext = getStringValue(solrDoc.getFieldValue(FULLTEXT + "_" + language));
-            String title = getStringValue(solrDoc.getFieldValue(TITLE + "_" + language));
-            float score = (Float) solrDoc.getFieldValue(SCORE);
+            DocumentReference docref = new DocumentReference(wikiName, spaceName, pageName, language);
+
             searchResult = new SearchResult(id, wikiName, spaceName, pageName, language);
-            searchResult.setScore(score);
+            searchResult.setType(type);
+            Map<String, List<String>> docMap = this.highlightingMap.get(id);
 
-            if (solrDoc.getFieldValue(TYPE).equals("DOCUMENT")) {
-                pageName = getStringValue(solrDoc.getFieldValue(NAME + "_" + language));
-                searchResult = new SearchResult(id, wikiName, spaceName, pageName, language);
-                searchResult.setScore(score);
-                searchResult.setContent(fulltext);
-                title = getStringValue(solrDoc.getFieldValue(TITLE + "_" + language));
-                searchResult.setTitle(title);
-                if (this.highlightingMap != null) {
-                    Map<String, List<String>> docMap = this.highlightingMap.get(id);
-                    if (docMap != null && docMap.containsKey(FULLTEXT + "_" + language)) {
-                        fulltext = cleanUp(docMap.get(FULLTEXT + "_" + language).toString());
-                    }
-
-                    if (docMap != null && docMap.containsKey(TITLE + "_" + language)) {
-                        title = cleanUp(docMap.get(TITLE + "_" + language).toString());
-                    }
+            if ("DOCUMENT".equals(type)) {
+                // Hightlight text/content
+                if (docMap != null && docMap.containsKey(DOCUMENT_CONTENT + "_" + language)) {
+                    searchResult.setHighlightText(cleanUp(docMap.get(DOCUMENT_CONTENT + "_" + language).toString()));
                 }
-            } else if (solrDoc.getFieldValue(TYPE).equals("ATTACHMENT")) {
-                pageName = getStringValue(solrDoc.getFieldValue(DOC_REFERENCE + "_" + language));
-                String filename = getStringValue(solrDoc.getFieldValue(FILENAME + "_" + language));
-                searchResult = new SearchResult(id, wikiName, spaceName, pageName, language);
-                searchResult.setScore(score);
-                XWikiContext context = getXWikiContext();
-                String fullname =
-                    new StringBuffer(wikiName).append(":").append(spaceName).append(".").append(pageName).toString();
-                String url = context.getWiki().getAttachmentURL(fullname, filename, context);
-                url = "http://localhost:8080" + url;
+
+                if (docMap != null && docMap.containsKey(TITLE + "_" + language)) {
+                    searchResult.setTitle((docMap.get(TITLE + "_" + language).toString()));
+                } else {
+                    searchResult.setTitle(getStringValue(solrDoc.getFieldValue(TITLE + "_" + language)));
+                }
+            } else if ("ATTACHMENT".equals(type)) {
+                // Hightlight text/content
+                if (docMap != null && docMap.containsKey(ATTACHMENT_CONTENT + "_" + language)) {
+                    searchResult.setHighlightText(cleanUp(docMap.get(ATTACHMENT_CONTENT + "_" + language).toString()));
+                }
+
+                String fileName = getStringValue(solrDoc.getFieldValue(FILENAME + "_" + language));
+                searchResult.setFileName(fileName);
+                AttachmentReference attachmentReference = new AttachmentReference(fileName, docref);
+                String url = documentAccessBridge.getAttachmentURL(attachmentReference, true);
                 searchResult.setURL(url);
+
+            } else if ("OBJECT".equals(type)) {
+                // Hightlight text/content
+                if (docMap != null && docMap.containsKey(OBJECT_CONTENT + "_" + language)) {
+                    searchResult.setHighlightText(cleanUp(docMap.get(OBJECT_CONTENT + "_" + language).toString()));
+                }
+                searchResult.setObjectName(getStringValue(solrDoc.getFieldValue(OBJECT)));
+
+            } else if ("PROPERTY".equals(type)) {
+                // TODO
+                // How to fetch the property.
             }
 
-           
-           
-            
-            DocumentReference docref = new DocumentReference(wikiName, spaceName, pageName);
-            searchResult.setContent(fulltext);
-            searchResult.setTitle(title);
+            float score = (Float) solrDoc.getFieldValue(SCORE);
+            searchResult.setScore(score);
 
             // checks if the user has access to view the page.
             if ((documentAccessBridge.exists(docref)) && (documentAccessBridge.isDocumentViewable(docref))) {
                 return searchResult;
             }
-            
-            
-           
 
         } catch (Exception ex) {
             logger.info("Error while retieving search result" + ex.getMessage(), ex);
@@ -316,9 +313,6 @@ public class SolrjSearchResponse implements SearchResponse
         return null;
     }
 
-
-        
-    
     public XWikiContext getXWikiContext()
     {
         XWikiContext context = (XWikiContext) execution.getContext().getProperty(XWikiContext.EXECUTIONCONTEXT_KEY);
@@ -338,7 +332,7 @@ public class SolrjSearchResponse implements SearchResponse
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @see org.xwiki.platform.search.SearchResponse#processQueryResult(java.lang.Object)
      */
     @Override

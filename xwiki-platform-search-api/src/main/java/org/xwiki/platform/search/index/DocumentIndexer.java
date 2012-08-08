@@ -26,6 +26,7 @@ import org.xwiki.bridge.DocumentModelBridge;
 import org.xwiki.component.annotation.Role;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
 
 /**
  * XWiki DoucumentIndexer API
@@ -52,6 +53,15 @@ public interface DocumentIndexer
     void indexDocuments(List<DocumentReference> docs);
 
     /**
+     * Index the documents.
+     * 
+     * @param reference Entity reference of Wiki or Space
+     * @param documents List of documents to be indexed.
+     * @return the Number of documents scheduled for indexing. -1 in case of errors.
+     */
+    void indexDocuments(EntityReference reference, List<DocumentReference> docs);
+
+    /**
      * Delete the index for document.
      * 
      * @param doc List of document references to which index needs to be deleted.
@@ -66,6 +76,15 @@ public interface DocumentIndexer
      * @return true if document index deletion is successful.
      */
     void deleteIndex(List<DocumentReference> docs);
+
+    /**
+     * Delete the index for the given list of documents.
+     * 
+     * @param reference Entity reference of Wiki or Space
+     * @param document Document reference to which index needs to be deleted.
+     * @return true if document index deletion is successful.
+     */
+    void deleteIndex(EntityReference reference, List<DocumentReference> docs);
 
     /**
      * Deletes the entire index of the current wiki.
@@ -91,21 +110,19 @@ public interface DocumentIndexer
      * @return status of given thread.
      */
     DocumentIndexerStatus getStatus(String threadId);
-    
+
     /**
-     * 
      * @param attachment attachment reference of the files
      * @param doc parent document
      * @return boolean value
      */
-     boolean indexAttachment(AttachmentReference attachment, DocumentModelBridge doc);
-     
+    boolean indexAttachment(AttachmentReference attachment, DocumentModelBridge doc);
+
     /**
-     * 
      * @param attachment attachment reference of the files
      * @param doc parent document
      * @return boolean value
      */
-     boolean deleteIndexAttachment(AttachmentReference attachment, DocumentModelBridge doc);
+    boolean deleteIndexAttachment(AttachmentReference attachment, DocumentModelBridge doc);
 
 }

@@ -44,13 +44,14 @@ import org.xwiki.context.ExecutionContextException;
 import org.xwiki.context.ExecutionContextManager;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.platform.search.index.DocumentData;
 import org.xwiki.platform.search.index.DocumentIndexer;
 import org.xwiki.platform.search.index.DocumentIndexerStatus;
 import org.xwiki.platform.search.internal.SolrDocData;
 import org.xwiki.rendering.renderer.BlockRenderer;
-import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
-import org.xwiki.rendering.renderer.printer.WikiPrinter;
+
+import com.google.gson.Gson;
 
 /**
  * @version $Id$
@@ -94,9 +95,12 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
         private List<DocumentReference> docList;
 
-        public IndexThread(List<DocumentReference> docList)
+        EntityReference entityReference;
+
+        public IndexThread(EntityReference entityReference, List<DocumentReference> docList)
         {
             this.docList = docList;
+            this.entityReference = entityReference;
         }
 
         @Override
@@ -110,6 +114,9 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             indexerStatusMap.put(Thread.currentThread().getName(), indexerStatus);
 
             indexerStatus.setTotalDocCount(docList.size());
+            indexerStatus.setTitle(Thread.currentThread().getName());
+            indexerStatus.setEntityName(entityReference.getName());
+            indexerStatus.setEntityType(entityReference.getType().toString());
 
             logger.info("Indexing a total of [" + docList.size() + "] documents testing");
 
@@ -153,14 +160,19 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                             docs.add(sdoc);
 
                             // Attachments
+                            List<SolrInputDocument> attachmentdocs = sdocdata.getInputAttachments(docRef);
+                            if (attachmentdocs != null && !attachmentdocs.isEmpty())
+                                docs.addAll(attachmentdocs);
 
                             // Objects
                             List<SolrInputDocument> objDocs = sdocdata.getInputObjects(docRef);
-                            docs.addAll(objDocs);
+                            if (objDocs != null && !objDocs.isEmpty())
+                                docs.addAll(objDocs);
 
                             // Properties
                             List<SolrInputDocument> propDocs = sdocdata.getInputProperties(docRef);
-                            docs.addAll(propDocs);
+                            if (propDocs != null && !propDocs.isEmpty())
+                                docs.addAll(propDocs);
 
                         } catch (Exception e) {
                             logger.error("Error fetching document [" + docRef.getName() + "]", e);
@@ -197,9 +209,12 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
         private List<DocumentReference> docList;
 
-        public DeleteIndexThread(List<DocumentReference> docList)
+        private EntityReference entityReference;
+
+        public DeleteIndexThread(EntityReference entityReference, List<DocumentReference> docList)
         {
             this.docList = docList;
+            this.entityReference=entityReference;
         }
 
         @Override
@@ -262,16 +277,9 @@ public class SolrjDocumentIndexer implements DocumentIndexer
      * @see org.xwiki.platform.search.index.DocumentIndexer#indexDocuments(java.util.List)
      */
     @Override
-    public void indexDocuments(List<DocumentReference> docList)
+    public void indexDocuments(List<DocumentReference> docs)
     {
-        if (docList.size() > 0) {
-            IndexThread indexThread = new IndexThread(docList);
-            thread = new Thread(indexThread);
-            thread.setName("Solrj indexer - " + indexThread.hashCode());
-            thread.setDaemon(true);
-            thread.setPriority(Thread.MIN_PRIORITY);
-            thread.start();
-        }
+        this.indexDocuments(null, docs);
     }
 
     /**
@@ -280,15 +288,9 @@ public class SolrjDocumentIndexer implements DocumentIndexer
      * @see org.xwiki.platform.search.index.DocumentIndexer#deleteIndex(java.util.List)
      */
     @Override
-    public void deleteIndex(List<DocumentReference> docList)
+    public void deleteIndex(List<DocumentReference> docs)
     {
-        if (docList.size() > 0) {
-            DeleteIndexThread deleteIndexThread = new DeleteIndexThread(docList);
-            thread = new Thread(deleteIndexThread);
-            thread.setDaemon(true);
-            thread.setPriority(Thread.MIN_PRIORITY);
-            thread.start();
-        }
+        this.deleteIndex(null, docs);
     }
 
     /**
@@ -304,22 +306,40 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             if (documentAccessBridge.exists(doc) && !doc.getName().contains("WatchList")) {
                 SolrjDocumentData sdocdata =
                     this.componentManager.getInstance(DocumentData.class, SolrjDocumentData.HINT);
-
+                UpdateResponse response = null;
+                Gson gson = new Gson();
                 // Document
                 SolrInputDocument sdoc = sdocdata.getInputDocument(doc);
-                solrServer.add(sdoc);
+                if (sdoc != null) {
+                    response = solrServer.add(sdoc);
+                    logger.info(gson.toJson(response));
+                }
 
                 // Attachments
+                List<SolrInputDocument> attachmentdocs = sdocdata.getInputAttachments(doc);
+                if (attachmentdocs != null && !attachmentdocs.isEmpty()) {
+                    response = solrServer.add(attachmentdocs);
+                    logger.info(gson.toJson(response));
+                }
 
                 // Objects
                 List<SolrInputDocument> objDocs = sdocdata.getInputObjects(doc);
-                solrServer.add(objDocs);
+                if (objDocs != null && !objDocs.isEmpty()) {
+                    solrServer.add(objDocs);
+                    logger.info(gson.toJson(response));
+                }
 
                 // Properties
                 List<SolrInputDocument> propDocs = sdocdata.getInputProperties(doc);
-                solrServer.add(propDocs);
+                if (propDocs != null && !propDocs.isEmpty()) {
+                    response = solrServer.add(propDocs);
+                    logger.info(gson.toJson(response));
+                }
 
-                solrServer.commit();
+                // Commit Response
+                response = solrServer.commit();
+                logger.info("Commit Response");
+                logger.info(gson.toJson(response));
                 return true;
             }
         } catch (Exception e) {
@@ -448,6 +468,45 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     public DocumentIndexerStatus getStatus(String threadId)
     {
         return indexerStatusMap.get(threadId);
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.index.DocumentIndexer#indexDocuments(org.xwiki.model.reference.EntityReference,
+     *      java.util.List)
+     */
+    @Override
+    public void indexDocuments(EntityReference reference, List<DocumentReference> docs)
+    {
+        if (docs.size() > 0) {
+            IndexThread indexThread = new IndexThread(reference, docs);
+            thread = new Thread(indexThread);
+            thread.setName("SolrjIndexer[" + indexThread.hashCode() + "]");
+            thread.setDaemon(true);
+            thread.setPriority(Thread.MIN_PRIORITY);
+            thread.start();
+        }
+
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.index.DocumentIndexer#deleteIndex(org.xwiki.model.reference.EntityReference,
+     *      java.util.List)
+     */
+    @Override
+    public void deleteIndex(EntityReference reference, List<DocumentReference> docs)
+    {
+        if (docs.size() > 0) {
+            DeleteIndexThread deleteIndexThread = new DeleteIndexThread(reference, docs);
+            thread = new Thread(deleteIndexThread);
+            thread.setDaemon(true);
+            thread.setPriority(Thread.MIN_PRIORITY);
+            thread.start();
+        }
+
     }
 
 }

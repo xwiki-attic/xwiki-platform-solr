@@ -19,6 +19,7 @@
  */
 package org.xwiki.platform.search.internal;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,6 +41,8 @@ import org.xwiki.platform.search.Search;
 import org.xwiki.platform.search.SearchException;
 import org.xwiki.platform.search.SearchService;
 import org.xwiki.script.service.ScriptService;
+
+import com.google.gson.Gson;
 
 /**
  * Implementation of {@link SearchService}.
@@ -171,4 +174,17 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
             logger.error("Exception in intializing Search component with hint [" + componentHint + "]", e.getMessage());
         }
     }
+
+    public String toJsonFromCollection(Collection collection)
+    {
+        Gson gson = new Gson();
+        return gson.toJson(collection);
+    }
+
+    public String toJsonFromObject(Object object)
+    {
+        Gson gson = new Gson();
+        return gson.toJson(object);
+    }
+
 }

@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.xwiki.platform.search.SearchRequest;
 import org.xwiki.rendering.block.XDOM;
 import org.xwiki.rendering.converter.Converter;
-import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
 import org.xwiki.rendering.renderer.printer.WikiPrinter;
 import org.xwiki.rendering.syntax.Syntax;

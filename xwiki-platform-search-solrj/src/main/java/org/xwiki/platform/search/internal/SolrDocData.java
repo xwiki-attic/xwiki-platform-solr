@@ -20,10 +20,11 @@
 
 package org.xwiki.platform.search.internal;
 
+import static org.xwiki.platform.search.DocumentField.ATTACHMENT_CONTENT;
+import static org.xwiki.platform.search.DocumentField.DOCUMENT_CONTENT;
 import static org.xwiki.platform.search.DocumentField.DOC_REFERENCE;
 import static org.xwiki.platform.search.DocumentField.FILENAME;
 import static org.xwiki.platform.search.DocumentField.FULLNAME;
-import static org.xwiki.platform.search.DocumentField.FULLTEXT;
 import static org.xwiki.platform.search.DocumentField.ID;
 import static org.xwiki.platform.search.DocumentField.LANGUAGE;
 import static org.xwiki.platform.search.DocumentField.MIME_TYPE;
@@ -40,7 +41,6 @@ import org.apache.solr.common.SolrInputDocument;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.bridge.DocumentModelBridge;
 import org.xwiki.component.annotation.Component;
-
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 
@@ -94,7 +94,7 @@ public class SolrDocData
         sdoc.addField(ID, getId(doc));
         sdoc.addField(NAME + lang, docref.getName());
         sdoc.addField(TITLE + lang, doc.getTitle());
-        sdoc.addField(FULLTEXT + lang, textContent);
+        sdoc.addField(DOCUMENT_CONTENT + lang, textContent);
         sdoc.addField(LANGUAGE, doc.getRealLanguage());
         sdoc.addField(VERSION, doc.getVersion());
         sdoc.addField(WIKI, docref.getWikiReference().getName());
@@ -124,7 +124,7 @@ public class SolrDocData
         String lang = "_" + language;
         sdoc.addField(ID, getAttachmentID(doc, attachment));
         sdoc.addField(DOC_REFERENCE + lang, attachment.getParent().getName());
-        sdoc.addField(FULLTEXT + lang, textContent);
+        sdoc.addField(ATTACHMENT_CONTENT + lang, textContent);
         sdoc.addField(LANGUAGE, doc.getRealLanguage());
         sdoc.addField(MIME_TYPE, attachment.getType().name());
         sdoc.addField(WIKI, docref.getWikiReference().getName());

@@ -22,30 +22,75 @@ package org.xwiki.platform.search.index;
 import java.util.List;
 
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
 
 /**
  * Status of the document indexer.
- *
+ * 
  * @version $Id$
  */
 public class DocumentIndexerStatus
 {
     private long estimatedCompletionTime;
 
-    private double indexingSpeed;
+    private String estimatedCompletionTimeAsString;
 
-    private int lastIndexedDocumentIndex;
+    private float indexingSpeed;
+
+    private int indexedDocs;
 
     private int totalDocCount;
 
     private long elapsedTime;
+
+    private String elapsedTimeAsString;
+    
+    private String title;
+    
+    private String entityName;
+    
+    private String entityType;
+    
+    
+
+    /**
+     * @return the indexedDocs
+     */
+    public int getIndexedDocs()
+    {
+        return indexedDocs;
+    }
+
+    /**
+     * @param indexedDocs the indexedDocs to set
+     */
+    public void setIndexedDocs(int indexedDocs)
+    {
+        this.indexedDocs = indexedDocs;
+    }
+
+    /**
+     * @return the title
+     */
+    public String getTitle()
+    {
+        return title;
+    }
+
+    /**
+     * @param title the title to set
+     */
+    public void setTitle(String title)
+    {
+        this.title = title;
+    }
 
     /**
      * @return the lastIndexedDocumentIndex
      */
     public synchronized int getLastIndexedDocumentIndex()
     {
-        return lastIndexedDocumentIndex;
+        return indexedDocs;
     }
 
     /**
@@ -53,7 +98,7 @@ public class DocumentIndexerStatus
      */
     public synchronized void setLastIndexedDocumentIndex(int lastIndexedDocumentIndex)
     {
-        this.lastIndexedDocumentIndex = lastIndexedDocumentIndex;
+        this.indexedDocs = lastIndexedDocumentIndex;
     }
 
     /**
@@ -75,7 +120,7 @@ public class DocumentIndexerStatus
     /**
      * @param indexingSpeed the indexingSpeed to set
      */
-    public synchronized void setIndexingSpeed(double indexingSpeed)
+    public synchronized void setIndexingSpeed(float indexingSpeed)
     {
         this.indexingSpeed = indexingSpeed;
     }
@@ -83,7 +128,7 @@ public class DocumentIndexerStatus
     /**
      * @return the indexingSpeed
      */
-    public synchronized double getIndexingSpeed()
+    public synchronized float getIndexingSpeed()
     {
         return indexingSpeed;
     }
@@ -97,6 +142,15 @@ public class DocumentIndexerStatus
     }
 
     /**
+     * @return the completion time stamp.
+     */
+    public synchronized String getEstimatedCompletionTimeAsString()
+    {
+
+        return this.estimatedCompletionTimeAsString;
+    }
+
+    /**
      * @param count number of documents
      * @return the list of indexed documents.
      */
@@ -106,26 +160,126 @@ public class DocumentIndexerStatus
     }
 
     /**
+     * @return the elapsedTime
+     */
+    public long getElapsedTime()
+    {
+        return elapsedTime;
+    }
+
+    /**
+     * @param elapsedTime the elapsedTime to set
+     */
+    public void setElapsedTime(long elapsedTime)
+    {
+        this.elapsedTime = elapsedTime;
+    }
+
+    /**
+     * @param estimatedCompletionTime the estimatedCompletionTime to set
+     */
+    public void setEstimatedCompletionTime(long estimatedCompletionTime)
+    {
+        this.estimatedCompletionTime = estimatedCompletionTime;
+    }
+
+    /**
+     * @param estimatedCompletionTimeAsString the estimatedCompletionTimeAsString to set
+     */
+    public void setEstimatedCompletionTimeAsString(String estimatedCompletionTimeAsString)
+    {
+        this.estimatedCompletionTimeAsString = estimatedCompletionTimeAsString;
+    }
+
+    /**
+     * @return the elapsedTimeAsString
+     */
+    public String getElapsedTimeAsString()
+    {
+        return elapsedTimeAsString;
+    }
+
+    /**
+     * @param elapsedTimeAsString the elapsedTimeAsString to set
+     */
+    public void setElapsedTimeAsString(String elapsedTimeAsString)
+    {
+        this.elapsedTimeAsString = elapsedTimeAsString;
+    }
+
+    /**
      * @return queue size of the indexing process.
      */
     public synchronized int getQueueSize()
     {
-        return (this.totalDocCount - this.lastIndexedDocumentIndex);
+        return (this.totalDocCount - this.indexedDocs);
     }
 
     public synchronized void addStepDetails(long elapsedTime1, int docsIndexed)
     {
         this.elapsedTime += elapsedTime1;
-        this.lastIndexedDocumentIndex += docsIndexed;
+        this.indexedDocs += docsIndexed;
+        int docsRemaining = this.totalDocCount - this.indexedDocs;
+        float timeForEachDoc = 0;
+
+        if (this.indexedDocs > 0) {
+            timeForEachDoc = (float) (this.elapsedTime / this.indexedDocs);
+        }
+
+        this.setEstimatedCompletionTime((long) (docsRemaining * timeForEachDoc));
+        if (this.elapsedTime > 0) {
+            
+            int a=(this.indexedDocs*1000);           
+            float speed=(a/this.elapsedTime);
+            System.out.println(speed);
+            this.setIndexingSpeed(speed);
+        }
+        this.setEstimatedCompletionTimeAsString(this.formatIntoHHMMSS((int) (this.estimatedCompletionTime / 1000)));
+
+        this.setElapsedTimeAsString(this.formatIntoHHMMSS((int) (this.elapsedTime / 1000)));
+
     }
 
-    public String toString()
+    private String formatIntoHHMMSS(int secondsInput)
     {
-        String toStr =
-            "ElapsedTime:" + this.elapsedTime + ", LastIndexedDoc:" + lastIndexedDocumentIndex + ", TotalDoc:"
-                + totalDocCount;
+        int hours = (int) (secondsInput / 3600), remainder = (int) (secondsInput % 3600), minutes =
+            (int) remainder / 60, seconds = remainder % 60;
 
-        return toStr;
+        return ((hours < 10 ? "0" : "") + hours + ":" + (minutes < 10 ? "0" : "") + minutes + ":"
+            + (seconds < 10 ? "0" : "") + seconds);
     }
+
+    /**
+     * @return the entityName
+     */
+    public String getEntityName()
+    {
+        return entityName;
+    }
+
+    /**
+     * @param entityName the entityName to set
+     */
+    public void setEntityName(String entityName)
+    {
+        this.entityName = entityName;
+    }
+
+    /**
+     * @return the entityType
+     */
+    public String getEntityType()
+    {
+        return entityType;
+    }
+
+    /**
+     * @param entityType the entityType to set
+     */
+    public void setEntityType(String entityType)
+    {
+        this.entityType = entityType;
+    }
+
 
 }

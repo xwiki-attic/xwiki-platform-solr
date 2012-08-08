@@ -260,7 +260,6 @@ Case insensitive stop word removal. add enablePositionIncrements=true in both th
     <filter class="solr.SnowballPorterFilterFactory" language="English" protected="protwords.txt"/>
     </analyzer>
     </fieldType>
-
     <!-- A text field with defaults appropriate for English: it
          tokenizes with StandardTokenizer, removes English stop words
          (lang/stopwords_en.txt), down cases, protects words from protwords.txt, and
@@ -643,25 +642,28 @@ Case insensitive stop word removal. add enablePositionIncrements=true in both th
    <field name="lang" type="string" indexed="true" stored="true"/>
    <field name="space" type="string" indexed="true" stored="true"/>
    <field name="wiki" type="string" indexed="true" stored="true"/>
-   <field name="hasAttachment" type="string" indexed="true" stored="true"/>
+   <field name="hasattachment" type="boolean" indexed="true" stored="true"/>
+   <field name="hascomment" type="boolean" indexed="true" stored="true"/>
    <field name="author" type="string" indexed="true" stored="true"/>
+   <field name="creator" type="string" indexed="true" stored="true"/>
    <field name="version" type="string" indexed="true" stored="true"/>
    <field name="type" type="string" indexed="true" stored="true"/>
+   <field name="object" type="string" indexed="true" stored="true"/>
    <field name="mimetype" type="string" indexed="true" stored="true"/>
+   <field name="date" type="tdate" indexed="true" stored="true"/>
+   <field name="creationdate" type="tdate" indexed="true" stored="true"/>
+
 
    <!-- uncomment the following to ignore any fields that don't already match an existing 
         field name or dynamic field, rather than reporting them as an error. 
         alternately, change the type="ignored" to some other type e.g. "text" if you want 
         unknown fields indexed and/or stored by default --> 
    <!--dynamicField name="*" type="ignored" multiValued="true" /-->
-   
  </fields>
 
  <!-- Field to use to determine and enforce document uniqueness. 
       Unless this field is marked with required="false", it will be a required field
    -->
  <uniqueKey>id</uniqueKey>
-
-  
 
 </schema>
