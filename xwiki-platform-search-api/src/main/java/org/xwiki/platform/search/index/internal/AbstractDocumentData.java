@@ -19,8 +19,6 @@
  */
 package org.xwiki.platform.search.index.internal;
 
-import java.util.Locale;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -36,7 +34,9 @@ import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.platform.search.index.DocumentData;
+import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
+import org.xwiki.rendering.syntax.Syntax;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.objects.BaseObject;
@@ -61,7 +61,7 @@ public abstract class AbstractDocumentData implements DocumentData
 
     @Inject
     protected Logger logger;
-
+    
     @Inject
     @Named("plain/1.0")
     protected BlockRenderer renderer;
@@ -153,9 +153,14 @@ public abstract class AbstractDocumentData implements DocumentData
     {
         String language = null;
         try {
-            language = documentAccessBridge.getDocument(documentReference).getRealLanguage();
-            if (StringUtils.isEmpty(language) || !StringUtils.isAlpha(language)) {
-                language = getXWikiContext().getLanguage();
+            if (documentReference.getLocale() != null
+                && !StringUtils.isEmpty(documentReference.getLocale().getDisplayLanguage())) {
+                language = documentReference.getLocale().toString();
+            } else if (!StringUtils.isEmpty(documentAccessBridge.getDocument(documentReference).getRealLanguage())) {
+                language=documentAccessBridge.getDocument(documentReference).getRealLanguage();
+            }else{
+                //Multilingual and Default placeholder
+                language = "ml" ;
             }
         } catch (Exception e) {
             logger.error("Exception while fetching the language of the document - " + documentReference);

@@ -20,9 +20,11 @@
 package org.xwiki.platform.search.internal;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -41,6 +43,7 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.context.Execution;
 import org.xwiki.context.ExecutionContextManager;
+import org.xwiki.platform.search.DocumentField;
 import org.xwiki.platform.search.SearchEngine;
 import org.xwiki.platform.search.SearchRequest;
 
@@ -84,18 +87,34 @@ public class SolrjSearchRequest implements SearchRequest
     {
         List<String> fields=getFields();
         String language=getXWikiContext().getLanguage();
-        String[] items=query.trim().split(" ");
-        StringBuilder builder=new StringBuilder();
-        for(String item:items){
-            if(item.contains(":")){
-                String[] pair=item.split(":");
-                if(fields.contains(pair[0]+"_"+language)){
-                    item=pair[0]+"_"+language+":"+pair[1];
+        String[] params=query.trim().split(" ");
+        Map<String,String> paramMap=new HashMap<String,String>();
+        for(String param:params){
+            if(param.contains(":")){
+                String[] pa=param.split(":");
+                if(fields.contains(pa[0]+"_"+language)){
+                    pa[0]=pa[0]+"_"+language;
+                    
                 }
+                paramMap.put(pa[0],pa[1]);
+            }else{
+                paramMap.put(param, null);
             }
-            builder.append(item+" ");
         }
         
+        if(!paramMap.containsKey(DocumentField.LANGUAGE)){
+            paramMap.put(DocumentField.LANGUAGE,language);
+        }
+        
+        StringBuilder builder=new StringBuilder();
+        for(Entry<String,String> entry:paramMap.entrySet()){
+            builder.append(entry.getKey());
+            if(entry.getValue()!=null){
+                builder.append(":"+entry.getValue());
+            }
+            builder.append(" ");
+        }
+    
         return builder.toString().trim();
         
     }

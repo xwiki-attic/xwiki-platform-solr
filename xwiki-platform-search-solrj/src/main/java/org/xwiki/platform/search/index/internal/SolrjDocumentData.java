@@ -88,22 +88,35 @@ public class SolrjDocumentData extends AbstractDocumentData
     {
         SolrInputDocument sdoc = new SolrInputDocument();
         try {
-            DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(documentReference);
-
+            
+            // TODO Add methods to DocumentModelBridge
+            //DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(documentReference);
+            XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
+            
+            String doclang="";
+            if(documentReference.getLocale()!=null){
+                doclang=documentReference.getLocale().toString();
+            }
+            XWikiDocument tdoc=xdoc.getTranslatedDocument(doclang,getXWikiContext());
+            
+            
+            String language = getLanguage(documentReference);
+            sdoc.addField(ID, getDocumentId(documentReference));
+            addDocumentReferenceFields(documentReference, sdoc, language);
+            sdoc.addField(TYPE, documentReference.getType().name());
+            sdoc.addField(FULLNAME + "_" + language, serializer.serialize(documentReference));
+            
+            
+            //Replace xwiki document with document model bridge once the bug is fixed.
+            
             // Convert the XWiki syntax of document to plain text.
             WikiPrinter printer = new DefaultWikiPrinter();
-            renderer.render(documentModelBridge.getXDOM(), printer);
-            String lang = "_" + getLanguage(documentReference);
-            sdoc.addField(ID, getDocumentId(documentReference));
-            addDocumentReferenceFields(documentReference, sdoc, getLanguage(documentReference));
-            sdoc.addField(TITLE + lang, documentModelBridge.getTitle());
-            sdoc.addField(DOCUMENT_CONTENT + lang, printer.toString());
-            sdoc.addField(VERSION, documentModelBridge.getVersion());
-            sdoc.addField(FULLNAME + lang, serializer.serialize(documentReference));
-            sdoc.addField(TYPE, documentReference.getType().name());
+            renderer.render(tdoc.getXDOM(), printer);
+            
+            sdoc.addField(TITLE + "_" + language, tdoc.getTitle());
+            sdoc.addField(DOCUMENT_CONTENT + "_" + language, printer.toString());
+            sdoc.addField(VERSION, tdoc.getVersion());
 
-            // TODO Add methods to DocumentModelBridge
-            XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
             sdoc.addField(AUTHOR, xdoc.getAuthorReference().getName());
             sdoc.addField(CREATOR, xdoc.getCreatorReference().getName());
             sdoc.addField(CREATIONDATE, xdoc.getCreationDate());
@@ -120,7 +133,7 @@ public class SolrjDocumentData extends AbstractDocumentData
                     String author = comment.getStringValue("author");
                     buffer.append(commentString + " by " + author + "  ");
                 }
-                sdoc.addField(COMMENT + lang, buffer.toString());
+                sdoc.addField(COMMENT + "_" + language, buffer.toString());
             }
 
         } catch (Exception e) {

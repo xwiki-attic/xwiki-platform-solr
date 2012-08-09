@@ -739,11 +739,11 @@
        <str name="title">Solritas</str>
 
        <str name="qf">
-          name_en^1.0 title_en^1.5 full_name_en^1.0 doc_content_en^1.0 att_content_en^1.0 objtxt_en^1.0 filename_en^1.0 comment_en^1.0
-          name_fr^1.0 title_fr^1.5 full_name_fr^1.0 doc_content_fr^1.0 att_content_fr^1.0 objtxt_fr^1.0 filename_fr^1.0 comment_fr^1.0
-          name_es^1.0 title_es^1.5 full_name_es^1.0 doc_content_es^1.0 att_content_es^1.0 objtxt_es^1.0 filename_es^1.0 comment_es^1.0
-          name_cs^1.0 title_cs^1.5 full_name_cs^1.0 doc_content_cs^1.0 att_content_cs^1.0 objtxt_cs^1.0 filename_cs^1.0 comment_cs^1.0
-          version^1.0 lang^1.0 object^1.5 author^1.0 date^1.0 creation_date^1.0 mimetype^1.0
+          name_en^1.0 title_en^1.5 fullname_en^1.0 doccontent_en^1.0 attcontent_en^1.0 objcontent_en^1.0 filename_en^1.0 comment_en^1.0
+          name_fr^1.0 title_fr^1.5 fullname_fr^1.0 doccontent_fr^1.0 attcontent_fr^1.0 objcontent_fr^1.0 filename_fr^1.0 comment_fr^1.0
+          name_es^1.0 title_es^1.5 fullname_es^1.0 doccontent_es^1.0 attcontent_es^1.0 objcontent_es^1.0 filename_es^1.0 comment_es^1.0
+          name_cs^1.0 title_cs^1.5 fullname_cs^1.0 doccontent_cs^1.0 attcontent_cs^1.0 objcontent_cs^1.0 filename_cs^1.0 comment_cs^1.0
+          space^0.5 wiki^0.5 version^1.0 lang^1.0 type^1.0 object^1.5 author^1.0 creator^1.0 date^1.0 creationdate^1.0 mimetype^1.0
        </str>
 
        <str name="facet">on</str>
@@ -755,8 +755,8 @@
        <str name="facet.field">creationdate</str>
        <str name="facet.field">author</str>
        <str name="facet.field">creator</str>
-       <str name="facet.field">hascomment</str>
-       <str name="facet.field">hasattachment</str>
+       <!--str name="facet.field">hascomment</str-->
+       <!--str name="facet.field">hasattachment</str-->
 
 
        <!-- Highlighting defaults -->

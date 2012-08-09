@@ -128,19 +128,12 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
             execution.pushContext(context);
 
-            try {
-                solrServer.deleteByQuery("*:*");
-                solrServer.commit();
-            } catch (Exception e) {
-                logger.error("Error while deleting the index");
-            }
-
             long totalTime = 0;
 
             try {
                 for (int i = 0; i < docList.size(); i += 10) {
                     int start = i;
-                    int end = (i + 10) < docList.size() ? (i + 10) : (docList.size() - 1);
+                    int end = (i + 10) < docList.size() ? (i + 10) : (docList.size());
                     List<DocumentReference> subList = docList.subList(start, end);
                     List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
                     long startTime, endTime, fetchTime = 0;

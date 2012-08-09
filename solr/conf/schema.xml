@@ -310,7 +310,7 @@ Case insensitive stop word removal. add enablePositionIncrements=true in both th
     <!-- Multilingual text fields.  -->
 
     <!-- Czech -->
-    <fieldType name="text_cz" class="solr.TextField" positionIncrementGap="100">
+    <fieldType name="text_cs" class="solr.TextField" positionIncrementGap="100">
       <analyzer> 
         <tokenizer class="solr.StandardTokenizerFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
@@ -333,6 +333,14 @@ Case insensitive stop word removal. add enablePositionIncrements=true in both th
         <tokenizer class="solr.StandardTokenizerFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
         <filter class="solr.FrenchLightStemFilterFactory"/>
+      </analyzer>
+    </fieldType>
+
+    <!-- Multilingual and default-->
+    <fieldType name="text_ml" class="solr.TextField" positionIncrementGap="100">
+      <analyzer> 
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
     </fieldType>
 
@@ -612,7 +620,8 @@ Case insensitive stop word removal. add enablePositionIncrements=true in both th
    <dynamicField name="*_en"  type="text_en"    indexed="true"  stored="true" multiValued="true" />
    <dynamicField name="*_fr"  type="text_fr"    indexed="true"  stored="true" multiValued="true" />
    <dynamicField name="*_es"  type="text_es"    indexed="true"  stored="true" multiValued="true" />
-   <dynamicField name="*_cz"  type="text_cz"    indexed="true"  stored="true" multiValued="true" />
+   <dynamicField name="*_cs"  type="text_cs"    indexed="true"  stored="true" multiValued="true" />
+   <dynamicField name="*_ml"  type="text_ml"    indexed="true"  stored="true" multiValued="true" />
    <dynamicField name="*_b"  type="boolean" indexed="true"  stored="true"/>
    <dynamicField name="*_f"  type="float"  indexed="true"  stored="true"/>
    <dynamicField name="*_d"  type="double" indexed="true"  stored="true"/>

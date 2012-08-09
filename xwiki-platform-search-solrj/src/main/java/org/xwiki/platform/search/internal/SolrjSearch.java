@@ -93,7 +93,7 @@ public class SolrjSearch extends AbstractSearch
 
     @Inject
     private DocumentAccessBridge documentAccessBridge;
-    
+
     @Inject
     @Named(SolrjSearchRequest.HINT)
     private SearchRequest searchRequest;
@@ -181,9 +181,13 @@ public class SolrjSearch extends AbstractSearch
         for (Object[] document : documents) {
 
             String spaceName = (String) document[0];
+            String language = (String) document[3];
+            
             DocumentReference documentReference =
-                new DocumentReference(wikiReference.getName(), spaceName, (String) document[1]);
-            docsList.add(documentReference);
+                new DocumentReference(wikiReference.getName(), spaceName, (String) document[1],language);
+            if(documentAccessBridge.exists(documentReference)){
+                docsList.add(documentReference);
+            }
         }
 
         indexer.indexDocuments(reference, docsList);
@@ -253,8 +257,8 @@ public class SolrjSearch extends AbstractSearch
                 DocumentReference documentReference = new DocumentReference(wikiName, spaceName, (String) document[1]);
                 docsList.add(documentReference);
             }
-            WikiReference wikiReference=new WikiReference(wikiName);
-            indexer.deleteIndex(wikiReference,docsList);
+            WikiReference wikiReference = new WikiReference(wikiName);
+            indexer.deleteIndex(wikiReference, docsList);
             return true;
         } catch (Exception e) {
             return false;

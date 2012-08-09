@@ -87,7 +87,7 @@ public interface DocumentField
     /**
      * XWiki object type, only used for objects
      */
-    String OBJECT_CONTENT = "objtxt";
+    String OBJECT_CONTENT = "objcontent";
 
     /**
      * Last modifier
