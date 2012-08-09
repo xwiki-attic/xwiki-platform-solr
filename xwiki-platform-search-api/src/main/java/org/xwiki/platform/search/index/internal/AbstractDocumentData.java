@@ -160,7 +160,7 @@ public abstract class AbstractDocumentData implements DocumentData
                 language=documentAccessBridge.getDocument(documentReference).getRealLanguage();
             }else{
                 //Multilingual and Default placeholder
-                language = "ml" ;
+                language = "en" ;
             }
         } catch (Exception e) {
             logger.error("Exception while fetching the language of the document - " + documentReference);

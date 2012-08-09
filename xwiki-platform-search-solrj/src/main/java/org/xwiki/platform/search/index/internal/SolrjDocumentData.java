@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -94,11 +95,11 @@ public class SolrjDocumentData extends AbstractDocumentData
             XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
             
             String doclang="";
-            if(documentReference.getLocale()!=null){
+            if(documentReference.getLocale()!=null&& !StringUtils.isEmpty(documentReference.getLocale().toString())){
                 doclang=documentReference.getLocale().toString();
             }
+
             XWikiDocument tdoc=xdoc.getTranslatedDocument(doclang,getXWikiContext());
-            
             
             String language = getLanguage(documentReference);
             sdoc.addField(ID, getDocumentId(documentReference));
