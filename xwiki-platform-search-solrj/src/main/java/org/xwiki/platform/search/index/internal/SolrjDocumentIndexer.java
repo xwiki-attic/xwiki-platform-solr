@@ -33,6 +33,7 @@ import javax.inject.Singleton;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.SolrInputField;
 import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.bridge.DocumentModelBridge;
@@ -45,6 +46,7 @@ import org.xwiki.context.ExecutionContextManager;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
+import org.xwiki.platform.search.DocumentField;
 import org.xwiki.platform.search.index.DocumentData;
 import org.xwiki.platform.search.index.DocumentIndexer;
 import org.xwiki.platform.search.index.DocumentIndexerStatus;
@@ -110,7 +112,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             ExecutionContext context = new ExecutionContext();
             // Create a SolrDocData object
             SolrDocData solrdoc = new SolrDocData();
-            DocumentIndexerStatus indexerStatus = new DocumentIndexerStatus();
+            DocumentIndexerStatus indexerStatus = new SolrjDocumentIndexerStatus();
             indexerStatusMap.put(Thread.currentThread().getName(), indexerStatus);
 
             indexerStatus.setTotalDocCount(docList.size());
@@ -175,9 +177,23 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                     try {
                         UpdateResponse updateResponse = solrServer.add(docs);
                         UpdateResponse commitResponse = solrServer.commit();
+
+                        for (SolrInputDocument doc : docs) {   
+                            String lang=(String) doc.getFieldValue(DocumentField.LANGUAGE);
+                            if (doc.getField(DocumentField.DOCUMENT_CONTENT+"_"+lang) != null) {
+                                doc.removeField(DocumentField.DOCUMENT_CONTENT+"_"+lang);
+                            }
+                            if (doc.getField(DocumentField.ATTACHMENT_CONTENT+"_"+lang) != null) {
+                                doc.removeField(DocumentField.ATTACHMENT_CONTENT+"_"+lang);
+                            }
+                            if (doc.getField(DocumentField.OBJECT_CONTENT+"_"+lang) != null) {
+                                doc.removeField(DocumentField.OBJECT_CONTENT+"_"+lang);
+                            }
+                        }
+                        
                         // Send out a notification
                         indexerStatus.addStepDetails(
-                            fetchTime + updateResponse.getElapsedTime() + commitResponse.getElapsedTime(), 10);
+                            fetchTime + updateResponse.getElapsedTime() + commitResponse.getElapsedTime(), 10, docs);
                         totalTime += fetchTime + updateResponse.getElapsedTime() + commitResponse.getElapsedTime();
                     } catch (Exception e) {
                         logger.error("Error commiting solr index updates");
@@ -207,7 +223,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         public DeleteIndexThread(EntityReference entityReference, List<DocumentReference> docList)
         {
             this.docList = docList;
-            this.entityReference=entityReference;
+            this.entityReference = entityReference;
         }
 
         @Override

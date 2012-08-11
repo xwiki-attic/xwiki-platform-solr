@@ -1,6 +1,10 @@
 package org.xwiki.platform.search;
 
+import java.util.List;
+import java.util.Map;
+
 import org.xwiki.component.annotation.Role;
+import org.xwiki.model.reference.EntityReference;
 
 /*
  * See the NOTICE file distributed with this work for additional
@@ -35,5 +39,23 @@ public interface SearchRequest
      * @return
      */
     String processRequestQuery(String query);
+    
+    String processQueryFrequency(String qfString);
+    
+    Map<String,String> getSearchParametersMap();
+    
+    Map<String,String> getFilterParametersMap();
+    
+    void setQueryString(String query);
+    
+    String getQueryString();
+    
+    void setLanguages(List<String> languages);
+    
+    void setEntityReference(EntityReference entityReference);
+    
+    void setSearchParametersMap(Map<String,String> searchParametersMap);
+    
+    void setFilterParametersMap(Map<String,String> filterParametersMap);
 
 }

@@ -22,34 +22,36 @@ package org.xwiki.platform.search.index;
 import java.util.List;
 
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReference;
+
 
 /**
  * Status of the document indexer.
  * 
  * @version $Id$
  */
-public class DocumentIndexerStatus
+public abstract class DocumentIndexerStatus
 {
-    private long estimatedCompletionTime;
+    protected long estimatedCompletionTime;
 
-    private String estimatedCompletionTimeAsString;
+    protected String estimatedCompletionTimeAsString;
 
-    private float indexingSpeed;
+    protected float indexingSpeed;
 
-    private int indexedDocs;
+    protected int indexedDocs;
 
-    private int totalDocCount;
+    protected int totalDocCount;
 
-    private long elapsedTime;
+    protected long elapsedTime;
 
-    private String elapsedTimeAsString;
+    protected String elapsedTimeAsString;
     
-    private String title;
+    protected String title;
     
-    private String entityName;
+    protected String entityName;
     
-    private String entityType;
+    protected String entityType;
+    
+
     
     
 
@@ -215,32 +217,10 @@ public class DocumentIndexerStatus
         return (this.totalDocCount - this.indexedDocs);
     }
 
-    public synchronized void addStepDetails(long elapsedTime1, int docsIndexed)
-    {
-        this.elapsedTime += elapsedTime1;
-        this.indexedDocs += docsIndexed;
-        int docsRemaining = this.totalDocCount - this.indexedDocs;
-        float timeForEachDoc = 0;
+    public abstract void addStepDetails(long elapsedTime1, int docsIndexed,List<?> recentlyIndexedDocs);
 
-        if (this.indexedDocs > 0) {
-            timeForEachDoc = (float) (this.elapsedTime / this.indexedDocs);
-        }
 
-        this.setEstimatedCompletionTime((long) (docsRemaining * timeForEachDoc));
-        if (this.elapsedTime > 0) {
-            
-            int a=(this.indexedDocs*1000);           
-            float speed=(a/this.elapsedTime);
-            System.out.println(speed);
-            this.setIndexingSpeed(speed);
-        }
-        this.setEstimatedCompletionTimeAsString(this.formatIntoHHMMSS((int) (this.estimatedCompletionTime / 1000)));
-
-        this.setElapsedTimeAsString(this.formatIntoHHMMSS((int) (this.elapsedTime / 1000)));
-
-    }
-
-    private String formatIntoHHMMSS(int secondsInput)
+    protected String formatIntoHHMMSS(int secondsInput)
     {
         int hours = (int) (secondsInput / 3600), remainder = (int) (secondsInput % 3600), minutes =
             (int) remainder / 60, seconds = remainder % 60;
@@ -280,6 +260,12 @@ public class DocumentIndexerStatus
     {
         this.entityType = entityType;
     }
+
+    /**
+     * @return the recentlyIndexedDocs
+     */
+    public abstract List<?> getRecentlyIndexedDocs();
+
 
 
 }

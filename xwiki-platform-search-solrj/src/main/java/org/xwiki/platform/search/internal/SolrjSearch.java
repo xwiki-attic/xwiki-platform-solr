@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -40,6 +41,7 @@ import org.xwiki.bridge.event.DocumentDeletedEvent;
 import org.xwiki.bridge.event.DocumentUpdatedEvent;
 import org.xwiki.bridge.event.WikiDeletedEvent;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
@@ -93,10 +95,6 @@ public class SolrjSearch extends AbstractSearch
 
     @Inject
     private DocumentAccessBridge documentAccessBridge;
-
-    @Inject
-    @Named(SolrjSearchRequest.HINT)
-    private SearchRequest searchRequest;
 
     /**
      * {@inheritDoc}
@@ -182,10 +180,10 @@ public class SolrjSearch extends AbstractSearch
 
             String spaceName = (String) document[0];
             String language = (String) document[3];
-            
+
             DocumentReference documentReference =
-                new DocumentReference(wikiReference.getName(), spaceName, (String) document[1],language);
-            if(documentAccessBridge.exists(documentReference)){
+                new DocumentReference(wikiReference.getName(), spaceName, (String) document[1], language);
+            if (documentAccessBridge.exists(documentReference)) {
                 docsList.add(documentReference);
             }
         }
@@ -360,62 +358,6 @@ public class SolrjSearch extends AbstractSearch
     }
 
     /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.Search#search(java.lang.String, java.util.List,
-     *      org.xwiki.model.reference.WikiReference)
-     */
-    @Override
-    public SearchResponse search(String query, List<String> languages, EntityReference reference,
-        Map<String, String> searchParameters)
-    {
-        return this.search(query, languages, reference, searchParameters, Collections.EMPTY_MAP);
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.Search#search(java.lang.String, java.util.List,
-     *      org.xwiki.model.reference.EntityReference, java.util.Map, java.util.Map)
-     */
-    @Override
-    public SearchResponse search(String query, List<String> languages, EntityReference reference,
-        Map<String, String> searchParameters, Map<String, String> filterParameters)
-    {
-        logger.info("Searching for the query string :" + query + " Languages:" + languages + " in entity reference "
-            + reference);
-        logger.info("Search parameters : " + searchParameters);
-        // SolrQuery
-        SolrServer solrserver;
-        QueryResponse queryResponse;
-        SolrjSearchResponse searchResponse;
-        try {
-            StringBuilder queryString = new StringBuilder();
-            queryString.append(query);
-            for (Entry<String, String> entry : filterParameters.entrySet()) {
-                queryString.append(" " + entry.getKey() + ":" + entry.getValue());
-            }
-            SolrQuery solrQuery = new SolrQuery(searchRequest.processRequestQuery(queryString.toString()));
-
-            if (searchParameters != null && searchParameters.size() > 0) {
-                for (Entry<String, String> entry : searchParameters.entrySet()) {
-                    solrQuery.add(entry.getKey(), entry.getValue());
-                }
-            }
-            solrserver = (SolrServer) searchEngine.getSearchEngine();
-            queryResponse = solrserver.query(solrQuery);
-            searchResponse = this.componentManager.getInstance(SearchResponse.class, SolrjSearchResponse.HINT);
-            searchResponse.processQueryResult(queryResponse);
-            logger.info("Returning search response : \n" + searchResponse);
-            return searchResponse;
-
-        } catch (Exception e) {
-            logger.info("Failed to retrieve the solrserver object");
-        }
-        return null;
-    }
-
-    /**
      * @param attachment
      * @param doc
      * @return the boolean true if successfully indexed
@@ -491,5 +433,91 @@ public class SolrjSearch extends AbstractSearch
         CoreContainer container = (CoreContainer) searchEngine.getCoreContainer();
         SolrServer server = (SolrServer) searchEngine.getSearchEngine();
         return new VelocityUtils(container, server);
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#search(org.xwiki.platform.search.SearchRequest)
+     */
+    @Override
+    public SearchResponse search(SearchRequest request)
+    {
+        SearchResponse response = null;
+        if (request != null) {
+            // SolrQuery
+            SolrServer solrserver;
+            QueryResponse queryResponse;
+            SolrjSearchResponse searchResponse;
+            try {
+                StringBuilder queryString = new StringBuilder();
+                queryString.append(request.getQueryString());
+
+                if (request.getFilterParametersMap() != null) {
+                    for (Entry<String, String> entry : request.getFilterParametersMap().entrySet()) {
+                        queryString.append(" " + entry.getKey() + ":" + entry.getValue());
+                    }
+                }
+
+                String queryPostProcessing = request.processRequestQuery(queryString.toString());
+                logger.info("Query :" + queryPostProcessing);
+                SolrQuery solrQuery = new SolrQuery(queryPostProcessing);
+
+                if (request.getSearchParametersMap() != null && request.getSearchParametersMap().size() > 0) {
+                    for (Entry<String, String> entry : request.getSearchParametersMap().entrySet()) {
+                        if(entry.getKey().equals("qf")){
+                            String value=request.processQueryFrequency(entry.getValue());
+                            if(!StringUtils.isEmpty(value))       
+                                solrQuery.add(entry.getKey(),value);
+                        }else{
+                            if(!StringUtils.isEmpty(entry.getValue()))
+                                solrQuery.add(entry.getKey(), entry.getValue());
+                        }
+                       
+                    }
+                    
+                    
+                }
+                solrserver = (SolrServer) searchEngine.getSearchEngine();
+                queryResponse = solrserver.query(solrQuery);
+                searchResponse = this.componentManager.getInstance(SearchResponse.class, SolrjSearchResponse.HINT);
+                searchResponse.processQueryResult(queryResponse);
+                logger.info("Returning search response : \n" + searchResponse);
+                return searchResponse;
+
+            } catch (Exception e) {
+                logger.info("Failed to retrieve the solrserver object");
+            }
+        }
+        return response;
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#getSearchRequest()
+     */
+    @Override
+    public SearchRequest getSearchRequest()
+    {
+        SearchRequest searchRequest = null;
+        try {
+            searchRequest = this.componentManager.getInstance(SearchRequest.class, SolrjSearchRequest.HINT);
+        } catch (ComponentLookupException e) {
+            logger.error("Error in SearchRequest component looup with Hint[" + SolrjSearchRequest.HINT + "]");
+        }
+        return searchRequest;
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#search(java.lang.String)
+     */
+    @Override
+    public SearchResponse search(String query)
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

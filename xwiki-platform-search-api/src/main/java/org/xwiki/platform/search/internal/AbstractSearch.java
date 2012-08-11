@@ -148,28 +148,5 @@ public abstract class AbstractSearch implements Search, EventListener
     {
         return "XWiki Search";
     }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @see org.xwiki.platform.search.Search#search(java.lang.String)
-     */
-    @Override
-    public SearchResponse search(String query, Map<String, String> searchParameters)
-    {
-        return this.search(query, null, searchParameters);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @see org.xwiki.platform.search.Search#search(java.lang.String, java.util.List)
-     */
-    @Override
-    public SearchResponse search(String query, List<String> languages, Map<String, String> searchParameters)
-    {
-        return this.search(query, languages, null, searchParameters);
-    }
-
     
 }

@@ -160,45 +160,23 @@ public interface Search
      * @param query to be searched.
      * @return SearchResponse to the query searched.
      */
-    SearchResponse search(String query, Map<String, String> searchParameters);
+    SearchResponse search(String query);
 
     /**
-     * Search for the query in the current wiki for given languages.
+     * Search for the query in the current wiki for all the languages.
      * 
-     * @param query to be searched.
-     * @param languages to be searched.
+     * @param query and parameters as a SearchRequest object.
      * @return SearchResponse to the query searched.
      */
-    SearchResponse search(String query, List<String> languages, Map<String, String> searchParameters);
+    SearchResponse search(SearchRequest request);
 
-    /**
-     * Search for the query in the current wiki for given languages in a wiki.
-     * 
-     * @param query to be searched.
-     * @param languages Wiki reference to be searched for the query.
-     * @param reference Entiy reference ( Space or Wiki ) to be searched for the query.
-     * @return SearchResponse to the query searched.
-     */
-    SearchResponse search(String query, List<String> languages, EntityReference reference,
-        Map<String, String> searchParameters);
-
-    /**
-     * Search for the query in the current wiki for given languages in a wiki.
-     * 
-     * @param query to be searched.
-     * @param languages Wiki reference to be searched for the query.
-     * @param reference Entiy reference ( Space or Wiki ) to be searched for the query.
-     * @param searchParameters
-     * @param filterParameters
-     * @return SearchResponse to the query searched.
-     */
-    SearchResponse search(String query, List<String> languages, EntityReference reference,
-        Map<String, String> searchParameters, Map<String, String> filterParameters);
 
     Map<String, DocumentIndexerStatus> getStatus();
 
     String getStatusAsJson();
 
     Object getVelocityUtils();
+
+    SearchRequest getSearchRequest();
 
 }
