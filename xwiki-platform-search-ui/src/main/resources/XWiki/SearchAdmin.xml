@@ -332,5 +332,5 @@ $msg.get('search.admin.configuration.seexwikicfg')
 
 = {{velocity}}$msg.get('search.admin.lucene.title'){{/velocity}} =
 
-{{include document="XWiki.SolrSearchAdmin"}}</content>
+{{include document="XWiki.LuceneSearchAdmin"}}</content>
 </xwikidoc>

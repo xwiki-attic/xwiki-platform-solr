@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xwikidoc>
+<web>Main</web>
+<name>AdvancedSearch</name>
+<language></language>
+<defaultLanguage></defaultLanguage>
+<translation>0</translation>
+<parent>Main.WebHome</parent>
+<creator>xwiki:XWiki.Admin</creator>
+<author>xwiki:XWiki.Admin</author>
+<customClass></customClass>
+<contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+<creationDate>1343862655000</creationDate>
+<date>1344723366000</date>
+<contentUpdateDate>1344723366000</contentUpdateDate>
+<version>1.1</version>
+<title>Advanced Search</title>
+<template></template>
+<defaultTemplate></defaultTemplate>
+<validationScript></validationScript>
+<comment></comment>
+<minorEdit>false</minorEdit>
+<syntaxId>xwiki/2.1</syntaxId>
+<hidden>false</hidden>
+<content>{{velocity}}
+{{include document="SearchMacros"/}}
+#set($docextras = [])
+$xwiki.jsfx.use("js/prototype/prototype.js")
+$xwiki.jsfx.use("js/scriptaculous/effects.js")
+$xwiki.jsfx.use("js/scriptaculous/accordion.js")
+##*****************************************************##
+## Arguments
+##*****************************************************##
+#set($text = "$!request.getParameter('q')")
+#set($rows_f = "$!request.getParameter('rows')")
+#set($start_f = "$!request.getParameter('firstIndex')")
+#set($end_f = "$!request.getParameter('end')")
+#set($space_f = "$!request.getParameter('space')")
+#set($lang_f = "$!request.getParameter('lr')")
+#set($filter = "$!request.getParameter('f')")
+#set($debug = "$!request.getParameter('x')")
+#set($boost = "$!request.getParameter('qf')")
+#set($filetype = "$!request.getParameter('ft')")
+#set($type = "$!request.getParameter('t')")
+#set($boost = "$!request.getParameter('qf')")
+
+
+{{html wiki="true"}}
+
+##*****************************************************##
+## Search Results
+##*****************************************************##
+#if($text != "" )
+	#set( $queryString="$text")
+	#set( $searchService = $services.search )
+	#set( $searchObj = $searchService.getSearch() )
+	#set( $req= $searchObj.getSearchRequest())
+
+
+	## Query text
+	$req.setQueryString($text)
+
+	##Search Parameters
+		##Default the attributes
+		#if($rows_f != "")
+			#set($rows=$rows_f)
+		#else
+			#set($rows="10")
+		#end
+		#if($start_f != "")
+			#set($start=$start_f)
+		#else
+			#set($start="0")
+		#end
+		#if($end_f != "")
+			#set($end=$end_f)
+		#else
+			#set($end="0")
+		#end
+
+		#set($smap=$req.getSearchParametersMap())
+		#set($a=$smap.put("start","${start}"))
+		#set($a=$smap.put("rows","${rows}"))
+		#set($a=$smap.put("qf","${boost}"))
+
+	##Search Parameters End
+
+	## Languages
+	#set ($languages = [$xcontext.language])
+	$req.setLanguages($languages)
+		
+	## Filter parameters
+
+
+	## Filter parameters end
+
+	##Filter based on entity. Space, Wiki.
+	#if($space_f != "")		
+		#set( $spacename = $space_f )
+		#set( $webhome = "WebHome" )
+		#set( $spaceDoc=$xwiki.getDocument("$spacename.$webhome"))
+		#set( $entityReference=$spaceDoc.getDocumentReference().getLastSpaceReference())
+		$req.setEntityReference($entityReference)
+	#end
+
+
+	## Search Results
+	#set( $searchResponse = $searchObj.search($req))
+
+	## Results
+	#set($maxScore = $searchResponse.getMaxScore() )
+	#set($totalNumber = $searchResponse.getTotalNumber() )
+	#set($totalResults = $searchResponse.getTotalResults())
+	#set($resultsCount = $totalResults.size())
+
+	#set( $queryResponse = $searchResponse.getQueryResponse())
+	#set( $spaceFacetFields = $queryResponse.getFacetField("space"))
+	#set( $langFacetFields = $queryResponse.getFacetField("lang"))
+	#set( $explainMap=$queryResponse.getExplainMap())
+	#set( $debugMap=$queryResponse.getDebugMap())
+#end
+
+
+## ---------------
+## Space macros
+## ---------------
+#macro(spaceoption $space $selectedSpace)
+	&lt;option value="${space}" #if($selectedSpace == $space)selected="selected"#end&gt;$space&lt;/option&gt;
+#end
+#macro(spaceselect $selectedSpace $spaces)
+&lt;select name="space" title="$msg.get('search.page.bar.spaces.title')"&gt;
+	&lt;option value="" #if($selectedSpace == '')selected="selected"#end&gt;$msg.get('search.page.bar.spaces.all')&lt;/option&gt;
+	#foreach($space in $spaces)
+		#if (!$blacklistedSpaces.contains($space) &amp;&amp; $xwiki.hasAccessLevel('view', "${space}.DocumentReservedForInternalXWikiUsage${mathtool.random(0, 999)}"))
+			#spaceoption($space $selectedSpace)
+		#end
+	#end
+&lt;/select&gt;
+#end
+## ---------------
+## Space filtering
+## ---------------
+#set($extraClause = '')
+#set($spaces = $xwiki.spaces)
+#set($selectedSpace = "$!request.space")
+#if($selectedSpace != '' &amp;&amp; !$blacklistedSpaces.contains($selectedSpace))
+  #set($extraClause = " AND space:${selectedSpace}")
+#end
+
+&lt;div class="search-bar"&gt;
+	&lt;form&gt;
+		&lt;div id="search_bar"
+			&lt;div&gt;
+				&lt;input type="text" title="Enter your search query" name="q" id="text" class="searchQuery" value="$text"&gt;
+				&lt;input type="submit" value="Search" title="Alt+S" class="button searchButton"&gt;
+			&lt;/div&gt;
+			&lt;div&gt;
+				&lt;input id="filter" type="checkbox" #if($filter != "")checked="true"#end name="f" onchange="filterChange(this)"/&gt;
+				&lt;label&gt;Filtered Search&lt;/label&gt;
+				&lt;input id="debug" type="checkbox" #if($debug != "")checked="true"#end name="x" onchange="debugChange(this)"/&gt;
+				&lt;label&gt;Debug Query&lt;/label&gt;
+			&lt;/div&gt;
+			&lt;div id="filteredSearch" #if($filter == "")class="noshow"#end&gt;
+				&lt;table&gt;
+					&lt;tr&gt;
+						&lt;td&gt;&lt;label&gt;Spaces&lt;/label&gt;&lt;/td&gt;
+						&lt;td&gt;#spaceselect($selectedSpace $spaces)&lt;/td&gt;
+					&lt;/tr&gt;
+					&lt;tr&gt;
+						&lt;td&gt;&lt;label&gt;Language&lt;/label&gt;&lt;/td&gt;
+						&lt;td&gt;
+							&lt;select name="lr"&gt;
+								&lt;option value=""&gt;All languages&lt;/option&gt;
+							&lt;/select&gt;
+						&lt;/td&gt;
+					&lt;/tr&gt;
+					&lt;tr&gt;
+						&lt;td&gt;&lt;label&gt;Type&lt;/label&gt;&lt;/td&gt;
+						&lt;td&gt;
+							&lt;select name="t"&gt;
+								&lt;option value=""&gt;All types&lt;/option&gt;
+								&lt;option&gt;Attachments&lt;/option&gt;
+								&lt;option&gt;Objects&lt;/option&gt;
+								&lt;option&gt;Comments&lt;/option&gt;
+							&lt;/select&gt;
+						&lt;/td&gt;
+					&lt;/tr&gt;
+					&lt;tr&gt;
+						&lt;td&gt;&lt;label&gt;Filetype&lt;/label&gt;&lt;/td&gt;
+						&lt;td&gt;
+							&lt;select name="ft"&gt;
+								&lt;option value=""&gt;All file types&lt;/option&gt;
+								&lt;option&gt;Adobe Acrobat PDF (.pdf)&lt;/option&gt;
+								&lt;option&gt;Microsoft Word (.doc/.docx)&lt;/option&gt;
+								&lt;option&gt;Microsoft Powerpoint (.ppt/.pptx)&lt;/option&gt;
+								&lt;option&gt;Microsoft Excel (.xls/.xlsx)&lt;/option&gt;
+								&lt;option&gt;XWiki Archive (.xar)&lt;/option&gt;
+							&lt;/select&gt;
+						&lt;/td&gt;
+					&lt;/tr&gt;
+					&lt;tr&gt;
+						&lt;td&gt;&lt;label&gt;Query boost&lt;/label&gt;&lt;/td&gt;
+						&lt;td&gt;&lt;input type="text" value="$boost" name="qf" size="50"/&gt;&lt;span&gt;e.g. title^1.2 name^2.0 author^1.0 doccontent^0.5&lt;/span&gt;&lt;/td&gt;
+
+					&lt;/tr&gt;
+				&lt;/table&gt;
+			&lt;/div&gt;
+		&lt;/div&gt;
+
+	&lt;/form&gt;
+	&lt;div id="debugSearch" #if($debug == "")class="noshow"#end&gt;
+		&lt;span&gt;Debug is On&lt;span&gt;
+		#if($debugMap)
+			&lt;div&gt;&lt;b&gt;Query Parser:&lt;/b&gt;$debugMap.get('QParser')&lt;/div&gt;
+			&lt;div&gt;&lt;b&gt;Parsed Query:&lt;/b&gt;$debugMap.get('parsedquery')&lt;/div&gt;
+			&lt;div&gt;&lt;b&gt;Processing time:&lt;/b&gt;$debugMap.get('timing')&lt;/div&gt; 
+		#end
+	&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div style="overflow: hidden"&gt;
+
+	#if ( $text != "" )
+
+		##***************************************************##
+		## Pagination                                        ##
+		##***************************************************##
+		#set($paginationParameters = {
+			'url' : $doc.getURL('view', "text=${escapetool.url($text)}"),
+			'totalItems' : $totalNumber,
+			'defaultItemsPerPage' : 10,
+			'position': 'top'
+		})
+		#pagination($paginationParameters)
+
+		#if($resultsCount &gt; 0 )
+		&lt;div id="main_container"&gt;
+			&lt;div id="side_nav" class="accordion"&gt;   
+				#foreach($facetfield in $queryResponse.getFacetFields())
+					#set($fall=$facetfield.getValues())
+					#set($frem=$facetfield.getLimitingFields(1).getValues())
+					#set($freq=$fall.removeAll($frem))
+					#if($fall.size()&gt;1)
+						&lt;div class="accordion-toggle"&gt;${facetfield.getName()}&lt;/div&gt; 
+						&lt;div class="accordion-content"&gt;
+							&lt;ul&gt;
+								&lt;li&gt;&lt;a href="$doc.getURL('view', "text=${escapetool.url($text)}")" &gt;All&lt;/a&gt;&lt;/li&gt;
+								#foreach($facet_count in $facetfield.getValues())
+									#if ($facet_count.getCount() &gt; 0 &amp;&amp; $facet_count.getName() != "date" &amp;&amp; $facet_count.getName() != "creationdate")
+										&lt;li&gt;&lt;a href="$doc.getURL('view', "text=${escapetool.url($text)}&amp;${facetfield.getName()}=${escapetool.url($facet_count.getName())}")" &gt;$facet_count&lt;/a&gt;&lt;/li&gt;
+									#end
+								#end
+							&lt;/ul&gt;
+						&lt;/div&gt;
+					#end
+				 #end
+			&lt;/div&gt;
+			&lt;div id="search-results"&gt;
+			#foreach( $searchResult in $totalResults )
+			    ##***************************************************##
+			    ## Document                                          ##
+			    ##***************************************************##
+			    #set($itemfullname = $services.model.serialize($searchResult.getReference()))
+			    #set($itemDoc = $xwiki.getDocument($itemfullname))
+                            #set($itemType=$searchResult.getType())
+
+			    #if($itemType=="ATTACHMENT")
+			    	#set($title=$searchResult.getFileName())
+			    	#set($title_url="$searchResult.getURL()")
+                                #set($itemtypeclass="search-attachment")
+                            #elseif($itemType=="OBJECT")
+                                #set($itemtypeclass="search-object")
+			    	#set($title=$escapetool.xml($xwiki.getDocument($itemfullname).plainTitle))
+			    	#set($title_url=$xwiki.getURL($itemfullname))
+                            #elseif($itemType=="PROPERTY")
+                                #set($itemtypeclass="search-property")
+			    	#set($title=$escapetool.xml($xwiki.getDocument($itemfullname).plainTitle))
+			    	#set($title_url=$xwiki.getURL($itemfullname))
+			    #else
+			    	#set($title=$escapetool.xml($xwiki.getDocument($itemfullname).plainTitle))
+			    	#set($title_url=$xwiki.getURL($itemfullname))
+                                #set($itemtypeclass="search-doc")
+			    #end 
+			    &lt;div&gt;
+			        &lt;div class="search-item"&gt;
+				        &lt;div class="search-item-description ${itemtypeclass}"&gt;
+					        ##Title
+					        &lt;h2 class="search-item-title"&gt;
+					           &lt;a href="$title_url"&gt;$title&lt;/a&gt;
+					        &lt;/h2&gt;
+					        #if($searchResult.getTitle()) &lt;div&gt;${searchResult.getTitle()}&lt;/div&gt;#end
+				            ##*********************************************************##
+				            ## Location                                                ##
+				            ##*********************************************************##
+				            &lt;div class="search-item-location"&gt;
+				              $msg.get('search.item.location', [
+				              $escapetool.xml($itemDoc.wiki), $xwiki.getURL("$searchResult.getWikiName():Main.WebHome"),
+				              $escapetool.xml($itemDoc.space), $xwiki.getURL("$searchResult.getWikiName():$searchResult.getSpaceName().WebHome"),
+				              $escapetool.xml($itemDoc.name), $xwiki.getURL($itemfullname)])
+				            &lt;/div&gt;
+				        &lt;/div&gt;
+				        &lt;div class="search-item-relevance"&gt;
+			                ##if ($isScored)
+			                #set ($resval = $mathtool.min($mathtool.mul($searchResult.getScore(), 100), 100))
+			                ##*********************************************************##
+			                ## Relevance                                               ##
+			                ##*********************************************************##
+			                  &lt;span class="item-relevance" title="$msg.get('search.item.relevance.title')"&gt;
+			                    &lt;span class="current-relevance" style="width:${resval}%;"&gt;&lt;/span&gt;
+			                  &lt;/span&gt;
+			                  &lt;span class="relevance-text"&gt;$resval.intValue()%&lt;/span&gt;
+                                          &lt;a title="${searchResult.getId()}" class="debug" href="javascript:" onclick="handleDebugClick(this)"&gt;Debug&lt;/a&gt;
+			                ##end ## isScored
+				        &lt;/div&gt;
+			        &lt;/div&gt;
+                                #if($searchResult.getHighlightText())
+			        &lt;div&gt;
+			        	&lt;p&gt;$searchResult.getHighlightText()&lt;/p&gt;
+			        &lt;/div&gt;
+                                #end
+                                &lt;div id="debug_${searchResult.getId()}" class="noshow"&gt;
+                                     &lt;pre&gt;
+                                          $explainMap.get($searchResult.getId())
+                                     &lt;/pre&gt;
+                                &lt;/div&gt;
+			    &lt;/div&gt;
+			#end
+		&lt;/div&gt;
+		#end
+	#end
+
+	&lt;p style="clear: both"&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;p style="clear: both"&gt;&lt;/p&gt;
+
+{{/html}}
+
+{{/velocity}}</content></xwikidoc>

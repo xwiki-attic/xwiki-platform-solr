@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xwikidoc>
+<web>XWiki</web>
+<name>SearchAdminMacros</name>
+<language></language>
+<defaultLanguage></defaultLanguage>
+<translation>0</translation>
+<parent>Main.WebHome</parent>
+<creator>xwiki:XWiki.Admin</creator>
+<author>xwiki:XWiki.Admin</author>
+<customClass></customClass>
+<contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+<creationDate>1344724670000</creationDate>
+<date>1344724751000</date>
+<contentUpdateDate>1344724751000</contentUpdateDate>
+<version>1.1</version>
+<title></title>
+<template></template>
+<defaultTemplate></defaultTemplate>
+<validationScript></validationScript>
+<comment></comment>
+<minorEdit>false</minorEdit>
+<syntaxId>xwiki/2.1</syntaxId>
+<hidden>false</hidden>
+<object>
+<class>
+<name>XWiki.JavaScriptExtension</name>
+<customClass></customClass>
+<customMapping></customMapping>
+<defaultViewSheet></defaultViewSheet>
+<defaultEditSheet></defaultEditSheet>
+<defaultWeb></defaultWeb>
+<nameField></nameField>
+<validationScript></validationScript>
+<cache>
+<cache>0</cache>
+<disabled>0</disabled>
+<displayType>select</displayType>
+<multiSelect>0</multiSelect>
+<name>cache</name>
+<number>5</number>
+<prettyName>Caching policy</prettyName>
+<relationalStorage>0</relationalStorage>
+<separator> </separator>
+<separators> ,|</separators>
+<size>1</size>
+<unmodifiable>0</unmodifiable>
+<values>long|short|default|forbid</values>
+<classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+</cache>
+<code>
+<disabled>0</disabled>
+<name>code</name>
+<number>2</number>
+<prettyName>Code</prettyName>
+<rows>20</rows>
+<size>50</size>
+<unmodifiable>0</unmodifiable>
+<classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+</code>
+<name>
+<disabled>0</disabled>
+<name>name</name>
+<number>1</number>
+<prettyName>Name</prettyName>
+<size>30</size>
+<unmodifiable>0</unmodifiable>
+<classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+</name>
+<parse>
+<disabled>0</disabled>
+<displayFormType>select</displayFormType>
+<displayType>yesno</displayType>
+<name>parse</name>
+<number>4</number>
+<prettyName>Parse content</prettyName>
+<unmodifiable>0</unmodifiable>
+<classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+</parse>
+<use>
+<cache>0</cache>
+<disabled>0</disabled>
+<displayType>select</displayType>
+<multiSelect>0</multiSelect>
+<name>use</name>
+<number>3</number>
+<prettyName>Use this extension</prettyName>
+<relationalStorage>0</relationalStorage>
+<separator> </separator>
+<separators> ,|</separators>
+<size>1</size>
+<unmodifiable>0</unmodifiable>
+<values>currentPage=Always on this page|onDemand=On demand|always=Always on this wiki</values>
+<classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+</use>
+</class>
+<name>Search.SearchAdminMacros</name>
+<number>0</number>
+<className>XWiki.JavaScriptExtension</className>
+<guid>55d48e1c-9daa-4208-a517-51ed48fe0ffb</guid>
+<property>
+<cache>long</cache>
+</property>
+<property>
+<code>var ProgressBar = Class.create({
+	initialize:function(container,indexer,entity,entitytype){
+		this.container=container;
+		this.progress=0;
+		this.progressbar=new Element('div',{'class':'indexer_item'});
+		this.progressbardiv=new Element('div',{'id':'bar_'+indexer,'class':'progress_bar'});
+		this.containerWidth = this.progressbardiv.getDimensions().width - (parseInt(this.progressbardiv.getStyle('border-right-width').replace(/px/,''), 10) + parseInt(this.progressbardiv.getStyle('border-left-width').replace(/px/,''), 10));
+		this.progressbardivhelper=new Element('div',{'id':'bar_helper_'+indexer, 'class':'progress_bar_helper'});
+		this.progresstextdiv=new Element('div',{'id':'text_'+indexer});
+		this.progresstimediv=new Element('div',{'id':'time_'+indexer});
+		this.progresstogglediv=new Element('div',{'id':'toggle_'+indexer,'class':'toggl_link'});
+		this.togglelink=new Element('a',{'href':'javascript:','onclick':'handleClick(this);','class':'togglelink','title':indexer}).update("Last Indexed docs");
+		this.progresstogglediv.insert(this.togglelink);
+		this.progresstoggletextdiv=new Element('div',{'id':'toggle_text_'+indexer,'class':'noshow'});
+		this.progressbardiv.insert(this.progressbardivhelper);
+		this.progressbar.insert(this.progressbardiv,0);
+	    this.progressbar.insert(this.progresstextdiv,1);
+		this.progressbar.insert(this.progresstimediv,2);
+		this.progressbar.insert(this.progresstogglediv,3);
+		this.progressbar.insert(this.progresstoggletextdiv,4);
+		this.header=new Element('h6');
+		this.header.update('Document indexer process - '+indexer+' is indexing '+entitytype+' ['+entity+']');
+		this.progresstoggletextdiv.update('Text something..&lt;br/&gt;Something again...');
+		this.container.insert(this.header,0)
+		this.container.insert(this.progressbar,1);
+
+
+			
+	},
+	setProgress:function(value,indexstatus,estimatedtime,tabsText){
+		this.progress=value;
+		// this.progresstextdiv.update(indexeddocs);
+		// this.progresstimediv.update(estimatedtime);
+		console.log(indexstatus);
+		this.progresstextdiv.update(""+indexstatus);
+		if(estimatedtime != null){
+			this.progresstimediv.update(""+estimatedtime);
+		}else{
+			this.progresstimediv.update("");
+		}
+		console.log(tabsText);
+		this.progresstoggletextdiv.update(tabsText);
+		
+		containerwidth=this.progressbardiv.getDimensions().width;
+		var pbarwidth=(containerwidth- Math.floor((parseInt(this.progress, 10) / 100) * containerwidth));
+		this.progressbardivhelper.setStyle({
+            width: pbarwidth+'px',
+            height: '100%',
+            top: 0,
+            right: 0,
+        });
+	}
+});
+
+var pu;
+
+var indexers=new Array();
+
+var progressbars=new Array();
+
+var indexingcontainer;
+
+var url="/xwiki/bin/get/Search/Indexer+Status";
+
+function cleanUpResponseText(responseText){
+	var text=responseText.stripTags().replace(/&amp;#123;/g,"{");
+	return text;
+
+}
+
+	function setTab(e){
+	   var active=e.title;
+	   $$('div.indexText').each(function(el){
+	   		if(el.id == active){
+	   			el.removeClassName("noshow");
+	   		}else{
+	   			if(!el.hasClassName("noshow")){
+	   				el.addClassName("noshow");
+	   			}
+	   		}
+
+	   });
+    }
+
+function getTabs(recentlyIndexedDocs){
+	    var htmlText='&lt;div class="toggl_tabs"&gt;';
+	    var links='&lt;div class="toggl_links" style=""&gt;&lt;ul&gt;';
+
+	    recentlyIndexedDocs.each(function(el){
+				var array2=Object.values(el);
+				htmlText=htmlText+'&lt;div id="'+el.id.value+'" class="indexText noshow"&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Field&lt;/th&gt;&lt;th&gt;Value&lt;/th&gt;&lt;th&gt;Boost&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;';
+		    	var indexval=el.id.value.indexOf('.');
+				links=links+'&lt;li&gt;&lt;a title="'+el.id.value+'""  onclick="setTab(this);" href="javascript:"&gt;'+el.id.value.substring(indexval+1)+'&lt;/a&gt;&lt;/li&gt;'
+				array2.each(function(item){
+					htmlText=htmlText+'&lt;tr&gt;';
+					htmlText=htmlText+'&lt;td&gt;'+item.name+'&lt;/td&gt;';
+					htmlText=htmlText+'&lt;td&gt;'+item.value+'&lt;/td&gt;';
+					htmlText=htmlText+'&lt;td&gt;'+item.boost+'&lt;/td&gt;';
+					htmlText=htmlText+'&lt;/tr&gt;';
+				});
+				htmlText=htmlText+'&lt;/table&gt;&lt;/div&gt;';
+	    });
+	    links=links+'&lt;/ul&gt;&lt;/div&gt;';
+	    htmlText=htmlText+'&lt;/div&gt;'
+	    return links+htmlText+'&lt;div class="clear"&gt;&lt;/div&gt;';
+}
+
+function handleClick(e){
+	var toggl_text=$('toggle_text_'+e.title);
+	console.log(e.title);
+	console.log(toggl_text);
+	if(toggl_text.hasClassName('noshow')){
+		toggl_text.removeClassName('noshow');
+		toggl_text.addClassName('active');
+	}else{
+		toggl_text.removeClassName('active');
+		toggl_text.addClassName('noshow');
+	}
+	console.log('Clicked'+e.title);
+}
+
+function registerPeriodicalUpdater(){
+	if(pu == null){
+		pu==new Ajax.PeriodicalUpdater('', url, {
+			method: 'get',
+			frequency: 5,
+			decay: 2,
+			onSuccess: function(transport){
+	    		var cleanText=cleanUpResponseText(transport.responseText);
+	    		if(cleanText=="NONE"){
+	    			if(progressbars != null &amp;&amp; progressbars.size()&gt;0 ){
+	    				progressbars.each(function(progressbar){
+	    					progressbar.setProgress(100,"Indexing is completed.");
+	    				});
+	    				progressbars=null;
+	    			}else{
+	    				$('indexing_response').update('');
+		    			//Stop the periodical updater.
+		    			if(pu!=null){
+		    				console.log("Stopping periodical updater.")
+		    				console.log($('indexing_response'));
+		    				pu.stop();
+		    			}	
+	    			}
+
+	    		}else{
+	    			var indexerobj=cleanText.evalJSON();
+	    			var indexerArray=Object.values(indexerobj);
+
+                    var tempIndexerArray=new Array();
+                    var i=0;
+
+					indexerArray.each(function(item) {
+						
+						var index=indexers.indexOf(item.title);
+						
+						var indexedDocs=new Number(item.indexedDocs);
+	                    var totalDocs=new Number(item.totalDocCount);
+
+	                    var percentage=(indexedDocs/totalDocs)*100;
+	                    var roundedPercentage=percentage.round();
+
+	                    var indexstatus=roundedPercentage+"% complete. Indexed "+indexedDocs+" of "+totalDocs+" docs @ "+item.indexingSpeed+"documents/second.";
+	                    var estimatedtime="Elapsed time indexing documents "+item.elapsedTimeAsString+". Estimated time to complete indexing "+item.estimatedCompletionTimeAsString+" in HH:MM:SS.";
+						
+						console.log("Making progress &gt;&gt; "+item.title);
+						var tabsText=getTabs(item.recentlyIndexedDocs);
+
+						progressbars[index].setProgress(roundedPercentage,indexstatus,estimatedtime,tabsText);
+
+						tempIndexerArray[i]=item.title;
+						i++;
+					});
+
+
+					//Check for completed ones.
+					for(i=0;i&lt;indexers.size();i++){
+						var index=tempIndexerArray.indexOf(indexers[i]);
+
+						if(index&gt;=0){
+							console.log("Index is existing "+indexers[i]);
+						}else{
+							console.log("Index is not existing "+indexers[i])
+							progressbars[i].setProgress(100,"Indexing complete");
+						}
+					}
+	    		}
+			}
+		});
+	}
+}
+
+function checkDocumentIndexers(){
+
+
+	//Poll and check if any Document indexers are running.
+    new Ajax.Request(url, {
+    	method: 'get',
+    	onSuccess: function(transport) {
+    		var cleanText=cleanUpResponseText(transport.responseText);
+    		if(cleanText!="NONE"){
+    			var indexerobj=cleanText.evalJSON();
+    			var indexerArray=Object.values(indexerobj);
+
+    			//Register a progress bar.
+				indexerArray.each(function(item) {
+					console.log("Adding ProgressBar &gt;&gt; "+item.title);
+					var index=indexers.size();
+					indexers[index]=item.title;
+					progressbars[index]=new ProgressBar(indexingcontainer,item.title,item.entityName,item.entityType);
+				});
+
+				//Register a periodical updater.
+				if(indexerArray.size() &gt; 0){
+					console.log("Registering periodical updater");
+					registerPeriodicalUpdater();
+				}
+    		}
+
+    		
+
+
+    		
+    	}
+    });
+}
+
+document.observe("xwiki:dom:loaded", function(){
+
+   indexingcontainer=$('indexing_response');	
+  // Initialization that can rely on the fact the DOM is XWiki-tranformed goes here.
+  checkDocumentIndexers();
+
+  
+});
+
+
+</code></property><property><name>Search Admin JSX</name>
+</property>
+<property>
+<parse>0</parse>
+</property>
+<property>
+<use>onDemand</use>
+</property>
+</object>
+<content></content></xwikidoc>
