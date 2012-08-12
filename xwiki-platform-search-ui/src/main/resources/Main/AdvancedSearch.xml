@@ -27,7 +27,6 @@
 #set($docextras = [])
 $xwiki.jsfx.use("js/prototype/prototype.js")
 $xwiki.jsfx.use("js/scriptaculous/effects.js")
-$xwiki.jsfx.use("js/scriptaculous/accordion.js")
 ##*****************************************************##
 ## Arguments
 ##*****************************************************##
@@ -43,6 +42,8 @@ $xwiki.jsfx.use("js/scriptaculous/accordion.js")
 #set($filetype = "$!request.getParameter('ft')")
 #set($type = "$!request.getParameter('t')")
 #set($boost = "$!request.getParameter('qf')")
+#set($sort = "$!request.getParameter('si')")
+#set($sorder = "$!request.getParameter('sorder')")
 
 
 {{html wiki="true"}}
@@ -82,6 +83,10 @@ $xwiki.jsfx.use("js/scriptaculous/accordion.js")
 		#set($a=$smap.put("start","${start}"))
 		#set($a=$smap.put("rows","${rows}"))
 		#set($a=$smap.put("qf","${boost}"))
+                
+                #if($sort != "")
+                   #set($a=$smap.put("sort","${sort} desc"))
+                #end 
 
 	##Search Parameters End
 
@@ -90,7 +95,7 @@ $xwiki.jsfx.use("js/scriptaculous/accordion.js")
 	$req.setLanguages($languages)
 		
 	## Filter parameters
-
+        #set($fmap=$req.getFilterParametersMap())
 
 	## Filter parameters end
 
@@ -101,6 +106,7 @@ $xwiki.jsfx.use("js/scriptaculous/accordion.js")
 		#set( $spaceDoc=$xwiki.getDocument("$spacename.$webhome"))
 		#set( $entityReference=$spaceDoc.getDocumentReference().getLastSpaceReference())
 		$req.setEntityReference($entityReference)
+                #set($a=$fmap.put("space",$spacename))
 	#end
 
 
@@ -148,10 +154,11 @@ $xwiki.jsfx.use("js/scriptaculous/accordion.js")
 #end
 
 &lt;div class="search-bar"&gt;
-	&lt;form&gt;
+	&lt;form id="search-form"&gt;
 		&lt;div id="search_bar"
 			&lt;div&gt;
 				&lt;input type="text" title="Enter your search query" name="q" id="text" class="searchQuery" value="$text"&gt;
+                                &lt;input type="hidden" id="sort-hidden-field" value="" name="si"/&gt;
 				&lt;input type="submit" value="Search" title="Alt+S" class="button searchButton"&gt;
 			&lt;/div&gt;
 			&lt;div&gt;
@@ -206,8 +213,8 @@ $xwiki.jsfx.use("js/scriptaculous/accordion.js")
 				&lt;/table&gt;
 			&lt;/div&gt;
 		&lt;/div&gt;
-
-	&lt;/form&gt;
+        &lt;/form&gt;
+	
 	&lt;div id="debugSearch" #if($debug == "")class="noshow"#end&gt;
 		&lt;span&gt;Debug is On&lt;span&gt;
 		#if($debugMap)
@@ -218,9 +225,21 @@ $xwiki.jsfx.use("js/scriptaculous/accordion.js")
 	&lt;/div&gt;
 &lt;/div&gt;
 
+
 &lt;div style="overflow: hidden"&gt;
 
-	#if ( $text != "" )
+          #if ( $text != "" )
+		&lt;div id="sort"&gt;
+			&lt;ul&gt;
+				&lt;li&gt;Sort:&lt;/li&gt;
+				&lt;li id="s_score" class="#if($sort == "score")active#end sort-item" title="score" onclick="handleSortElement(this);"&gt;Relevance&lt;/li&gt;
+				&lt;li id="s_name" class="#if($sort == "name")active#end sort-item" title="name" onclick="handleSortElement(this);"&gt;Name&lt;/li&gt;
+				&lt;li id="s_date" class="#if($sort == "date")active#end sort-item" title="date" onclick="handleSortElement(this);"&gt;Date&lt;/li&gt;
+				&lt;li id="s_author" class="#if($sort == "author")active#end sort-item" title="author" onclick="handleSortElement(this);"&gt;Last Author&lt;/li&gt;
+			&lt;/ul&gt;
+		&lt;/div&gt;
+	
+                
 
 		##***************************************************##
 		## Pagination                                        ##

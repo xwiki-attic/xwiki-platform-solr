@@ -98,4 +98,8 @@ public interface DocumentData
      * @return list of properties
      */
     List< ? > getInputProperties(DocumentReference documentReference);
+    
+    List<String> getObjectIdList(DocumentReference documentReference);
+    
+    List<String> getPropertyIdList(DocumentReference documentReference);
 }

@@ -116,86 +116,6 @@ public class SolrjSearch extends AbstractSearch
     /**
      * {@inheritDoc}
      * 
-     * @see org.xwiki.platform.search.Search#indexWiki(java.lang.String)
-     */
-    @Override
-    protected int indexWiki(String wikiName) throws XWikiException
-    {
-        logger.info("Indexing wiki [" + wikiName + "]");
-
-        final XWikiContext xcontext = getXWikiContext();
-
-        String currentWikiName = xcontext.getWiki().getName();
-
-        if (!currentWikiName.equalsIgnoreCase(wikiName)) {
-            xcontext.setDatabase(wikiName);
-        }
-
-        String hql = "select doc.space, doc.name, doc.version, doc.language from XWikiDocument as doc";
-        List<Object[]> documents = xcontext.getWiki().search(hql, xcontext);
-
-        List<DocumentReference> docsList = new ArrayList<DocumentReference>();
-
-        for (Object[] document : documents) {
-
-            String spaceName = (String) document[0];
-            DocumentReference documentReference = new DocumentReference(wikiName, spaceName, (String) document[1]);
-            docsList.add(documentReference);
-        }
-
-        WikiReference wikiReference = new WikiReference(wikiName);
-        indexer.indexDocuments(wikiReference, docsList);
-
-        return docsList.size();
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.Search#indexSpace(org.xwiki.model.reference.SpaceReference)
-     */
-    @Override
-    public int indexSpace(SpaceReference reference) throws SearchIndexingException, XWikiException
-    {
-        logger.info("Indexing space [" + reference.getName() + "]");
-
-        final XWikiContext xcontext = getXWikiContext();
-
-        WikiReference wikiReference = (WikiReference) reference.getParent();
-
-        String currentWikiName = xcontext.getWiki().getName();
-
-        if (!currentWikiName.equalsIgnoreCase(wikiReference.getName())) {
-            xcontext.setDatabase(wikiReference.getName());
-        }
-
-        String hql =
-            "select doc.space, doc.name, doc.version, doc.language from XWikiDocument as doc where doc.space='"
-                + reference.getName() + "'";
-        List<Object[]> documents = xcontext.getWiki().search(hql, xcontext);
-
-        List<DocumentReference> docsList = new ArrayList<DocumentReference>();
-
-        for (Object[] document : documents) {
-
-            String spaceName = (String) document[0];
-            String language = (String) document[3];
-
-            DocumentReference documentReference =
-                new DocumentReference(wikiReference.getName(), spaceName, (String) document[1], language);
-            if (documentAccessBridge.exists(documentReference)) {
-                docsList.add(documentReference);
-            }
-        }
-
-        indexer.indexDocuments(reference, docsList);
-
-        return docsList.size();
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
      * @see org.xwiki.platform.search.Search#deleteDocumentIndex(org.xwiki.model.reference.DocumentReference)
      */
     @Override
@@ -213,148 +133,6 @@ public class SolrjSearch extends AbstractSearch
     public String getImplementation()
     {
         return "Embedded Solr";
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.Search#indexDocument(org.xwiki.model.reference.DocumentReference)
-     */
-    @Override
-    public boolean indexDocument(DocumentReference document)
-    {
-        return indexer.indexDocument(document);
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.Search#deleteindexWiki()
-     */
-    @Override
-    public boolean deleteindexWiki(String wiki) throws XWikiException
-    {
-        try {
-            // gets the final index Wiki
-            final XWikiContext xcontext = getXWikiContext();
-            String wikiName = xcontext.getWiki().getName();
-            logger.info("Deleting wiki.." + wikiName);
-
-            if (!wikiName.equalsIgnoreCase(wiki)) {
-                xcontext.setDatabase(wikiName);
-            }
-
-            String hql = "select doc.space, doc.name, doc.version, doc.language from XWikiDocument as doc";
-            List<Object[]> documents = xcontext.getWiki().search(hql, xcontext);
-
-            List<DocumentReference> docsList = new ArrayList<DocumentReference>();
-
-            for (Object[] document : documents) {
-
-                String spaceName = (String) document[0];
-                DocumentReference documentReference = new DocumentReference(wikiName, spaceName, (String) document[1]);
-                docsList.add(documentReference);
-            }
-            WikiReference wikiReference = new WikiReference(wikiName);
-            indexer.deleteIndex(wikiReference, docsList);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.Search#indexDocuments(java.util.List)
-     */
-    @Override
-    public int indexDocuments(List<DocumentReference> documents)
-    {
-        indexer.indexDocuments(documents);
-        return documents.size();
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.Search#rebuildFarmIndex()
-     */
-    @Override
-    public int rebuildFarmIndex()
-    {
-        int docCount = 0;
-
-        if (getXWikiContext().getWiki().isVirtualMode()) {
-            try {
-                // Delete the existing index.
-                indexer.deleteEntireIndex();
-                docCount = indexWikiFarm();
-            } catch (Exception e) {
-                logger.error("Failure in rebuilding the farm index.", e);
-            }
-        }
-        return docCount;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.Search#rebuildFarmIndex(java.util.List)
-     */
-    @Override
-    public int rebuildFarmIndex(List<WikiReference> wikis)
-    {
-        int docCount = 0;
-        if (getXWikiContext().getWiki().isVirtualMode()) {
-            try {
-                for (WikiReference wiki : wikis) {
-                    // delete the wiki indexes
-                    boolean result = deleteindexWiki(wiki.getName());
-                    // build index
-                    if (result == true)
-                        docCount = indexWiki(wiki.getName());
-                    docCount = docCount + docCount;
-                }
-            } catch (Exception e) {
-                logger.info("error during rebuildFarmIndex" + e);
-            }
-        }
-        return docCount;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.Search#rebuildWikiIndex()
-     */
-    @Override
-    public int rebuildWikiIndex()
-    {
-        int docCount = 0;
-        try {
-            // delete existing index
-            boolean result = deleteindexWiki(getXWikiContext().getWiki().getName());
-            // build index
-            if (result == true)
-                docCount = indexWiki();
-        } catch (Exception e) {
-            logger.error("Failure in rebuilding the farm index.", e);
-        }
-        return docCount;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.Search#rebuildWikiIndex(java.util.List)
-     */
-    @Override
-    public int rebuildWikiIndex(List<SpaceReference> spaces)
-    {
-        int docCount = 0;
-        return docCount;
     }
 
     /**
@@ -383,7 +161,7 @@ public class SolrjSearch extends AbstractSearch
     {
         try {
             if (event instanceof DocumentUpdatedEvent || event instanceof DocumentCreatedEvent) {
-                indexDocument(((DocumentModelBridge) source).getDocumentReference());
+                buildDocumentIndex(((DocumentModelBridge) source).getDocumentReference());
             } else if (event instanceof DocumentDeletedEvent) {
                 deleteDocumentIndex(((DocumentModelBridge) source).getDocumentReference());
             }
@@ -465,18 +243,17 @@ public class SolrjSearch extends AbstractSearch
 
                 if (request.getSearchParametersMap() != null && request.getSearchParametersMap().size() > 0) {
                     for (Entry<String, String> entry : request.getSearchParametersMap().entrySet()) {
-                        if(entry.getKey().equals("qf")){
-                            String value=request.processQueryFrequency(entry.getValue());
-                            if(!StringUtils.isEmpty(value))       
-                                solrQuery.add(entry.getKey(),value);
-                        }else{
-                            if(!StringUtils.isEmpty(entry.getValue()))
+                        if (entry.getKey().equals("qf")) {
+                            String value = request.processQueryFrequency(entry.getValue());
+                            if (!StringUtils.isEmpty(value))
+                                solrQuery.add(entry.getKey(), value);
+                        } else {
+                            if (!StringUtils.isEmpty(entry.getValue()))
                                 solrQuery.add(entry.getKey(), entry.getValue());
                         }
-                       
+
                     }
-                    
-                    
+
                 }
                 solrserver = (SolrServer) searchEngine.getSearchEngine();
                 queryResponse = solrserver.query(solrQuery);
@@ -519,5 +296,195 @@ public class SolrjSearch extends AbstractSearch
     {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#buildDocumentIndex(org.xwiki.model.reference.DocumentReference)
+     */
+    @Override
+    public boolean buildDocumentIndex(DocumentReference document)
+    {
+        return indexer.indexDocument(document);
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#buildDocumentIndex(java.util.List)
+     */
+    @Override
+    public int buildDocumentIndex(List<DocumentReference> documents)
+    {
+        indexer.indexDocuments(documents);
+        return documents.size();
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#buildWikiIndex(org.xwiki.model.reference.WikiReference)
+     */
+    @Override
+    public int buildWikiIndex(WikiReference wikiReference) throws SearchIndexingException, XWikiException
+    {
+        String wikiName = wikiReference.getName();
+
+        final XWikiContext xcontext = getXWikiContext();
+
+        String currentWikiName = xcontext.getWiki().getName();
+
+        if (!currentWikiName.equalsIgnoreCase(wikiName)) {
+            xcontext.setDatabase(wikiName);
+        }
+
+        String hql = "select doc.space, doc.name, doc.version, doc.language from XWikiDocument as doc";
+        List<Object[]> documents = xcontext.getWiki().search(hql, xcontext);
+
+        List<DocumentReference> docsList = new ArrayList<DocumentReference>();
+
+        for (Object[] document : documents) {
+
+            String spaceName = (String) document[0];
+            DocumentReference documentReference = new DocumentReference(wikiName, spaceName, (String) document[1]);
+            docsList.add(documentReference);
+        }
+
+        indexer.indexDocuments(wikiReference, docsList);
+
+        return docsList.size();
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#buildWikiSpaceIndex(org.xwiki.model.reference.SpaceReference)
+     */
+    @Override
+    public int buildWikiSpaceIndex(SpaceReference spaceReference) throws SearchIndexingException, XWikiException
+    {
+        logger.info("Indexing space [" + spaceReference.getName() + "]");
+
+        final XWikiContext xcontext = getXWikiContext();
+
+        WikiReference wikiReference = (WikiReference) spaceReference.getParent();
+
+        String currentWikiName = xcontext.getWiki().getName();
+
+        if (!currentWikiName.equalsIgnoreCase(wikiReference.getName())) {
+            xcontext.setDatabase(wikiReference.getName());
+        }
+
+        String hql =
+            "select doc.space, doc.name, doc.version, doc.language from XWikiDocument as doc where doc.space='"
+                + spaceReference.getName() + "'";
+        List<Object[]> documents = xcontext.getWiki().search(hql, xcontext);
+
+        List<DocumentReference> docsList = new ArrayList<DocumentReference>();
+
+        for (Object[] document : documents) {
+
+            String spaceName = (String) document[0];
+            String language = (String) document[3];
+
+            DocumentReference documentReference =
+                new DocumentReference(wikiReference.getName(), spaceName, (String) document[1], language);
+            if (documentAccessBridge.exists(documentReference)) {
+                docsList.add(documentReference);
+            }
+        }
+
+        indexer.indexDocuments(spaceReference, docsList);
+
+        return docsList.size();
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#deleteWikiIndex(org.xwiki.model.reference.WikiReference)
+     */
+    @Override
+    public boolean deleteWikiIndex(WikiReference wikiReference) throws SearchIndexingException, XWikiException
+    {
+        try {
+            indexer.deleteIndex(wikiReference, null);
+            return true;
+        } catch (Exception e) {
+            logger.error("Deleting the wiki index for the Wiki["+wikiReference.getName()+"]");
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#deleteSpaceIndex(org.xwiki.model.reference.SpaceReference)
+     */
+    @Override
+    public boolean deleteSpaceIndex(SpaceReference spaceReference) throws SearchIndexingException, XWikiException
+    {
+        logger.info("Deleting Space Index for " + spaceReference.getName());
+        try {
+            indexer.deleteIndex(spaceReference, null);
+            return true;
+        } catch (Exception e) {
+            logger.error("Deleting the space index for the Space["+spaceReference.getName()+"]");
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#reBuildFarmIndex()
+     */
+    @Override
+    public int reBuildFarmIndex()
+    {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#reBuildFarmIndex(java.util.List)
+     */
+    @Override
+    public int reBuildFarmIndex(List<WikiReference> wikis)
+    {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#reBuildWikiIndex(org.xwiki.model.reference.WikiReference)
+     */
+    @Override
+    public int reBuildWikiIndex(WikiReference wikiReference)
+    {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#reBuildSpaceIndex(org.xwiki.model.reference.SpaceReference)
+     */
+    @Override
+    public int reBuildSpaceIndex(SpaceReference spaceReference)
+    {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+    
+    @Override
+    public boolean deleteEntireIndex() throws SearchIndexingException,XWikiException{
+        return this.indexer.deleteEntireIndex();
     }
 }

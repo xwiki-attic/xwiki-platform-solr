@@ -32,6 +32,7 @@ import org.xwiki.bridge.event.DocumentDeletedEvent;
 import org.xwiki.bridge.event.DocumentUpdatedEvent;
 import org.xwiki.context.Execution;
 import org.xwiki.context.ExecutionContext;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.event.Event;
 import org.xwiki.platform.search.Search;
@@ -88,25 +89,6 @@ public abstract class AbstractSearch implements Search, EventListener
         return context;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @see org.xwiki.platform.search.Search#indexWiki()
-     */
-    @Override
-    public int indexWiki() throws SearchIndexingException, XWikiException
-    {
-        String wikiName = getXWikiContext().getWiki().getName();
-        logger.info("Indexing wiki.." + wikiName);
-        int docsCount = this.indexWiki(wikiName);
-        return docsCount;
-    }
-
-    /**
-     * @param wikiName
-     * @return
-     */
-    protected abstract int indexWiki(String wikiName) throws XWikiException;
 
     /**
      * {@inheritDoc}
@@ -114,14 +96,15 @@ public abstract class AbstractSearch implements Search, EventListener
      * @see org.xwiki.platform.search.Search#indexWikiFarm()
      */
     @Override
-    public int indexWikiFarm() throws SearchIndexingException, XWikiException
+    public int buildWikiFarmIndex() throws SearchIndexingException, XWikiException
     {
         XWikiContext xcontext = getXWikiContext();
         int totalDocCount = 0;
         if (xcontext.getWiki().isVirtualMode()) {
             List<String> wikis = xcontext.getWiki().getVirtualWikisDatabaseNames(xcontext);
             for (String wikiName : wikis) {
-                totalDocCount += indexWiki(wikiName);
+                WikiReference wikiReference=new WikiReference(wikiName);
+                totalDocCount += buildWikiIndex(wikiReference);
             }
         }
         return totalDocCount;

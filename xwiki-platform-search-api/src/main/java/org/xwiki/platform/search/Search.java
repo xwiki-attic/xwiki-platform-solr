@@ -63,7 +63,7 @@ public interface Search
      * @param document reference to the document to be indexed.
      * @return true if document indexing is successful.
      */
-    boolean indexDocument(DocumentReference document);
+    boolean buildDocumentIndex(DocumentReference document);
 
     /**
      * Index the documents.
@@ -71,7 +71,7 @@ public interface Search
      * @param documents List of documents to be indexed.
      * @return the Number of documents scheduled for indexing. -1 in case of errors.
      */
-    int indexDocuments(List<DocumentReference> documents);
+    int buildDocumentIndex(List<DocumentReference> documents);
 
     /**
      * Build the index for the current wiki.
@@ -80,25 +80,34 @@ public interface Search
      * @throws SearchIndexingException Exception thrown in case of indexing errors.
      * @throws XWikiException
      */
-    int indexWiki() throws SearchIndexingException, XWikiException;
+    int buildWikiIndex(WikiReference wikiReference) throws SearchIndexingException, XWikiException;
 
     /**
-     * Build the index for the give space.
+     * Build the index for the given space.
      * 
      * @param reference SpaceReference
      * @return number of documents to index.
      * @throws SearchIndexingException Exception thrown in case of indexing errors.
      * @throws XWikiException
      */
-    int indexSpace(SpaceReference reference) throws SearchIndexingException, XWikiException;
+    int buildWikiSpaceIndex(SpaceReference reference) throws SearchIndexingException, XWikiException;
 
     /**
      * @return
      * @throws SearchIndexingException
      * @throws XWikiException
      */
-    boolean deleteindexWiki(String wiki) throws SearchIndexingException, XWikiException;
+    boolean deleteWikiIndex(WikiReference wikiReference) throws SearchIndexingException, XWikiException;
 
+    /**
+     * @return
+     * @throws SearchIndexingException
+     * @throws XWikiException
+     */
+    boolean deleteSpaceIndex(SpaceReference spaceReference) throws SearchIndexingException, XWikiException;
+    
+    boolean deleteEntireIndex() throws SearchIndexingException,XWikiException;
+    
     /**
      * Build the index for the current wiki farm.
      * 
@@ -106,7 +115,7 @@ public interface Search
      * @throws SearchIndexingException
      * @throws XWikiException
      */
-    int indexWikiFarm() throws SearchIndexingException, XWikiException;
+    int buildWikiFarmIndex() throws SearchIndexingException, XWikiException;
 
     /**
      * To initialize and load configuration for the search component.
@@ -129,7 +138,7 @@ public interface Search
      * 
      * @return the Number of documents scheduled for indexing. -1 in case of errors.
      */
-    int rebuildFarmIndex();
+    int reBuildFarmIndex();
 
     /**
      * Rebuilds the index for the given wiki's in a wiki farm.
@@ -137,22 +146,22 @@ public interface Search
      * @param wikis List of wikis to be indexed.
      * @return the Number of documents scheduled for indexing. -1 in case of errors.
      */
-    int rebuildFarmIndex(List<WikiReference> wikis);
+    int reBuildFarmIndex(List<WikiReference> wikis);
 
     /**
      * Rebuilds the index for the current wiki.
      * 
      * @return the Number of documents scheduled for indexing. -1 in case of errors
      */
-    int rebuildWikiIndex();
-
+    int reBuildWikiIndex(WikiReference wikiReference);
+    
     /**
      * Rebuilds the index for given spaces in the current wiki.
      * 
      * @param spaces List of spaces to be indexed
      * @return the Number of documents scheduled for indexing. -1 in case of errors
      */
-    int rebuildWikiIndex(List<SpaceReference> spaces);
+    int reBuildSpaceIndex(SpaceReference spaceReference);
 
     /**
      * Search for the query in the current wiki for all the languages.

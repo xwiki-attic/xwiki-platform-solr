@@ -140,12 +140,12 @@
 <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
 </propertiesToShow>
 </class>
-<name>Search.IndexingAdmin</name>
+<name>Xwiki.IndexingAdmin</name>
 <number>0</number>
 <className>XWiki.ConfigurableClass</className>
 <guid>1c5d86e1-bdfa-4e70-afcc-711e00cd2403</guid>
 <property>
-<codeToExecute>{{include document="Search.IndexingAdmin"/}}</codeToExecute>
+<codeToExecute>{{include document="XWiki.IndexingAdmin"/}}</codeToExecute>
 </property>
 <property>
 <configurationClass></configurationClass>
@@ -266,12 +266,12 @@
 
 #set($docextras = [])
 $xwiki.jsx.use("XWiki.SearchAdminMacros")
-$xwiki.ssx.use("XWiki.SearchMacros")
+$xwiki.ssx.use("Main.SearchMacros")
 
 &lt;div style="padding:10px;&gt;Index the wiki by clicking the button&lt;/div&gt;
 &lt;div id="indexing_request"&gt;
 
-#set($indexselect="$!request.getParameter('indexselect')")
+#set($indexoption="$!request.getParameter('indexselect')")
 
 #macro(spaceoption $space $selectedSpace)
   &lt;option value="${space}" #if($selectedSpace == $space)selected="selected"#end&gt;$space&lt;/option&gt;
@@ -293,31 +293,47 @@ $xwiki.ssx.use("XWiki.SearchMacros")
 #end
 
 #set($searchobj = $services.search.getSearch() )
-#if($indexselect == "indexwiki")
+#if($indexoption == "indexwiki")
     ### Call Index Wiki.
-    #set($totaldocs=$searchobj.indexWiki())
+    #set($totaldocs=$searchobj.buildWikiIndex($doc.getDocumentReference().getWikiReference()))
 
-#elseif($indexselect=="indexspace")
+#elseif($indexoption=="indexspace")
    ### Call Index Space.
    #if($selectedSpace != "")
        #set($spaceref= $xwiki.getDocument("${selectedSpace}.WebHome").getDocumentReference().getLastSpaceReference())
-       #set($totaldocs=$searchobj.indexSpace($spaceref))
+       #set($totaldocs=$searchobj.buildWikiSpaceIndex($spaceref))
    #end
+#elseif($indexoption=="deletewiki")
+   ### Call Index Space.
+   #set($totaldocs=$searchobj.deleteWikiIndex($doc.getDocumentReference().getWikiReference()))
+#elseif($indexoption=="deletespace")
+   #if($selectedSpace != "")
+       #set($spaceref= $xwiki.getDocument("${selectedSpace}.WebHome").getDocumentReference().getLastSpaceReference())
+       #set($totaldocs=$searchobj.deleteSpaceIndex($spaceref))
+   #end
+#elseif($indexoption=="deleteindex")
+   ### Call Index Space.
+   #set($totaldocs=$searchobj.deleteEntireIndex())
 #end
 
 
 &lt;form method="post"&gt;
      &lt;div id="indexselectdiv"&gt;
      &lt;select name="indexselect" id="indexselect"&gt;
-         &lt;option value="indexspace"&gt;Index Space&lt;/option&gt;
-         &lt;option value="indexwiki"&gt;Index Wiki&lt;/option&gt;
+         &lt;option #if($indexoption=="indexspace") selected=true #end value="indexspace"&gt;Index Space&lt;/option&gt;
+         &lt;option #if($indexoption=="indexwiki") selected=true #end value="indexwiki"&gt;Index Wiki&lt;/option&gt;
+         &lt;option #if($indexoption=="deleteindex") selected=true #end value="deleteindex"&gt;Delete Entire Index&lt;/option&gt;
+         &lt;option #if($indexoption=="deletewiki") selected=true #end value="deletewiki"&gt;Delete Wiki Index&lt;/option&gt;
+         &lt;option #if($indexoption=="deletespace") selected=true #end value="deletespace"&gt;Delete Space Index&lt;/option&gt;
+         &lt;option #if($indexoption=="rebuildwiki") selected=true #end value="rebuildwiki&gt;Rebuild Wiki Index&lt;/option&gt;
+         &lt;option #if($indexoption=="rebuildspace") selected=true #end value="rebuildspace"&gt;Rebuild Space Index&lt;/option&gt;
      &lt;/select&gt;
-     #if($indexselect == "indexspace")
+     #if($indexoption == "indexspace" || $indexoption == "deletespace" || $indexoption == "rebuildspace" )
          Choose a Space:      
          #spaceselect($selectedSpace $spaces)
      #end
+     &lt;input type="submit" class="button" id="startIndex" value="Start"/&gt; 
      &lt;/div&gt;
-     &lt;input type="submit" class="button" id="startIndex" value="Start Indexing"/&gt; 
 &lt;/form&gt;
 
 &lt;/div&gt;

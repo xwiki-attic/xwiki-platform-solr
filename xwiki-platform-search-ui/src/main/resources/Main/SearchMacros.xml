@@ -103,47 +103,56 @@
 </property>
 <property>
 <code>function handleDebugClick(e){
-	var toggl_text=$('debug_'+e.title);
-	console.log(e.title);
-	console.log(toggl_text);
-	if(toggl_text.hasClassName('noshow')){
-		toggl_text.removeClassName('noshow');
-		toggl_text.addClassName('active');
-	}else{
-		toggl_text.removeClassName('active');
-		toggl_text.addClassName('noshow');
-	}
+    var toggl_text=$('debug_'+e.title);
+    console.log(e.title);
+    console.log(toggl_text);
+    if(toggl_text.hasClassName('noshow')){
+        toggl_text.removeClassName('noshow');
+        toggl_text.addClassName('active');
+    }else{
+        toggl_text.removeClassName('active');
+        toggl_text.addClassName('noshow');
+    }
 }
 
 
     function filterChange(cb){
         console.log(cb);
-    	var filterDiv=$('filteredSearch');
-    	if(cb.checked){
-    		if(filterDiv.hasClassName('noshow')){
-    			filterDiv.removeClassName('noshow');
-    		}
-    	}else{
-    		if(!filterDiv.hasClassName('noshow')){
-    			filterDiv.addClassName('noshow');
-    		}
-    	}
+        var filterDiv=$('filteredSearch');
+        if(cb.checked){
+            if(filterDiv.hasClassName('noshow')){
+                filterDiv.removeClassName('noshow');
+            }
+        }else{
+            if(!filterDiv.hasClassName('noshow')){
+                filterDiv.addClassName('noshow');
+            }
+        }
     }
 
     function debugChange(cb){
         console.log(cb);
-    	var debugDiv=$('debugSearch');
-    	if(cb.checked){
-    		if(debugDiv.hasClassName('noshow')){
-    			debugDiv.removeClassName('noshow');
-    		}
-    	}else{
-    		if(!debugDiv.hasClassName('noshow')){
-    			debugDiv.addClassName('noshow');
-    		}
-    	}
+        var debugDiv=$('debugSearch');
+        if(cb.checked){
+            if(debugDiv.hasClassName('noshow')){
+                debugDiv.removeClassName('noshow');
+            }
+        }else{
+            if(!debugDiv.hasClassName('noshow')){
+                debugDiv.addClassName('noshow');
+            }
+        }
     }
-
+    
+function handleSortElement(e){
+        var element=$(e.id);
+        $$('li.sort-item').each(function(el){
+            el.removeClassName('active');
+        })
+        element.addClassName('active');
+        $('sort-hidden-field').value=e.title;
+        document.forms['search-form'].submit();
+    }
 </code></property><property><name>Search JSX</name>
 </property>
 <property>
@@ -257,22 +266,22 @@
 }
 
 #toggle_text{
-	padding:10px;
+    padding:10px;
 }
 
 .toggl_links {
-	width:40%;
-	float:left;
-	border-right:solid 1px #ccc;
+    width:40%;
+    float:left;
+    border-right:solid 1px #ccc;
 }
 
 div.indexText table {
-	padding:0px 10px;
+    padding:0px 10px;
 }
 
 div.indexText table tr td {
-	border-bottom : 1px solid #ccc;
-	padding:5px;
+    border-bottom : 1px solid #ccc;
+    padding:5px;
 }
 
 .toggl_tabs{
@@ -280,18 +289,18 @@ div.indexText table tr td {
 }
 
 .toggl_links ul{
-	margin: 0;
-	padding:0;
+    margin: 0;
+    padding:0;
 }
 
 .toggl_links ul li{
-	list-style-type: none;
-	padding:5px;
-	text-decoration: none;
+    list-style-type: none;
+    padding:5px;
+    text-decoration: none;
         border-bottom: 1px solid #CCCCCC;
 }
 .toggl_links ul li a{
-	text-decoration: none;
+    text-decoration: none;
 }
 
 #search_bar .searchQuery {
@@ -428,7 +437,7 @@ div.accordion-toggle {
     position: relative;
  /* required for effect */
     z-index: 10;
-		/* required for effect */
+        /* required for effect */
     border-bottom: 1px solid #ccc;
    /* required for effect--can be anything except "transparent" */
     cursor: pointer;
@@ -444,7 +453,7 @@ div.accordion-toggle-active {
 
 div.accordion-content {
     overflow: hidden;
-	/* required for effect */
+    /* required for effect */
 }
 
 div.accordion-content &gt; ul {
@@ -516,6 +525,29 @@ float:right;position:relative;padding:5px 10px;margin-right:-10px;
 #filteredSearch table tr td span{
     display:block;
     font-size:0.8em;
+}
+
+#sort ul{
+    margin:0px;
+    padding:0px;
+}
+
+#sort ul li{
+    display:inline;
+    list-style-type:none;
+    padding-right:10px;
+    cursor: pointer;
+}
+
+
+
+.sort-item{
+    color:#CCC;
+}
+
+.active{
+    font-weight: bold;
+    color:#000;
 }
 
 </code></property><property><name>Search SSX</name>

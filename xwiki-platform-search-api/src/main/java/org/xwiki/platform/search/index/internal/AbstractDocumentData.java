@@ -19,6 +19,12 @@
  */
 package org.xwiki.platform.search.index.internal;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -34,11 +40,11 @@ import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.platform.search.index.DocumentData;
-import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
-import org.xwiki.rendering.syntax.Syntax;
 
 import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.XWikiException;
+import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.BaseProperty;
 import com.xpn.xwiki.util.XWikiStubContextProvider;
@@ -187,5 +193,48 @@ public abstract class AbstractDocumentData implements DocumentData
             getExecutionContext().setProperty(XWikiContext.EXECUTIONCONTEXT_KEY, context);
         }
         return context;
+    }
+    
+    public List<String> getObjectIdList(DocumentReference documentReference){
+        List<String> idList=new ArrayList<String>();
+        XWikiDocument xdoc;
+        try {
+            xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
+            Map<DocumentReference, List<BaseObject>> map = xdoc.getXObjects();
+            if (map != null) {
+                for (Entry<DocumentReference, List<BaseObject>> entry : map.entrySet()) {
+                    for (BaseObject object : entry.getValue()) {
+                        idList.add(getObjectId(documentReference, object));
+                    }
+                }
+            }
+        } catch (XWikiException e) {
+            logger.info("Error fetching the document "+documentReference.getName());
+        }
+
+        return idList;
+    }
+    
+    public List<String> getPropertyIdList(DocumentReference documentReference){
+        List<String> idList=new ArrayList<String>();
+        XWikiDocument xdoc = null;
+        try {
+            xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
+            Map<DocumentReference, List<BaseObject>> map = xdoc.getXObjects();
+            if (map != null) {
+                for (Entry<DocumentReference, List<BaseObject>> entry : map.entrySet()) {
+                    for (BaseObject object : entry.getValue()) {
+                        for (Object field : object.getFieldList()) {
+                            BaseProperty<EntityReference> property = (BaseProperty<EntityReference>) field;
+                            idList.add(getPropertyId(documentReference, property));
+                        }
+                    }
+                }
+            }
+        } catch (XWikiException e) {
+            logger.info("Error fetching the document "+documentReference.getName());
+        }
+
+        return idList;
     }
 }

@@ -43,6 +43,7 @@ import org.xwiki.context.Execution;
 import org.xwiki.context.ExecutionContext;
 import org.xwiki.context.ExecutionContextException;
 import org.xwiki.context.ExecutionContextManager;
+import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
@@ -54,6 +55,8 @@ import org.xwiki.platform.search.internal.SolrDocData;
 import org.xwiki.rendering.renderer.BlockRenderer;
 
 import com.google.gson.Gson;
+import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.objects.BaseObject;
 
 /**
  * @version $Id$
@@ -178,19 +181,19 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                         UpdateResponse updateResponse = solrServer.add(docs);
                         UpdateResponse commitResponse = solrServer.commit();
 
-                        for (SolrInputDocument doc : docs) {   
-                            String lang=(String) doc.getFieldValue(DocumentField.LANGUAGE);
-                            if (doc.getField(DocumentField.DOCUMENT_CONTENT+"_"+lang) != null) {
-                                doc.removeField(DocumentField.DOCUMENT_CONTENT+"_"+lang);
+                        for (SolrInputDocument doc : docs) {
+                            String lang = (String) doc.getFieldValue(DocumentField.LANGUAGE);
+                            if (doc.getField(DocumentField.DOCUMENT_CONTENT + "_" + lang) != null) {
+                                doc.removeField(DocumentField.DOCUMENT_CONTENT + "_" + lang);
                             }
-                            if (doc.getField(DocumentField.ATTACHMENT_CONTENT+"_"+lang) != null) {
-                                doc.removeField(DocumentField.ATTACHMENT_CONTENT+"_"+lang);
+                            if (doc.getField(DocumentField.ATTACHMENT_CONTENT + "_" + lang) != null) {
+                                doc.removeField(DocumentField.ATTACHMENT_CONTENT + "_" + lang);
                             }
-                            if (doc.getField(DocumentField.OBJECT_CONTENT+"_"+lang) != null) {
-                                doc.removeField(DocumentField.OBJECT_CONTENT+"_"+lang);
+                            if (doc.getField(DocumentField.OBJECT_CONTENT + "_" + lang) != null) {
+                                doc.removeField(DocumentField.OBJECT_CONTENT + "_" + lang);
                             }
                         }
-                        
+
                         // Send out a notification
                         indexerStatus.addStepDetails(
                             fetchTime + updateResponse.getElapsedTime() + commitResponse.getElapsedTime(), 10, docs);
@@ -230,8 +233,6 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         public void run()
         {
             ExecutionContext context = new ExecutionContext();
-            // Create a SolrDocData object
-            SolrDocData solrdoc = new SolrDocData();
 
             try {
                 executionContextManager.initialize(context);
@@ -242,36 +243,43 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             execution.pushContext(context);
 
             try {
-                List<String> ids = new ArrayList<String>();
-                for (DocumentReference docRef : docList) {
+                List<String> idList = new ArrayList<String>();
+                SolrjDocumentData sdocdata = componentManager.getInstance(DocumentData.class, SolrjDocumentData.HINT);
+                for (DocumentReference documentReference : docList) {
 
                     try {
 
-                        // deleting the index of the documents
-                        DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(docRef);
-                        String id = solrdoc.getId(documentModelBridge);
-                        ids.add(id);
-
-                        // deleting the indexes of the attachments
-                        List<AttachmentReference> attachReferences =
-                            documentAccessBridge.getAttachmentReferences(docRef);
-                        for (AttachmentReference attachReference : attachReferences) {
-                            String attachId = "";
-                            ids.add(attachId);
+                        //Add Document Id.
+                        idList.add(sdocdata.getDocumentId(documentReference));
+                        
+                        //Attachments
+                        List<AttachmentReference> attachmentReferenceList =
+                            documentAccessBridge.getAttachmentReferences(documentReference);
+                        for(AttachmentReference attachmentReference:attachmentReferenceList){
+                            idList.add(sdocdata.getAttachmentId(attachmentReference));
                         }
+                        
+                        //Objects
+                        idList.addAll(sdocdata.getObjectIdList(documentReference));
+                        
+                        //Properties
+                        idList.addAll(sdocdata.getPropertyIdList(documentReference));
+                        
 
                     } catch (Exception e) {
-                        logger.error("Error retrieving document." + e.getMessage());
+                        logger.error("Error while adding document ids for index deletion" + e.getMessage());
                     }
                 }
 
                 try {
-                    solrServer.deleteById(ids);
+                    solrServer.deleteById(idList);
                     solrServer.commit();
                 } catch (Exception e) {
                     logger.error("Error commiting solr documents", e);
                 }
 
+            } catch (Exception ex) {
+                logger.error("Error instantiating DocumentData component with hint["+SolrjDocumentData.HINT+"]");
             } finally {
                 execution.removeContext();
             }
@@ -508,14 +516,16 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     @Override
     public void deleteIndex(EntityReference reference, List<DocumentReference> docs)
     {
-        if (docs.size() > 0) {
-            DeleteIndexThread deleteIndexThread = new DeleteIndexThread(reference, docs);
-            thread = new Thread(deleteIndexThread);
-            thread.setDaemon(true);
-            thread.setPriority(Thread.MIN_PRIORITY);
-            thread.start();
-        }
-
+        try {
+            if(reference.getType()== EntityType.WIKI){
+                solrServer.deleteByQuery("wiki:"+reference.getName());
+            }else if(reference.getType() == EntityType.SPACE){
+                solrServer.deleteByQuery("space:"+reference.getName());
+            }
+            solrServer.commit();
+        } catch (Exception e) {
+            logger.error("Error deleting index for EntityReference:"+reference);
+        }      
     }
 
 }

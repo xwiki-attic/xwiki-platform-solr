@@ -140,12 +140,12 @@
 <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
 </propertiesToShow>
 </class>
-<name>Search.Schema</name>
+<name>XWiki.Schema</name>
 <number>0</number>
 <className>XWiki.ConfigurableClass</className>
 <guid>2f279b68-65ca-4be2-96f6-49298fa7c8a5</guid>
 <property>
-<codeToExecute>{{include document="Search.Schema"/}}</codeToExecute>
+<codeToExecute>{{include document="XWiki.Schema"/}}</codeToExecute>
 </property>
 <property>
 <configurationClass></configurationClass>
@@ -154,7 +154,7 @@
 <configureGlobally>1</configureGlobally>
 </property>
 <property>
-<displayInSection>Schema</displayInSection>
+<displayInSection>Solr Schema</displayInSection>
 </property>
 <property>
 <heading>Schema.xml</heading>

@@ -145,7 +145,7 @@
 <className>XWiki.ConfigurableClass</className>
 <guid>fdc4097d-2121-435f-bce5-878db2cc6624</guid>
 <property>
-<codeToExecute>{{include document="Search.SolrConfig"/}}</codeToExecute>
+<codeToExecute>{{include document="XWiki.SolrConfig"/}}</codeToExecute>
 </property>
 <property>
 <configurationClass></configurationClass>

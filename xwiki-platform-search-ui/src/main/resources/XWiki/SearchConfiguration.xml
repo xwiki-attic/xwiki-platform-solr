@@ -140,12 +140,12 @@
 <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
 </propertiesToShow>
 </class>
-<name>Search.SearchConfiguration</name>
+<name>XWiki.SearchConfiguration</name>
 <number>1</number>
 <className>XWiki.ConfigurableClass</className>
 <guid>645a484d-3407-4232-a965-d47e2d627790</guid>
 <property>
-<codeToExecute>{{include document="Search.SearchConfiguration"/}}</codeToExecute>
+<codeToExecute>{{include document="XWiki.SearchConfiguration"/}}</codeToExecute>
 </property>
 <property>
 <configurationClass></configurationClass>

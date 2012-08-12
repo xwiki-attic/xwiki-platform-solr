@@ -164,7 +164,7 @@ var progressbars=new Array();
 
 var indexingcontainer;
 
-var url="/xwiki/bin/get/Search/Indexer+Status";
+var url="/xwiki/bin/get/XWiki/IndexerStatus";
 
 function cleanUpResponseText(responseText){
 	var text=responseText.stripTags().replace(/&amp;#123;/g,"{");
