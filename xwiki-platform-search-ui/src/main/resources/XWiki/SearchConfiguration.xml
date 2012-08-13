@@ -174,16 +174,6 @@
 
 #set($searchobj=$services.search.getSearch())
 #set($veltool=$searchobj.getVelocityUtils())
-&lt;h3&gt;Indexer statistics&lt;/h3&gt;
-&lt;table&gt;
-#set($namedlist=$veltool.getIndexingStatistics())
-#foreach($name in $namedlist.iterator())
-&lt;tr&gt;
-    &lt;td&gt;$name.key&lt;/td&gt;
-    &lt;td&gt;$name.value&lt;/td&gt;
-&lt;/tr&gt;
-#end
-&lt;/table&gt;
 
 ### Solr Details
 &lt;h3&gt;Solr Details&lt;/h3&gt;

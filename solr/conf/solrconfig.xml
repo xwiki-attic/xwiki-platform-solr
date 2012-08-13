@@ -47,7 +47,7 @@
        that you fully re-index after changing this setting as it can
        affect both how text is indexed and queried.
     -->
-  <luceneMatchVersion>LUCENE_36</luceneMatchVersion>
+  <luceneMatchVersion>LUCENE_40</luceneMatchVersion>
 
   <!-- lib directives can be used to instruct Solr to load an Jars
        identified and use them to resolve any "plugins" specified in
@@ -751,7 +751,7 @@
        <str name="facet.field">wiki</str>
        <str name="facet.field">lang</str>
        <str name="facet.field">object</str>
-       <str name="facet.field">date</str>
+       <str name="facet.field">date</str>    
        <str name="facet.field">creationdate</str>
        <str name="facet.field">author</str>
        <str name="facet.field">creator</str>
@@ -761,7 +761,7 @@
 
        <!-- Highlighting defaults -->
        <str name="hl">on</str>
-       <str name="hl.fl">*_en</str>
+       <str name="hl.fl">*_en,*_fr,*_cs,*_de</str>
        <str name="hl.simple.pre"><![CDATA[<span class="search-text-highlight">]]></str>
        <str name="hl.simple.post"><![CDATA[</span>]]></str>
        

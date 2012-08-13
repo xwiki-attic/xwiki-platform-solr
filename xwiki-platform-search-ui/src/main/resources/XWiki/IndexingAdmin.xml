@@ -267,8 +267,21 @@
 #set($docextras = [])
 $xwiki.jsx.use("XWiki.SearchAdminMacros")
 $xwiki.ssx.use("Main.SearchMacros")
+#set($searchobj = $services.search.getSearch() )
+#set($veltool=$searchobj.getVelocityUtils())
+&lt;h3&gt;Indexer statistics&lt;/h3&gt;
+&lt;table&gt;
+#set($namedlist=$veltool.getIndexingStatistics())
+#foreach($name in $namedlist.iterator())
+&lt;tr&gt;
+    &lt;td&gt;$name.key&lt;/td&gt;
+    &lt;td&gt;$name.value&lt;/td&gt;
+&lt;/tr&gt;
+#end
+&lt;/table&gt;
+&lt;h3&gt;Indexer&lt;/h3&gt;
+Index or Delete the Index using the select box below, then click on Start.
 
-&lt;div style="padding:10px;&gt;Index the wiki by clicking the button&lt;/div&gt;
 &lt;div id="indexing_request"&gt;
 
 #set($indexoption="$!request.getParameter('indexselect')")
@@ -292,7 +305,6 @@ $xwiki.ssx.use("Main.SearchMacros")
   #set($extraClause = " AND space:${selectedSpace}")
 #end
 
-#set($searchobj = $services.search.getSearch() )
 #if($indexoption == "indexwiki")
     ### Call Index Wiki.
     #set($totaldocs=$searchobj.buildWikiIndex($doc.getDocumentReference().getWikiReference()))
@@ -335,7 +347,6 @@ $xwiki.ssx.use("Main.SearchMacros")
      &lt;input type="submit" class="button" id="startIndex" value="Start"/&gt; 
      &lt;/div&gt;
 &lt;/form&gt;
-
 &lt;/div&gt;
 &lt;div id="indexing_response"&gt;
 &lt;/div&gt;

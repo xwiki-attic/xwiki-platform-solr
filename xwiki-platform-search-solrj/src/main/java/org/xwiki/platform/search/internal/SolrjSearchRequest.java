@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ecs.xhtml.param;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
@@ -117,15 +118,7 @@ public class SolrjSearchRequest implements SearchRequest
             }
         }
 
-        if (!paramMap.containsKey(DocumentField.LANGUAGE)) {
-            paramMap.put(DocumentField.LANGUAGE, language);
-        }
-
         StringBuilder builder = new StringBuilder();
-        
-        if(paramMap.size()==1 && paramMap.containsKey("lang")){
-            return "";
-        }
         
         for (Entry<String, String> entry : paramMap.entrySet()) {
             builder.append(entry.getKey());
@@ -135,7 +128,13 @@ public class SolrjSearchRequest implements SearchRequest
             builder.append(" ");
         }
 
-        return builder.toString().trim();
+        String queryString=builder.toString();
+        
+        if(!StringUtils.isEmpty(queryString) && !queryString.contains(DocumentField.LANGUAGE)){
+            queryString="+("+queryString+") +"+DocumentField.LANGUAGE+":"+language;
+        }
+        
+        return queryString;
 
     }
     

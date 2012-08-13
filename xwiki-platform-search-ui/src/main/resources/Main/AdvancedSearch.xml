@@ -11,8 +11,8 @@
 <customClass></customClass>
 <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
 <creationDate>1343862655000</creationDate>
-<date>1344723366000</date>
-<contentUpdateDate>1344723366000</contentUpdateDate>
+<date>1344849034000</date>
+<contentUpdateDate>1344849034000</contentUpdateDate>
 <version>1.1</version>
 <title>Advanced Search</title>
 <template></template>
@@ -22,6 +22,224 @@
 <minorEdit>false</minorEdit>
 <syntaxId>xwiki/2.1</syntaxId>
 <hidden>false</hidden>
+<object>
+<class>
+<name>XWiki.JavaScriptExtension</name>
+<customClass></customClass>
+<customMapping></customMapping>
+<defaultViewSheet></defaultViewSheet>
+<defaultEditSheet></defaultEditSheet>
+<defaultWeb></defaultWeb>
+<nameField></nameField>
+<validationScript></validationScript>
+<cache>
+<cache>0</cache>
+<disabled>0</disabled>
+<displayType>select</displayType>
+<multiSelect>0</multiSelect>
+<name>cache</name>
+<number>5</number>
+<prettyName>Caching policy</prettyName>
+<relationalStorage>0</relationalStorage>
+<separator> </separator>
+<separators> ,|</separators>
+<size>1</size>
+<unmodifiable>0</unmodifiable>
+<values>long|short|default|forbid</values>
+<classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+</cache>
+<code>
+<disabled>0</disabled>
+<name>code</name>
+<number>2</number>
+<prettyName>Code</prettyName>
+<rows>20</rows>
+<size>50</size>
+<unmodifiable>0</unmodifiable>
+<classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+</code>
+<name>
+<disabled>0</disabled>
+<name>name</name>
+<number>1</number>
+<prettyName>Name</prettyName>
+<size>30</size>
+<unmodifiable>0</unmodifiable>
+<classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+</name>
+<parse>
+<disabled>0</disabled>
+<displayFormType>select</displayFormType>
+<displayType>yesno</displayType>
+<name>parse</name>
+<number>4</number>
+<prettyName>Parse content</prettyName>
+<unmodifiable>0</unmodifiable>
+<classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+</parse>
+<use>
+<cache>0</cache>
+<disabled>0</disabled>
+<displayType>select</displayType>
+<multiSelect>0</multiSelect>
+<name>use</name>
+<number>3</number>
+<prettyName>Use this extension</prettyName>
+<relationalStorage>0</relationalStorage>
+<separator> </separator>
+<separators> ,|</separators>
+<size>1</size>
+<unmodifiable>0</unmodifiable>
+<values>currentPage=Always on this page|onDemand=On demand|always=Always on this wiki</values>
+<classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+</use>
+</class>
+<name>Main.AdvancedSearch</name>
+<number>0</number>
+<className>XWiki.JavaScriptExtension</className>
+<guid>b632e69b-f6a2-42b8-8c32-064ebcebe003</guid>
+<property>
+<cache>long</cache>
+</property>
+<property>
+<code>/* Simple Accordion Script 
+ * Requires Prototype and Script.aculo.us Libraries
+ * By: Brian Crescimanno &lt;brian.crescimanno@gmail.com&gt;
+ * http://briancrescimanno.com
+ * This work is licensed under the Creative Commons Attribution-Share Alike 3.0
+ * http://creativecommons.org/licenses/by-sa/3.0/us/
+ */
+
+if (typeof Effect == 'undefined')
+  throw("You must have the script.aculo.us library to use this accordion");
+
+var Accordion = Class.create({
+
+    initialize: function(id, defaultExpandedCount) {
+        if(!$(id)) throw("Attempted to initalize accordion with id: "+ id + " which was not found.");
+        this.accordion = $(id);
+        this.options = {
+            toggleClass: "accordion-toggle",
+            toggleActive: "accordion-toggle-active",
+            contentClass: "accordion-content"
+        }
+        this.contents = this.accordion.select('div.'+this.options.contentClass);
+        this.isAnimating = false;
+        this.maxHeight = 0;
+        this.current = defaultExpandedCount ? this.contents[defaultExpandedCount-1] : this.contents[0];
+        this.toExpand = null;
+
+        this.checkMaxHeight();
+        this.initialHide();
+        this.attachInitialMaxHeight();
+
+        var clickHandler =  this.clickHandler.bindAsEventListener(this);
+        this.accordion.observe('click', clickHandler);
+    },
+
+    expand: function(el) {
+        this.toExpand = el.next('div.'+this.options.contentClass);
+        if(this.current != this.toExpand){
+            this.toExpand.show();
+            console.log(this.toExpand);
+            console.log(this.toExpand.firstDescendant());
+            console.log(this.toExpand.firstDescendant().getHeight());
+            this.maxHeight = this.toExpand.firstDescendant().getHeight() + 10;
+            this.animate();
+        }
+    },
+
+    checkMaxHeight: function() {
+        this.maxHeight = this.contents[0].getHeight();
+    },
+
+    attachInitialMaxHeight: function() {
+        this.current.previous('div.'+this.options.toggleClass).addClassName(this.options.toggleActive);
+        if(this.current.getHeight() != this.maxHeight) this.current.setStyle({height: this.maxHeight+"px"});
+    },
+
+    clickHandler: function(e) {
+        var el = e.element();
+        if(el.hasClassName(this.options.toggleClass) &amp;&amp; !this.isAnimating) {
+            this.expand(el);
+        }
+    },
+
+    initialHide: function(){
+        for(var i=0; i&lt;this.contents.length; i++){
+            if(this.contents[i] != this.current) {
+                this.contents[i].hide();
+                this.contents[i].setStyle({height: 0});
+            }
+        }
+    },
+
+    animate: function() {
+        var effects = new Array();
+        var options = {
+            sync: true,
+            scaleFrom: 0,
+            scaleContent: false,
+            transition: Effect.Transitions.sinoidal,
+            scaleMode: {
+                originalHeight: this.maxHeight,
+                originalWidth: this.accordion.getWidth()
+            },
+            scaleX: false,
+            scaleY: true
+        };
+
+        effects.push(new Effect.Scale(this.toExpand, 100, options));
+
+        options = {
+            sync: true,
+            scaleContent: false,
+            transition: Effect.Transitions.sinoidal,
+            scaleX: false,
+            scaleY: true
+        };
+
+        effects.push(new Effect.Scale(this.current, 0, options));
+
+        var myDuration = 0.75;
+
+        new Effect.Parallel(effects, {
+            duration: myDuration,
+            fps: 35,
+            queue: {
+                position: 'end',
+                scope: 'accordion'
+            },
+            beforeStart: function() {
+                this.isAnimating = true;
+                this.current.previous('div.'+this.options.toggleClass).removeClassName(this.options.toggleActive);
+                this.toExpand.previous('div.'+this.options.toggleClass).addClassName(this.options.toggleActive);
+            }.bind(this),
+            afterFinish: function() {
+                this.current.hide();
+                this.toExpand.setStyle({ height: this.maxHeight+"px" });
+                this.current = this.toExpand;
+                this.isAnimating = false;
+            }.bind(this)
+        });
+    }
+
+});
+
+document.observe("xwiki:dom:loaded", function(){
+    accordion = new Accordion("side_nav", 0);
+})</code>
+</property>
+<property>
+<name>Advanced Search JavaScript</name>
+</property>
+<property>
+<parse>0</parse>
+</property>
+<property>
+<use>currentPage</use>
+</property>
+</object>
 <content>{{velocity}}
 {{include document="SearchMacros"/}}
 #set($docextras = [])
@@ -83,6 +301,7 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 		#set($a=$smap.put("start","${start}"))
 		#set($a=$smap.put("rows","${rows}"))
 		#set($a=$smap.put("qf","${boost}"))
+                ####set($a=$smap.put("mm","2"))
                 
                 #if($sort != "")
                    #set($a=$smap.put("sort","${sort} desc"))
@@ -106,7 +325,7 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 		#set( $spaceDoc=$xwiki.getDocument("$spacename.$webhome"))
 		#set( $entityReference=$spaceDoc.getDocumentReference().getLastSpaceReference())
 		$req.setEntityReference($entityReference)
-                #set($a=$fmap.put("space",$spacename))
+                #set($a=$fmap.put("+space",$spacename))
 	#end
 
 
@@ -245,7 +464,7 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 		## Pagination                                        ##
 		##***************************************************##
 		#set($paginationParameters = {
-			'url' : $doc.getURL('view', "text=${escapetool.url($text)}"),
+			'url' : $doc.getURL('view', "q=${escapetool.url($text)}"),
 			'totalItems' : $totalNumber,
 			'defaultItemsPerPage' : 10,
 			'position': 'top'
@@ -263,10 +482,10 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 						&lt;div class="accordion-toggle"&gt;${facetfield.getName()}&lt;/div&gt; 
 						&lt;div class="accordion-content"&gt;
 							&lt;ul&gt;
-								&lt;li&gt;&lt;a href="$doc.getURL('view', "text=${escapetool.url($text)}")" &gt;All&lt;/a&gt;&lt;/li&gt;
+								&lt;li&gt;&lt;a href="$doc.getURL('view', "q=${escapetool.url($text)}")" &gt;All&lt;/a&gt;&lt;/li&gt;
 								#foreach($facet_count in $facetfield.getValues())
 									#if ($facet_count.getCount() &gt; 0 &amp;&amp; $facet_count.getName() != "date" &amp;&amp; $facet_count.getName() != "creationdate")
-										&lt;li&gt;&lt;a href="$doc.getURL('view', "text=${escapetool.url($text)}&amp;${facetfield.getName()}=${escapetool.url($facet_count.getName())}")" &gt;$facet_count&lt;/a&gt;&lt;/li&gt;
+										&lt;li&gt;&lt;a href="$doc.getURL('view', "q=${escapetool.url($text)}&amp;${facetfield.getName()}=${escapetool.url($facet_count.getName())}")" &gt;$facet_count&lt;/a&gt;&lt;/li&gt;
 									#end
 								#end
 							&lt;/ul&gt;
