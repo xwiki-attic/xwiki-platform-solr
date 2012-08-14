@@ -115,119 +115,119 @@ if (typeof Effect == 'undefined')
 
 var Accordion = Class.create({
 
-    initialize: function(id, defaultExpandedCount) {
-        if(!$(id)) throw("Attempted to initalize accordion with id: "+ id + " which was not found.");
-        this.accordion = $(id);
-        this.options = {
-            toggleClass: "accordion-toggle",
-            toggleActive: "accordion-toggle-active",
-            contentClass: "accordion-content"
-        }
-        this.contents = this.accordion.select('div.'+this.options.contentClass);
-        this.isAnimating = false;
-        this.maxHeight = 0;
-        this.current = defaultExpandedCount ? this.contents[defaultExpandedCount-1] : this.contents[0];
-        this.toExpand = null;
+	initialize: function(id, defaultExpandedCount) {
+		if(!$(id)) throw("Attempted to initalize accordion with id: "+ id + " which was not found.");
+		this.accordion = $(id);
+		this.options = {
+			toggleClass: "accordion-toggle",
+			toggleActive: "accordion-toggle-active",
+			contentClass: "accordion-content"
+		}
+		this.contents = this.accordion.select('div.'+this.options.contentClass);
+		this.isAnimating = false;
+		this.maxHeight = 0;
+		this.current = defaultExpandedCount ? this.contents[defaultExpandedCount-1] : this.contents[0];
+		this.toExpand = null;
 
-        this.checkMaxHeight();
-        this.initialHide();
-        this.attachInitialMaxHeight();
+		this.checkMaxHeight();
+		this.initialHide();
+		this.attachInitialMaxHeight();
 
-        var clickHandler =  this.clickHandler.bindAsEventListener(this);
-        this.accordion.observe('click', clickHandler);
-    },
+		var clickHandler =  this.clickHandler.bindAsEventListener(this);
+		this.accordion.observe('click', clickHandler);
+	},
 
-    expand: function(el) {
-        this.toExpand = el.next('div.'+this.options.contentClass);
-        if(this.current != this.toExpand){
-            this.toExpand.show();
-            console.log(this.toExpand);
-            console.log(this.toExpand.firstDescendant());
-            console.log(this.toExpand.firstDescendant().getHeight());
-            this.maxHeight = this.toExpand.firstDescendant().getHeight() + 10;
-            this.animate();
-        }
-    },
+	expand: function(el) {
+		this.toExpand = el.next('div.'+this.options.contentClass);
+		if(this.current != this.toExpand){
+			this.toExpand.show();
+			console.log(this.toExpand);
+			console.log(this.toExpand.firstDescendant());
+			console.log(this.toExpand.firstDescendant().getHeight());
+			this.maxHeight = this.toExpand.firstDescendant().getHeight() + 10;
+			this.animate();
+		}
+	},
 
-    checkMaxHeight: function() {
-        this.maxHeight = this.contents[0].getHeight();
-    },
+	checkMaxHeight: function() {
+		this.maxHeight = this.contents[0].getHeight();
+	},
 
-    attachInitialMaxHeight: function() {
-        this.current.previous('div.'+this.options.toggleClass).addClassName(this.options.toggleActive);
-        if(this.current.getHeight() != this.maxHeight) this.current.setStyle({height: this.maxHeight+"px"});
-    },
+	attachInitialMaxHeight: function() {
+		this.current.previous('div.'+this.options.toggleClass).addClassName(this.options.toggleActive);
+		if(this.current.getHeight() != this.maxHeight) this.current.setStyle({height: this.maxHeight+"px"});
+	},
 
-    clickHandler: function(e) {
-        var el = e.element();
-        if(el.hasClassName(this.options.toggleClass) &amp;&amp; !this.isAnimating) {
-            this.expand(el);
-        }
-    },
+	clickHandler: function(e) {
+		var el = e.element();
+		if(el.hasClassName(this.options.toggleClass) &amp;&amp; !this.isAnimating) {
+			this.expand(el);
+		}
+	},
 
-    initialHide: function(){
-        for(var i=0; i&lt;this.contents.length; i++){
-            if(this.contents[i] != this.current) {
-                this.contents[i].hide();
-                this.contents[i].setStyle({height: 0});
-            }
-        }
-    },
+	initialHide: function(){
+		for(var i=0; i&lt;this.contents.length; i++){
+			if(this.contents[i] != this.current) {
+				this.contents[i].hide();
+				this.contents[i].setStyle({height: 0});
+			}
+		}
+	},
 
-    animate: function() {
-        var effects = new Array();
-        var options = {
-            sync: true,
-            scaleFrom: 0,
-            scaleContent: false,
-            transition: Effect.Transitions.sinoidal,
-            scaleMode: {
-                originalHeight: this.maxHeight,
-                originalWidth: this.accordion.getWidth()
-            },
-            scaleX: false,
-            scaleY: true
-        };
+	animate: function() {
+		var effects = new Array();
+		var options = {
+			sync: true,
+			scaleFrom: 0,
+			scaleContent: false,
+			transition: Effect.Transitions.sinoidal,
+			scaleMode: {
+				originalHeight: this.maxHeight,
+				originalWidth: this.accordion.getWidth()
+			},
+			scaleX: false,
+			scaleY: true
+		};
 
-        effects.push(new Effect.Scale(this.toExpand, 100, options));
+		effects.push(new Effect.Scale(this.toExpand, 100, options));
 
-        options = {
-            sync: true,
-            scaleContent: false,
-            transition: Effect.Transitions.sinoidal,
-            scaleX: false,
-            scaleY: true
-        };
+		options = {
+			sync: true,
+			scaleContent: false,
+			transition: Effect.Transitions.sinoidal,
+			scaleX: false,
+			scaleY: true
+		};
 
-        effects.push(new Effect.Scale(this.current, 0, options));
+		effects.push(new Effect.Scale(this.current, 0, options));
 
-        var myDuration = 0.75;
+		var myDuration = 0.75;
 
-        new Effect.Parallel(effects, {
-            duration: myDuration,
-            fps: 35,
-            queue: {
-                position: 'end',
-                scope: 'accordion'
-            },
-            beforeStart: function() {
-                this.isAnimating = true;
-                this.current.previous('div.'+this.options.toggleClass).removeClassName(this.options.toggleActive);
-                this.toExpand.previous('div.'+this.options.toggleClass).addClassName(this.options.toggleActive);
-            }.bind(this),
-            afterFinish: function() {
-                this.current.hide();
-                this.toExpand.setStyle({ height: this.maxHeight+"px" });
-                this.current = this.toExpand;
-                this.isAnimating = false;
-            }.bind(this)
-        });
-    }
+		new Effect.Parallel(effects, {
+			duration: myDuration,
+			fps: 35,
+			queue: {
+				position: 'end',
+				scope: 'accordion'
+			},
+			beforeStart: function() {
+				this.isAnimating = true;
+				this.current.previous('div.'+this.options.toggleClass).removeClassName(this.options.toggleActive);
+				this.toExpand.previous('div.'+this.options.toggleClass).addClassName(this.options.toggleActive);
+			}.bind(this),
+			afterFinish: function() {
+				this.current.hide();
+				this.toExpand.setStyle({ height: this.maxHeight+"px" });
+				this.current = this.toExpand;
+				this.isAnimating = false;
+			}.bind(this)
+		});
+	}
 
 });
 
 document.observe("xwiki:dom:loaded", function(){
-    accordion = new Accordion("side_nav", 0);
+	accordion = new Accordion("side_nav", 0);
 })</code>
 </property>
 <property>
@@ -301,10 +301,10 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 		#set($a=$smap.put("start","${start}"))
 		#set($a=$smap.put("rows","${rows}"))
 		#set($a=$smap.put("qf","${boost}"))
-                
-                #if($sort != "")
-                   #set($a=$smap.put("sort","${sort} desc"))
-                #end 
+				
+				#if($sort != "")
+				   #set($a=$smap.put("sort","${sort} desc"))
+				#end 
 
 	##Search Parameters End
 
@@ -313,7 +313,7 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 	$req.setLanguages($languages)
 		
 	## Filter parameters
-        #set($fmap=$req.getFilterParametersMap())
+		#set($fmap=$req.getFilterParametersMap())
 
 	## Filter parameters end
 
@@ -324,7 +324,7 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 		#set( $spaceDoc=$xwiki.getDocument("$spacename.$webhome"))
 		#set( $entityReference=$spaceDoc.getDocumentReference().getLastSpaceReference())
 		$req.setEntityReference($entityReference)
-                #set($a=$fmap.put("space",$spacename))
+				#set($a=$fmap.put("space",$spacename))
 	#end
 
 
@@ -376,7 +376,7 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 		&lt;div id="search_bar"
 			&lt;div&gt;
 				&lt;input type="text" title="Enter your search query" name="q" id="text" class="searchQuery" value="$text"&gt;
-                                &lt;input type="hidden" id="sort-hidden-field" value="" name="si"/&gt;
+								&lt;input type="hidden" id="sort-hidden-field" value="" name="si"/&gt;
 				&lt;input type="submit" value="Search" title="Alt+S" class="button searchButton"&gt;
 			&lt;/div&gt;
 			&lt;div&gt;
@@ -431,7 +431,7 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 				&lt;/table&gt;
 			&lt;/div&gt;
 		&lt;/div&gt;
-        &lt;/form&gt;
+		&lt;/form&gt;
 	
 	&lt;div id="debugSearch" #if($debug == "")class="noshow"#end&gt;
 		&lt;span&gt;Debug is On&lt;span&gt;
@@ -446,7 +446,7 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 
 &lt;div style="overflow: hidden"&gt;
 
-          #if ( $text != "" )
+		  #if ( $text != "" )
 		&lt;div id="sort"&gt;
 			&lt;ul&gt;
 				&lt;li&gt;Sort:&lt;/li&gt;
@@ -457,10 +457,10 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 			&lt;/ul&gt;
 		&lt;/div&gt;
 	
-                
+				
 
 		##***************************************************##
-		## Pagination                                        ##
+		## Pagination										##
 		##***************************************************##
 		#set($paginationParameters = {
 			'url' : $doc.getURL('view', "text=${escapetool.url($text)}"),
@@ -494,75 +494,77 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 			&lt;/div&gt;
 			&lt;div id="search-results"&gt;
 			#foreach( $searchResult in $totalResults )
-			    ##***************************************************##
-			    ## Document                                          ##
-			    ##***************************************************##
-			    #set($itemfullname = $services.model.serialize($searchResult.getReference()))
-			    #set($itemDoc = $xwiki.getDocument($itemfullname))
-                            #set($itemType=$searchResult.getType())
+				##***************************************************##
+				## Document											  ##
+				##***************************************************##
+				#set($itemfullname = $services.model.serialize($searchResult.getReference()))
+				#set($itemDoc = $xwiki.getDocument($itemfullname))
+				#set($itemType=$searchResult.getType())
 
-			    #if($itemType=="ATTACHMENT")
-			    	#set($title=$searchResult.getFileName())
-			    	#set($title_url="$searchResult.getURL()")
-                                #set($itemtypeclass="search-attachment")
-                            #elseif($itemType=="OBJECT")
-                                #set($itemtypeclass="search-object")
-			    	#set($title=$escapetool.xml($xwiki.getDocument($itemfullname).plainTitle))
-			    	#set($title_url=$xwiki.getURL($itemfullname))
-                            #elseif($itemType=="PROPERTY")
-                                #set($itemtypeclass="search-property")
-			    	#set($title=$escapetool.xml($xwiki.getDocument($itemfullname).plainTitle))
-			    	#set($title_url=$xwiki.getURL($itemfullname))
-                                #set($shortdesc="${searchResult.getPropertyName()} :: ${searchResult.getPropertyValue()}")
-			    #else
-			    	#set($title=$escapetool.xml($xwiki.getDocument($itemfullname).plainTitle))
-			    	#set($title_url=$xwiki.getURL($itemfullname))
-                                #set($itemtypeclass="search-doc")
-                                #set($shortdesc=$searchResult.getTitle())
-			    #end 
-			    &lt;div&gt;
-			        &lt;div class="search-item"&gt;
-				        &lt;div class="search-item-description ${itemtypeclass}"&gt;
-					        ##Title
-					        &lt;h2 class="search-item-title"&gt;
-					           &lt;a href="$title_url"&gt;$title&lt;/a&gt;
-					        &lt;/h2&gt;
-					        #if($shortdesc != "") &lt;div&gt;${shortdesc}&lt;/div&gt;#end
-				            ##*********************************************************##
-				            ## Location                                                ##
-				            ##*********************************************************##
-				            &lt;div class="search-item-location"&gt;
-				              $msg.get('search.item.location', [
-				              $escapetool.xml($itemDoc.wiki), $xwiki.getURL("$searchResult.getWikiName():Main.WebHome"),
-				              $escapetool.xml($itemDoc.space), $xwiki.getURL("$searchResult.getWikiName():$searchResult.getSpaceName().WebHome"),
-				              $escapetool.xml($itemDoc.name), $xwiki.getURL($itemfullname)])
-				            &lt;/div&gt;
-				        &lt;/div&gt;
-				        &lt;div class="search-item-relevance"&gt;
-			                ##if ($isScored)
-			                #set ($resval = $mathtool.min($mathtool.mul($searchResult.getScore(), 100), 100))
-			                ##*********************************************************##
-			                ## Relevance                                               ##
-			                ##*********************************************************##
-			                  &lt;span class="item-relevance" title="$msg.get('search.item.relevance.title')"&gt;
-			                    &lt;span class="current-relevance" style="width:${resval}%;"&gt;&lt;/span&gt;
-			                  &lt;/span&gt;
-			                  &lt;span class="relevance-text"&gt;$resval.intValue()%&lt;/span&gt;
-                                          &lt;a title="${searchResult.getId()}" class="debug" href="javascript:" onclick="handleDebugClick(this)"&gt;Debug&lt;/a&gt;
-			                ##end ## isScored
-				        &lt;/div&gt;
-			        &lt;/div&gt;
-                                #if($searchResult.getHighlightText())
-			        &lt;div&gt;
-			        	&lt;p&gt;$searchResult.getHighlightText()&lt;/p&gt;
-			        &lt;/div&gt;
-                                #end
-                                &lt;div id="debug_${searchResult.getId()}" class="noshow"&gt;
-                                     &lt;pre&gt;
-                                          $explainMap.get($searchResult.getId())
-                                     &lt;/pre&gt;
-                                &lt;/div&gt;
-			    &lt;/div&gt;
+				#if($itemType=="ATTACHMENT")
+					#set($title=$searchResult.getFileName())
+					#set($title_url="$searchResult.getURL()")
+					#set($itemtypeclass="search-attachment")
+					#set($shortdesc="${searchResult.getMimeType()}")
+				#elseif($itemType=="OBJECT")
+					#set($itemtypeclass="search-object")
+					#set($title=$escapetool.xml($xwiki.getDocument($itemfullname).plainTitle))
+					#set($title_url=$xwiki.getURL($itemfullname))
+					#set($shortdesc="${searchResult.getObjectName()}")
+				#elseif($itemType=="PROPERTY")
+					#set($itemtypeclass="search-property")
+					#set($title=$escapetool.xml($xwiki.getDocument($itemfullname).plainTitle))
+			 		#set($title_url=$xwiki.getURL($itemfullname))
+					#set($shortdesc="${searchResult.getPropertyName()} :: ${searchResult.getPropertyValue()}")
+				#else
+					#set($title=$escapetool.xml($xwiki.getDocument($itemfullname).plainTitle))
+					#set($title_url=$xwiki.getURL($itemfullname))
+					#set($itemtypeclass="search-doc")
+					#set($shortdesc=$searchResult.getTitle())
+				#end 
+				&lt;div&gt;
+					&lt;div class="search-item"&gt;
+						&lt;div class="search-item-description ${itemtypeclass}"&gt;
+							##Title
+							&lt;h2 class="search-item-title"&gt;
+							   &lt;a href="$title_url"&gt;$title&lt;/a&gt;
+							&lt;/h2&gt;
+							#if($shortdesc != "") &lt;div&gt;${shortdesc}&lt;/div&gt;#end
+							##*********************************************************##
+							## Location												##
+							##*********************************************************##
+							&lt;div class="search-item-location"&gt;
+							  $msg.get('search.item.location', [
+							  $escapetool.xml($itemDoc.wiki), $xwiki.getURL("$searchResult.getWikiName():Main.WebHome"),
+							  $escapetool.xml($itemDoc.space), $xwiki.getURL("$searchResult.getWikiName():$searchResult.getSpaceName().WebHome"),
+							  $escapetool.xml($itemDoc.name), $xwiki.getURL($itemfullname)])
+							&lt;/div&gt;
+						&lt;/div&gt;
+						&lt;div class="search-item-relevance"&gt;
+							##if ($isScored)
+							#set ($resval = $mathtool.min($mathtool.mul($searchResult.getScore(), 100), 100))
+							##*********************************************************##
+							## Relevance											   ##
+							##*********************************************************##
+							  &lt;span class="item-relevance" title="$msg.get('search.item.relevance.title')"&gt;
+								&lt;span class="current-relevance" style="width:${resval}%;"&gt;&lt;/span&gt;
+							  &lt;/span&gt;
+							  &lt;span class="relevance-text"&gt;$resval.intValue()%&lt;/span&gt;
+										  &lt;a title="${searchResult.getId()}" class="debug" href="javascript:" onclick="handleDebugClick(this)"&gt;Debug&lt;/a&gt;
+							##end ## isScored
+						&lt;/div&gt;
+					&lt;/div&gt;
+								#if($searchResult.getHighlightText())
+									&lt;div&gt;
+										&lt;p&gt;$searchResult.getHighlightText()&lt;/p&gt;
+									&lt;/div&gt;
+								#end
+								&lt;div id="debug_${searchResult.getId()}" class="noshow"&gt;
+									 &lt;pre&gt;
+										  $explainMap.get($searchResult.getId())
+									 &lt;/pre&gt;
+								&lt;/div&gt;
+				&lt;/div&gt;
 			#end
 		&lt;/div&gt;
 		#end

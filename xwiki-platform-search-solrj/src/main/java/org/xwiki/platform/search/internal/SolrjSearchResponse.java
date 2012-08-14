@@ -33,6 +33,7 @@ import static org.xwiki.platform.search.DocumentField.TITLE;
 import static org.xwiki.platform.search.DocumentField.TYPE;
 import static org.xwiki.platform.search.DocumentField.WIKI;
 import static org.xwiki.platform.search.DocumentField.PROPERTY_NAME;
+import static org.xwiki.platform.search.DocumentField.MIME_TYPE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -286,6 +287,7 @@ public class SolrjSearchResponse implements SearchResponse
                 AttachmentReference attachmentReference = new AttachmentReference(fileName, docref);
                 String url = documentAccessBridge.getAttachmentURL(attachmentReference, true);
                 searchResult.setURL(url);
+                searchResult.setMimeType(getStringValue(solrDoc.getFieldValue(MIME_TYPE)));
 
             } else if ("OBJECT".equals(type)) {
                 // Hightlight text/content
