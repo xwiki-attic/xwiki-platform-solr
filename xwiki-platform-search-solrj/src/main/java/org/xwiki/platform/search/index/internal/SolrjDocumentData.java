@@ -39,6 +39,7 @@ import static org.xwiki.platform.search.DocumentField.TITLE;
 import static org.xwiki.platform.search.DocumentField.TYPE;
 import static org.xwiki.platform.search.DocumentField.VERSION;
 import static org.xwiki.platform.search.DocumentField.WIKI;
+import static org.xwiki.platform.search.DocumentField.PROPERTY_NAME;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -259,8 +260,10 @@ public class SolrjDocumentData extends AbstractDocumentData
                             if (!blackListedPropeties.contains(property.getName())) {
                                 SolrInputDocument sdoc = new SolrInputDocument();
                                 sdoc.addField(ID, getPropertyId(documentReference, property));
-                                sdoc.addField(docRef.getLastSpaceReference().getName() + "." + docRef.getName() + "."
-                                    + property.getName() + "_" + getLanguage(documentReference), property.getValue());
+                                String propertyName=docRef.getLastSpaceReference().getName() + "." + docRef.getName() + "."
+                                    + property.getName() + "_" + getLanguage(documentReference);
+                                sdoc.addField(PROPERTY_NAME, propertyName);
+                                sdoc.addField(propertyName, property.getValue());
                                 sdoc.addField(TYPE, "PROPERTY");
                                 addDocumentReferenceFields(documentReference, sdoc, getLanguage(documentReference));
                                 inputProperties.add(sdoc);

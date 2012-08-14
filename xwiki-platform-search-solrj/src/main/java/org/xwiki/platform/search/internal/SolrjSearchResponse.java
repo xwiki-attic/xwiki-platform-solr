@@ -32,6 +32,7 @@ import static org.xwiki.platform.search.DocumentField.SPACE;
 import static org.xwiki.platform.search.DocumentField.TITLE;
 import static org.xwiki.platform.search.DocumentField.TYPE;
 import static org.xwiki.platform.search.DocumentField.WIKI;
+import static org.xwiki.platform.search.DocumentField.PROPERTY_NAME;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -294,8 +295,9 @@ public class SolrjSearchResponse implements SearchResponse
                 searchResult.setObjectName(getStringValue(solrDoc.getFieldValue(OBJECT)));
 
             } else if ("PROPERTY".equals(type)) {
-                // TODO
-                // How to fetch the property.
+                String propertyName=getStringValue(solrDoc.getFieldValue(PROPERTY_NAME));
+                searchResult.setPropertyName(propertyName);
+                searchResult.setPropertyValue(getStringValue(solrDoc.getFieldValue(propertyName)));
             }
 
             float score = (Float) solrDoc.getFieldValue(SCORE);

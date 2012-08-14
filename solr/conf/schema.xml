@@ -649,6 +649,7 @@ Case insensitive stop word removal. add enablePositionIncrements=true in both th
    <field name="lang" type="string" indexed="true" stored="true"/>
    <field name="space" type="string" indexed="true" stored="true"/>
    <field name="wiki" type="string" indexed="true" stored="true"/>
+   <field name="propertyname" type="string" indexed="true" stored="true"/>
    <field name="hasattachment" type="boolean" indexed="true" stored="true"/>
    <field name="hascomment" type="boolean" indexed="true" stored="true"/>
    <field name="author" type="string" indexed="true" stored="true"/>

@@ -148,4 +148,9 @@ public interface DocumentField
      * For storing the comments.
      */
     String COMMENT = "comment";
+    
+    /**
+     * For storing property name.
+     */
+    String PROPERTY_NAME="propertyname";
 }

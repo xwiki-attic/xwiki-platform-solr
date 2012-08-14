@@ -108,7 +108,8 @@ public class SolrjSearchRequest implements SearchRequest
         for (String param : params) {
             if (param.contains(":")) {
                 String[] pa = param.split(":");
-                if (fields.contains(pa[0] + "_" + language)) {
+                String cleanField=pa[0].replaceAll("[+-]","");
+                if (fields.contains(cleanField + "_" + language)) {
                     pa[0] = pa[0] + "_" + language;
 
                 }
@@ -127,15 +128,14 @@ public class SolrjSearchRequest implements SearchRequest
             }
             builder.append(" ");
         }
-
+        
         String queryString=builder.toString();
-        
-        if(!StringUtils.isEmpty(queryString) && !queryString.contains(DocumentField.LANGUAGE)){
-            queryString="+("+queryString+") +"+DocumentField.LANGUAGE+":"+language;
+        //If query doesn't have language, Add a language filter query.
+        if(!queryString.contains(DocumentField.LANGUAGE)){
+            this.searchParametersMap.put("fq", "lang:"+language);
         }
-        
-        return queryString;
 
+        return queryString;
     }
     
     public String processQueryFrequency(String qfString){

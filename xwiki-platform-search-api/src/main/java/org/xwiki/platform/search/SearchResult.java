@@ -59,6 +59,8 @@ public class SearchResult
 
     private String propertyName;
 
+    private String propertyValue;
+
     public SearchResult(String id, String wikiName, String spaceName, String pageName, String language)
     {
         this.reference = new DocumentReference(wikiName, spaceName, pageName, language);
@@ -303,4 +305,21 @@ public class SearchResult
         this.propertyName = propertyName;
     }
 
+    /**
+     * @return the propertyValue
+     */
+    public String getPropertyValue()
+    {
+        return propertyValue;
+    }
+
+    /**
+     * @param propertyValue the propertyValue to set
+     */
+    public void setPropertyValue(String propertyValue)
+    {
+        this.propertyValue = propertyValue;
+    }
+
+    
 }

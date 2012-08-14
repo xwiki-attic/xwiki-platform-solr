@@ -301,7 +301,6 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 		#set($a=$smap.put("start","${start}"))
 		#set($a=$smap.put("rows","${rows}"))
 		#set($a=$smap.put("qf","${boost}"))
-                ####set($a=$smap.put("mm","2"))
                 
                 #if($sort != "")
                    #set($a=$smap.put("sort","${sort} desc"))
@@ -325,7 +324,7 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 		#set( $spaceDoc=$xwiki.getDocument("$spacename.$webhome"))
 		#set( $entityReference=$spaceDoc.getDocumentReference().getLastSpaceReference())
 		$req.setEntityReference($entityReference)
-                #set($a=$fmap.put("+space",$spacename))
+                #set($a=$fmap.put("space",$spacename))
 	#end
 
 
@@ -464,7 +463,7 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 		## Pagination                                        ##
 		##***************************************************##
 		#set($paginationParameters = {
-			'url' : $doc.getURL('view', "q=${escapetool.url($text)}"),
+			'url' : $doc.getURL('view', "text=${escapetool.url($text)}"),
 			'totalItems' : $totalNumber,
 			'defaultItemsPerPage' : 10,
 			'position': 'top'
@@ -482,10 +481,10 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 						&lt;div class="accordion-toggle"&gt;${facetfield.getName()}&lt;/div&gt; 
 						&lt;div class="accordion-content"&gt;
 							&lt;ul&gt;
-								&lt;li&gt;&lt;a href="$doc.getURL('view', "q=${escapetool.url($text)}")" &gt;All&lt;/a&gt;&lt;/li&gt;
+								&lt;li&gt;&lt;a href="$doc.getURL('view', "text=${escapetool.url($text)}")" &gt;All&lt;/a&gt;&lt;/li&gt;
 								#foreach($facet_count in $facetfield.getValues())
 									#if ($facet_count.getCount() &gt; 0 &amp;&amp; $facet_count.getName() != "date" &amp;&amp; $facet_count.getName() != "creationdate")
-										&lt;li&gt;&lt;a href="$doc.getURL('view', "q=${escapetool.url($text)}&amp;${facetfield.getName()}=${escapetool.url($facet_count.getName())}")" &gt;$facet_count&lt;/a&gt;&lt;/li&gt;
+										&lt;li&gt;&lt;a href="$doc.getURL('view', "text=${escapetool.url($text)}&amp;${facetfield.getName()}=${escapetool.url($facet_count.getName())}")" &gt;$facet_count&lt;/a&gt;&lt;/li&gt;
 									#end
 								#end
 							&lt;/ul&gt;
@@ -514,10 +513,12 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
                                 #set($itemtypeclass="search-property")
 			    	#set($title=$escapetool.xml($xwiki.getDocument($itemfullname).plainTitle))
 			    	#set($title_url=$xwiki.getURL($itemfullname))
+                                #set($shortdesc="${searchResult.getPropertyName()} :: ${searchResult.getPropertyValue()}")
 			    #else
 			    	#set($title=$escapetool.xml($xwiki.getDocument($itemfullname).plainTitle))
 			    	#set($title_url=$xwiki.getURL($itemfullname))
                                 #set($itemtypeclass="search-doc")
+                                #set($shortdesc=$searchResult.getTitle())
 			    #end 
 			    &lt;div&gt;
 			        &lt;div class="search-item"&gt;
@@ -526,7 +527,7 @@ $xwiki.jsfx.use("js/scriptaculous/effects.js")
 					        &lt;h2 class="search-item-title"&gt;
 					           &lt;a href="$title_url"&gt;$title&lt;/a&gt;
 					        &lt;/h2&gt;
-					        #if($searchResult.getTitle()) &lt;div&gt;${searchResult.getTitle()}&lt;/div&gt;#end
+					        #if($shortdesc != "") &lt;div&gt;${shortdesc}&lt;/div&gt;#end
 				            ##*********************************************************##
 				            ## Location                                                ##
 				            ##*********************************************************##
