@@ -53,15 +53,22 @@ import org.xwiki.model.reference.DocumentReference;
 @Component
 public class SolrDocData
 {
-
+    
+    /**
+     * String Builder object.
+     */
+    public StringBuilder retval = new StringBuilder();
+    
+    /**
+     * DocumentAccessBridge component.
+     */
     @Inject
     private DocumentAccessBridge documentAccessBridge;
-
-    StringBuilder retval = new StringBuilder();
-
+    
     /**
-     * It gets the Unique id of the document
+     * It gets the Unique id of the document.
      * 
+     * @param doc DocumentModelBridge.
      * @return Gives the unique ID of the document
      */
     public String getId(DocumentModelBridge doc)
@@ -79,6 +86,10 @@ public class SolrDocData
      * It retrieves the solrInput Document which could be added to the SolrServer. Have done partial Indexing of the
      * document.
      * 
+     * @param docref Refernce to document.
+     * @param doc Document Model Bridge.
+     * @param language .
+     * @param textContent .
      * @param org.xwiki.model.reference.DocumentReference,org.xwiki.bridge.DocumentModelBridge,java.lang.String
      * @return the SolrInputDocument
      */
@@ -106,10 +117,11 @@ public class SolrDocData
     }
 
     /**
-     * @param attachment
-     * @param doc
-     * @param language
-     * @return
+     * @param attachment reference to the attachment.
+     * @param doc Document Model Bridge.
+     * @param language of the document.
+     * @param textContent .
+     * @return Solr Input Document
      */
     public SolrInputDocument getSolrInputAttachment(AttachmentReference attachment, DocumentModelBridge doc,
         String language, String textContent)
@@ -136,9 +148,9 @@ public class SolrDocData
     }
 
     /**
-     * @param doc
-     * @param attachment
-     * @return
+     * @param doc  Document Model Bridge
+     * @param attachment reference to the attachment.
+     * @return the ID
      */
     private String getAttachmentID(DocumentModelBridge doc, AttachmentReference attachment)
     {

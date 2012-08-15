@@ -57,10 +57,10 @@ public class SolrjSearchTest extends AbstractComponentTestCase
         Assert.assertEquals(this.search.getImplementation(), "Embedded Solr");
     }
 
-
     @Test
-    public void testSearchResponseComponet() throws Exception{
-	SearchResponse response=getComponentManager().getInstance(SearchResponse.class,"solrsearchresponse");
+    public void testSearchResponseComponet() throws Exception
+    {
+        SearchResponse response = getComponentManager().getInstance(SearchResponse.class, "solrsearchresponse");
         Assert.assertNotNull(response);
 
     }

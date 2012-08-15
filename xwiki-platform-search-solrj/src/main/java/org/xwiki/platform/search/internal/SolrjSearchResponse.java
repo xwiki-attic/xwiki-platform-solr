@@ -70,34 +70,64 @@ import com.xpn.xwiki.util.XWikiStubContextProvider;
 @Named(SolrjSearchResponse.HINT)
 @InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
 public class SolrjSearchResponse implements SearchResponse
-{
-
-    @Inject
-    private Logger logger;
-
+{   
+    /**
+     * solrsearchresponse HINT.
+     */
+    public static final String HINT = "solrsearchresponse";
+    
+   
+    /**
+     * Execution component.
+     */
     @Inject
     protected Execution execution;
-
+    
+    /**
+     * XWikiStubContextProvider component.
+     */
     @Inject
     protected XWikiStubContextProvider contextProvider;
-
-    public static final String HINT = "solrsearchresponse";
-
+    
+    /**
+     * Logger component.
+     */
+    @Inject
+    private Logger logger;
+      
+    /**
+     * List of Languages.
+     */
     private List<String> languages;
-
+    
+    /**
+     * EntityReference .
+     */
     private EntityReference entityReference;
 
     /**
-     * declare a QueryResponse object
+     * declare a QueryResponse object.
      */
     private QueryResponse queryResponse;
-
+    
+    /**
+     * SolrDocumentList.
+     */
     private SolrDocumentList solrDocumentList;
-
+    
+    /**
+     * List of Search Results.
+     */
     private List<SearchResult> searchResults;
-
-    Map<String, Map<String, List<String>>> highlightingMap = null;
-
+    
+    /**
+     * highlighted text.
+     */
+   private Map<String, Map<String, List<String>>> highlightingMap = null;
+    
+   /**
+    * DocumentAccessBridge component.
+    */
     @Inject
     private DocumentAccessBridge documentAccessBridge;
 
@@ -217,7 +247,12 @@ public class SolrjSearchResponse implements SearchResponse
     {
         return queryResponse;
     }
-
+    
+    /**
+     * 
+     * @param string .
+     * @return String.
+     */
     private String cleanUp(String string)
     {
         if (string.startsWith("[")) {
@@ -230,7 +265,12 @@ public class SolrjSearchResponse implements SearchResponse
 
         return string;
     }
-
+    
+    /**
+     * 
+     * @param object .
+     * @return value  of the Object.
+     */
     private String getStringValue(Object object)
     {
         String string = "";
@@ -245,7 +285,12 @@ public class SolrjSearchResponse implements SearchResponse
 
         return string;
     }
-
+    
+    /**
+     * 
+     * @param solrDoc Solr Dcument.
+     * @return Search Result.
+     */
     private SearchResult getSearchResult(SolrDocument solrDoc)
     {
         SearchResult searchResult = null;
@@ -297,7 +342,7 @@ public class SolrjSearchResponse implements SearchResponse
                 searchResult.setObjectName(getStringValue(solrDoc.getFieldValue(OBJECT)));
 
             } else if ("PROPERTY".equals(type)) {
-                String propertyName=getStringValue(solrDoc.getFieldValue(PROPERTY_NAME));
+                String propertyName = getStringValue(solrDoc.getFieldValue(PROPERTY_NAME));
                 searchResult.setPropertyName(propertyName);
                 searchResult.setPropertyValue(getStringValue(solrDoc.getFieldValue(propertyName)));
             }
@@ -316,7 +361,11 @@ public class SolrjSearchResponse implements SearchResponse
 
         return null;
     }
-
+    
+    /**
+     * returns the XWiki Context.
+     * @return XWiki context.
+     */
     public XWikiContext getXWikiContext()
     {
         XWikiContext context = (XWikiContext) execution.getContext().getProperty(XWikiContext.EXECUTIONCONTEXT_KEY);
@@ -328,7 +377,11 @@ public class SolrjSearchResponse implements SearchResponse
         }
         return context;
     }
-
+    
+    /**
+     * 
+     * @return ExecutionContext .
+     */
     private ExecutionContext getExecutionContext()
     {
         return this.execution.getContext();

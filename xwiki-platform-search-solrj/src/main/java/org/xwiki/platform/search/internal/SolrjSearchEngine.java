@@ -33,8 +33,6 @@ import org.xwiki.component.phase.Initializable;
 import org.xwiki.component.phase.InitializationException;
 import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.platform.search.SearchEngine;
-import org.xwiki.platform.search.SearchException;
-
 /**
  * @version $Id$
  */
@@ -43,15 +41,30 @@ import org.xwiki.platform.search.SearchException;
 @Singleton
 public class SolrjSearchEngine implements SearchEngine, Initializable
 {
-
-    public static final String HINT = "solrjsearchengine";
-
-    private static SolrServer solrServer;
-
-    private static CoreContainer coreContainer;
-
+    /**
+     * SOLR HOME KEY.
+     */
     public static final String SOLR_HOME_KEY = "solr.solr.home";
-
+    
+    /**
+     * solrjsearchengine HINT.
+     */
+    public static final String HINT = "solrjsearchengine";
+    
+    /**
+     * solrserver HINT.
+     */
+    private static SolrServer solrServer;
+    
+    /**
+     * corecontainer HINT.
+     */
+    private static CoreContainer coreContainer;
+    
+    
+    /**
+     *  Logger component.
+     */
     @Inject
     private Logger logger;
 
@@ -101,7 +114,13 @@ public class SolrjSearchEngine implements SearchEngine, Initializable
     {
         return solrServer;
     }
-
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.SearchEngine#getCoreContainer()
+     */
     public CoreContainer getCoreContainer()
     {
         return coreContainer;

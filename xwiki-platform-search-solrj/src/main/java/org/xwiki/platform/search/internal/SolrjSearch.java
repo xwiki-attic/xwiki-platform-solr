@@ -20,7 +20,6 @@
 package org.xwiki.platform.search.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -45,7 +44,6 @@ import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.event.Event;
@@ -76,23 +74,34 @@ import com.xpn.xwiki.internal.event.AttachmentUpdatedEvent;
 @Singleton
 public class SolrjSearch extends AbstractSearch
 {
-
+    /**
+     * solrJ HINT.
+     */
     public static final String HINT = "solrj";
 
     /**
-     * Document Indexer for solrj
+     * Document Indexer for solrj.
      */
     @Inject
     @Named(SolrjDocumentIndexer.HINT)
     private DocumentIndexer indexer;
-
+    
+    /**
+     * SearchEngine component.
+     */
     @Inject
     @Named(SolrjSearchEngine.HINT)
     private SearchEngine searchEngine;
-
+    
+    /**
+     *  ComponentManager component.
+     */
     @Inject
     private ComponentManager componentManager;
-
+    
+    /**
+     * DocumentAccessBridge component.
+     */
     @Inject
     private DocumentAccessBridge documentAccessBridge;
 
@@ -136,15 +145,21 @@ public class SolrjSearch extends AbstractSearch
     }
 
     /**
-     * @param attachment
-     * @param doc
+     * @param attachment reference to the attachment.
+     * @param doc  DocumentModelBridge.
      * @return the boolean true if successfully indexed
      */
     public boolean indexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
     {
         return indexer.indexAttachment(attachment, doc);
     }
-
+    
+    /**
+     * 
+     * @param attachment attachment reference.
+     * @param doc DocumentModelBridge.
+     * @return boolean if Index of the attachment is deleted.
+     */
     public boolean deleteIndexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
     {
         return indexer.deleteIndexAttachment(attachment, doc);
@@ -164,10 +179,7 @@ public class SolrjSearch extends AbstractSearch
                 buildDocumentIndex(((DocumentModelBridge) source).getDocumentReference());
             } else if (event instanceof DocumentDeletedEvent) {
                 deleteDocumentIndex(((DocumentModelBridge) source).getDocumentReference());
-            }
-
-            else if (event instanceof AttachmentUpdatedEvent || event instanceof AttachmentAddedEvent) {
-
+            } else if (event instanceof AttachmentUpdatedEvent || event instanceof AttachmentAddedEvent) {
                 AttachmentReference attachref =
                     new AttachmentReference(((AbstractAttachmentEvent) event).getName(),
                         ((DocumentModelBridge) source).getDocumentReference());
@@ -181,7 +193,7 @@ public class SolrjSearch extends AbstractSearch
                 deleteIndexAttachment(attachref, (DocumentModelBridge) source);
 
             } else if (event instanceof WikiDeletedEvent) {
-
+              //TO DO
             }
         } catch (Exception e) {
             logger.error("error in notify", e);
@@ -205,7 +217,13 @@ public class SolrjSearch extends AbstractSearch
         Gson gson = new Gson();
         return gson.toJson(indexer.getStatus());
     }
-
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.Search#getVelocityUtils()
+     */
     public VelocityUtils getVelocityUtils()
     {
         CoreContainer container = (CoreContainer) searchEngine.getCoreContainer();
@@ -245,11 +263,13 @@ public class SolrjSearch extends AbstractSearch
                     for (Entry<String, String> entry : request.getSearchParametersMap().entrySet()) {
                         if (entry.getKey().equals("qf")) {
                             String value = request.processQueryFrequency(entry.getValue());
-                            if (!StringUtils.isEmpty(value))
+                            if (!StringUtils.isEmpty(value)) {
                                 solrQuery.add(entry.getKey(), value);
+                            }
                         } else {
-                            if (!StringUtils.isEmpty(entry.getValue()))
+                            if (!StringUtils.isEmpty(entry.getValue())) {
                                 solrQuery.add(entry.getKey(), entry.getValue());
+                            }
                         }
 
                     }
@@ -294,7 +314,6 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public SearchResponse search(String query)
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -412,7 +431,7 @@ public class SolrjSearch extends AbstractSearch
             indexer.deleteIndex(wikiReference, null);
             return true;
         } catch (Exception e) {
-            logger.error("Deleting the wiki index for the Wiki["+wikiReference.getName()+"]");
+            logger.error("Deleting the wiki index for the Wiki[" + wikiReference.getName() + "]");
         }
         return false;
     }
@@ -430,7 +449,7 @@ public class SolrjSearch extends AbstractSearch
             indexer.deleteIndex(spaceReference, null);
             return true;
         } catch (Exception e) {
-            logger.error("Deleting the space index for the Space["+spaceReference.getName()+"]");
+            logger.error("Deleting the space index for the Space[" + spaceReference.getName() + "]");
         }
         return false;
     }
@@ -443,7 +462,6 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public int reBuildFarmIndex()
     {
-        // TODO Auto-generated method stub
         return 0;
     }
 
@@ -455,7 +473,7 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public int reBuildFarmIndex(List<WikiReference> wikis)
     {
-        // TODO Auto-generated method stub
+
         return 0;
     }
 
@@ -467,7 +485,7 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public int reBuildWikiIndex(WikiReference wikiReference)
     {
-        // TODO Auto-generated method stub
+
         return 0;
     }
 
@@ -479,12 +497,12 @@ public class SolrjSearch extends AbstractSearch
     @Override
     public int reBuildSpaceIndex(SpaceReference spaceReference)
     {
-        // TODO Auto-generated method stub
         return 0;
     }
-    
+
     @Override
-    public boolean deleteEntireIndex() throws SearchIndexingException,XWikiException{
+    public boolean deleteEntireIndex() throws SearchIndexingException, XWikiException
+    {
         return this.indexer.deleteEntireIndex();
     }
 }

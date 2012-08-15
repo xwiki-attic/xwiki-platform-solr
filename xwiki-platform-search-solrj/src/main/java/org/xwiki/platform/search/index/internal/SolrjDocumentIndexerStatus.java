@@ -28,7 +28,10 @@ import org.xwiki.platform.search.index.DocumentIndexerStatus;
  * @version $Id$
  */
 public class SolrjDocumentIndexerStatus extends DocumentIndexerStatus
-{
+{   
+    /**
+     * List of SolrInput Documents recently Indexed.
+     */
     protected List<SolrInputDocument> recentlyIndexedDocs;
 
     /**
@@ -68,7 +71,7 @@ public class SolrjDocumentIndexerStatus extends DocumentIndexerStatus
     }
 
     /**
-     * @param recentlyIndexedDocs
+     * @param recentlyIndexedDocs Solr Input Documents recently Indexed.
      */
     private void setRecentlyIndexedDocs(List<SolrInputDocument> recentlyIndexedDocs)
     {
@@ -84,7 +87,6 @@ public class SolrjDocumentIndexerStatus extends DocumentIndexerStatus
     @Override
     public List<SolrInputDocument> getRecentlyIndexedDocs()
     {
-        // TODO Auto-generated method stub
         return null;
     }
 

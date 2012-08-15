@@ -41,13 +41,26 @@ import org.apache.solr.util.RefCounted;
  */
 public class VelocityUtils
 {
-
+   /**
+    *  SolrServer .
+    */
     private SolrServer solrServer;
-
+    
+    /**
+     * SolrCore object.
+     */
     private SolrCore core;
-
+    
+    /**
+     * CoreContainer.
+     */
     private CoreContainer coreContainer;
-
+    
+    /**
+     * 
+     * @param coreContainer CoreContainer.
+     * @param solrServer SolrServer.
+     */
     public VelocityUtils(CoreContainer coreContainer, SolrServer solrServer)
     {
         this.coreContainer = coreContainer;
@@ -57,7 +70,11 @@ public class VelocityUtils
             this.core = c;
         }
     }
-
+    
+    /**
+     * 
+     * 
+     */
     public NamedList getIndexingStatistics()
     {
         RefCounted<SolrIndexSearcher> searcher = core.getSearcher();
@@ -67,7 +84,12 @@ public class VelocityUtils
         NamedList list = s.getStatistics();
         return list;
     }
-
+    
+    /**
+     * 
+     * @param key
+     * @return
+     */
     private NamedList getStatistics(String key)
     {
         Map<String, SolrInfoMBean> reg = this.core.getInfoRegistry();
@@ -80,43 +102,76 @@ public class VelocityUtils
         }
         return null;
     }
-
+    
+    /**
+     * 
+     * @return
+     */
     public NamedList getLukeStatistics()
     {
         return getStatistics("/admin/luke");
     }
-
+    
+    /**
+     * 
+     * @return
+     */
     public NamedList getSystemStatistics()
     {
         return getStatistics("/admin/system");
     }
-
+    
+    /**
+     * 
+     * @return
+     */
     public NamedList getFileStatistics()
     {
         return getStatistics("/admin/file");
     }
-
+    
+    /**
+     * 
+     * @return
+     */
     public NamedList getPluginsStatistics()
     {
         return getStatistics("/admin/plugins");
     }
-
+    
+    /**
+     * 
+     * @return
+     */
     public NamedList getJvmStatistics()
     {
         return getStatistics("/admin/properties");
     }
-
+    
+    /**
+     * 
+     * @return
+     */
     public NamedList getThreadStatistics()
     {
         return getStatistics("/admin/threads");
     }
-
+    
+    /**
+     * 
+     * @return property.
+     */
     private String getSolrConfigHome()
     {
         String property = System.getProperty("solr.solr.home");
         return property;
     }
-
+    
+    /**
+     * 
+     * @param filePath 
+     * @return
+     */
     private String readFileFromPath(String filePath)
     {
         File file = new File(filePath);
@@ -141,14 +196,22 @@ public class VelocityUtils
         }
         return null;
     }
-
+    
+    /**
+     * 
+     * @return gets the path of Solrschema.xml  file
+     */
     public String getSolrSchemaXml()
     {
         String filePath = getSolrConfigHome() + File.separatorChar + "conf" + File.separatorChar + "schema.xml";
         System.out.println(filePath);
         return readFileFromPath(filePath);
     }
-
+    
+    /**
+     * 
+     * @return gets the path of SolrConfig.xml  file.
+     */
     public String getSolrConfigXml()
     {
         String filePath = getSolrConfigHome() + File.separatorChar + "conf" + File.separatorChar + "solrconfig.xml";

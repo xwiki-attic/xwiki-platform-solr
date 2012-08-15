@@ -33,7 +33,6 @@ import javax.inject.Singleton;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.SolrInputField;
 import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.bridge.DocumentModelBridge;
@@ -55,8 +54,7 @@ import org.xwiki.platform.search.internal.SolrDocData;
 import org.xwiki.rendering.renderer.BlockRenderer;
 
 import com.google.gson.Gson;
-import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.objects.BaseObject;
+
 
 /**
  * @version $Id$
@@ -66,52 +64,101 @@ import com.xpn.xwiki.objects.BaseObject;
 @Singleton
 public class SolrjDocumentIndexer implements DocumentIndexer
 {
-
-    @Inject
+    /**
+    * solrjindexer HINT.
+    */
+    public static final String HINT = "solrjindexer";
+    /**
+     * Logger  component.
+     */
+    @Inject 
     private Logger logger;
-
-    @Inject
+    
+    /**
+     * ExecutionContextManager component.
+     */
+    @Inject 
     private ExecutionContextManager executionContextManager;
-
+    
+    /**
+     * Execution component.
+     */
     @Inject
     private Execution execution;
-
+    
+    /**
+     * Thread object reference variable.
+     */
     private Thread thread;
-
-    public static final String HINT = "solrjindexer";
-
+     
+    /**
+     * solrServer Object Reference Variable.
+     */
     private SolrServer solrServer;
-
+    
+    /**
+     * BlockRenderer Component.
+     */
     @Inject
     @Named("plain/1.0")
     private BlockRenderer renderer;
-
+    
+    /**
+     * ComponentManager component.
+     */
     @Inject
     private ComponentManager componentManager;
-
+    
+    /**
+     * DocumentAccessBridge component.
+     */
     @Inject
     private DocumentAccessBridge documentAccessBridge;
-
+    
+    /**
+     * indexerStatusMap to store Indexer status.
+     */
     private Map<String, DocumentIndexerStatus> indexerStatusMap = Collections
         .synchronizedMap(new HashMap<String, DocumentIndexerStatus>());
-
+    
+    /**
+     * 
+     * 
+     * @version $Id$
+     */
     private class IndexThread implements Runnable
     {
-
+        
+        /**
+         * list of Document Reference.
+         */
         private List<DocumentReference> docList;
-
-        EntityReference entityReference;
-
+        
+        /**
+         * Entity Reference.
+         */
+        private EntityReference entityReference;
+       
+        /**
+         * 
+         * @param entityReference refernce to Document ,atatchment.
+         * @param docList list of document reference.
+         */
         public IndexThread(EntityReference entityReference, List<DocumentReference> docList)
         {
             this.docList = docList;
             this.entityReference = entityReference;
         }
-
+        
+        /**
+         * 
+         * {@inheritDoc}
+         * 
+         * @see java.lang.Runnable#run()
+         */
         @Override
         public void run()
         {
-            // TODO Auto-generated method stub
             ExecutionContext context = new ExecutionContext();
             // Create a SolrDocData object
             SolrDocData solrdoc = new SolrDocData();
@@ -128,7 +175,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             try {
                 executionContextManager.initialize(context);
             } catch (ExecutionContextException e) {
-                throw new RuntimeException("Failed to initialize Solrj indexer's execution context", e);
+                throw new RuntimeException("Failed to initialize Solrj indexer execution context", e);
             }
 
             execution.pushContext(context);
@@ -141,7 +188,9 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                     int end = (i + 10) < docList.size() ? (i + 10) : (docList.size());
                     List<DocumentReference> subList = docList.subList(start, end);
                     List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
-                    long startTime, endTime, fetchTime = 0;
+                    long startTime;
+                    long endTime;
+                    long fetchTime = 0;
                     for (DocumentReference docRef : subList) {
 
                         try {
@@ -159,19 +208,19 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
                             // Attachments
                             List<SolrInputDocument> attachmentdocs = sdocdata.getInputAttachments(docRef);
-                            if (attachmentdocs != null && !attachmentdocs.isEmpty())
+                            if  (attachmentdocs != null && !attachmentdocs.isEmpty()) {
                                 docs.addAll(attachmentdocs);
-
+                            }
                             // Objects
                             List<SolrInputDocument> objDocs = sdocdata.getInputObjects(docRef);
-                            if (objDocs != null && !objDocs.isEmpty())
+                            if (objDocs != null && !objDocs.isEmpty()) {
                                 docs.addAll(objDocs);
-
+                            }
                             // Properties
                             List<SolrInputDocument> propDocs = sdocdata.getInputProperties(docRef);
-                            if (propDocs != null && !propDocs.isEmpty())
+                            if (propDocs != null && !propDocs.isEmpty()) {
                                 docs.addAll(propDocs);
-
+                            }
                         } catch (Exception e) {
                             logger.error("Error fetching document [" + docRef.getName() + "]", e);
                         }
@@ -215,14 +264,29 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
         }
     }
-
+   /**
+    * 
+    * 
+    * @version $Id$
+    */
     private class DeleteIndexThread implements Runnable
     {
-
+        
+        /**
+         * List of Document Reference.
+         */
         private List<DocumentReference> docList;
-
+        
+        /**
+         * Entity Reference.
+         */
         private EntityReference entityReference;
-
+        
+        /**
+         * 
+         * @param entityReference EntityReference
+         * @param docList of Document Reference.
+         */
         public DeleteIndexThread(EntityReference entityReference, List<DocumentReference> docList)
         {
             this.docList = docList;
@@ -249,22 +313,21 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
                     try {
 
-                        //Add Document Id.
+                        // Add Document Id.
                         idList.add(sdocdata.getDocumentId(documentReference));
-                        
-                        //Attachments
+
+                        // Attachments
                         List<AttachmentReference> attachmentReferenceList =
                             documentAccessBridge.getAttachmentReferences(documentReference);
-                        for(AttachmentReference attachmentReference:attachmentReferenceList){
+                        for (AttachmentReference attachmentReference : attachmentReferenceList) {
                             idList.add(sdocdata.getAttachmentId(attachmentReference));
                         }
-                        
-                        //Objects
+
+                        // Objects
                         idList.addAll(sdocdata.getObjectIdList(documentReference));
-                        
-                        //Properties
+
+                        // Properties
                         idList.addAll(sdocdata.getPropertyIdList(documentReference));
-                        
 
                     } catch (Exception e) {
                         logger.error("Error while adding document ids for index deletion" + e.getMessage());
@@ -279,7 +342,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                 }
 
             } catch (Exception ex) {
-                logger.error("Error instantiating DocumentData component with hint["+SolrjDocumentData.HINT+"]");
+                logger.error("Error instantiating DocumentData component with hint[" + SolrjDocumentData.HINT + "]");
             } finally {
                 execution.removeContext();
             }
@@ -403,7 +466,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     }
 
     /**
-     * indexes the attachment using the Solr cell {@inheritDoc}
+     * indexes the attachment using the Solr cell {@inheritDoc}.
      * 
      * @see org.xwiki.platform.search.index.DocumentIndexer#indexAttachment(org.xwiki.model.reference.AttachmentReference,
      *      org.xwiki.bridge.DocumentModelBridge)
@@ -517,15 +580,15 @@ public class SolrjDocumentIndexer implements DocumentIndexer
     public void deleteIndex(EntityReference reference, List<DocumentReference> docs)
     {
         try {
-            if(reference.getType()== EntityType.WIKI){
-                solrServer.deleteByQuery("wiki:"+reference.getName());
-            }else if(reference.getType() == EntityType.SPACE){
-                solrServer.deleteByQuery("space:"+reference.getName());
+            if (reference.getType() == EntityType.WIKI) {
+                solrServer.deleteByQuery("wiki:" + reference.getName());
+            } else if (reference.getType() == EntityType.SPACE) {
+                solrServer.deleteByQuery("space:" + reference.getName());
             }
             solrServer.commit();
         } catch (Exception e) {
-            logger.error("Error deleting index for EntityReference:"+reference);
-        }      
+            logger.error("Error deleting index for EntityReference:" + reference);
+        }
     }
 
 }

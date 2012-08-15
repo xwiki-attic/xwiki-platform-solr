@@ -29,8 +29,6 @@ import java.util.Map.Entry;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.ecs.xhtml.param;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.SimpleOrderedMap;
@@ -62,36 +60,73 @@ import com.xpn.xwiki.util.XWikiStubContextProvider;
 @InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
 public class SolrjSearchRequest implements SearchRequest
 {
-
+    /**
+     * solrjrequest HINT.
+     */
     public static final String HINT = "solrjrequest";
-
+     
+    /**
+     * searchParametersMap.
+     */
+    protected Map<String, String> searchParametersMap;
+    
+    /**
+     *filterParametersMap.
+     */
+    protected Map<String, String> filterParametersMap;
+    
+    /**
+     *  query String.
+     */
+    protected String queryString;
+    
+    /**
+     * List of languages.
+     */
+    protected List<String> languages;
+    
+    /**
+     * EntityReference.
+     */
+    protected EntityReference entityReference;
+    
+    /**
+     * List of fields.
+     */
+    protected List<String> fields;
+    
+    /**
+     * XWikiStubContextProvider conponent.
+     */
+    @Inject
+    protected XWikiStubContextProvider contextProvider;
+    
+    
+    /**
+     * ExecutionContextManager component.
+     */
     @Inject
     private ExecutionContextManager executionContextManager;
-
+    
+    /**
+     *  Execution component.
+     */
     @Inject
     private Execution execution;
-
+    
+    /**
+     * SearchEngine component.
+     */
     @Inject
     @Named(SolrjSearchEngine.HINT)
     private SearchEngine searchEngine;
-
+    
+    /**
+     * Logger  component.
+     */
     @Inject
     private Logger logger;
-
-    @Inject
-    protected XWikiStubContextProvider contextProvider;
-
-    protected Map<String, String> searchParametersMap;
-
-    protected Map<String, String> filterParametersMap;
-
-    protected String queryString;
-
-    protected List<String> languages;
-
-    protected EntityReference entityReference;
-
-    protected List<String> fields;
+    
 
     /**
      * {@inheritDoc}
@@ -137,7 +172,13 @@ public class SolrjSearchRequest implements SearchRequest
 
         return queryString;
     }
-
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.SearchRequest#processQueryFrequency(java.lang.String)
+     */
     public String processQueryFrequency(String qfString)
     {
         String[] qfArray = qfString.split(" ");
@@ -167,7 +208,11 @@ public class SolrjSearchRequest implements SearchRequest
 
         return builder.toString().trim();
     }
-
+    
+    /**
+     * 
+     * @return List of Fields.
+     */
     private List<String> getFields()
     {
         CoreContainer container = (CoreContainer) searchEngine.getCoreContainer();
@@ -198,7 +243,7 @@ public class SolrjSearchRequest implements SearchRequest
     }
 
     /**
-     * gets the XWikiContext
+     * gets the XWikiContext.
      * 
      * @return the XWikiContext
      */

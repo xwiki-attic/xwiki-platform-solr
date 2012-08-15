@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -56,7 +55,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.tika.Tika;
 import org.apache.tika.metadata.Metadata;
-import org.xwiki.bridge.DocumentModelBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
@@ -78,6 +76,9 @@ import com.xpn.xwiki.objects.BaseProperty;
 @InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
 public class SolrjDocumentData extends AbstractDocumentData
 {
+    /**
+     * solrj-document-data HINT.
+     */
     public static final String HINT = "solrj-document-data";
 
     /**
@@ -90,31 +91,29 @@ public class SolrjDocumentData extends AbstractDocumentData
     {
         SolrInputDocument sdoc = new SolrInputDocument();
         try {
-            
-            // TODO Add methods to DocumentModelBridge
-            //DocumentModelBridge documentModelBridge = documentAccessBridge.getDocument(documentReference);
+
             XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
-            
-            String doclang="";
-            if(documentReference.getLocale()!=null&& !StringUtils.isEmpty(documentReference.getLocale().toString())){
-                doclang=documentReference.getLocale().toString();
+
+            String doclang = "";
+            if (documentReference.getLocale() != null 
+                && !StringUtils.isEmpty(documentReference.getLocale().toString())) {
+                doclang = documentReference.getLocale().toString();
             }
 
-            XWikiDocument tdoc=xdoc.getTranslatedDocument(doclang,getXWikiContext());
-            
+            XWikiDocument tdoc = xdoc.getTranslatedDocument(doclang, getXWikiContext());
+
             String language = getLanguage(documentReference);
             sdoc.addField(ID, getDocumentId(documentReference));
             addDocumentReferenceFields(documentReference, sdoc, language);
             sdoc.addField(TYPE, documentReference.getType().name());
             sdoc.addField(FULLNAME + "_" + language, serializer.serialize(documentReference));
-            
-            
-            //Replace xwiki document with document model bridge once the bug is fixed.
-            
+
+            // Replace xwiki document with document model bridge once the bug is fixed.
+
             // Convert the XWiki syntax of document to plain text.
             WikiPrinter printer = new DefaultWikiPrinter();
             renderer.render(tdoc.getXDOM(), printer);
-            
+
             sdoc.addField(TITLE + "_" + language, tdoc.getTitle());
             sdoc.addField(DOCUMENT_CONTENT + "_" + language, printer.toString());
             sdoc.addField(VERSION, tdoc.getVersion());
@@ -139,7 +138,7 @@ public class SolrjDocumentData extends AbstractDocumentData
             }
 
         } catch (Exception e) {
-            logger.error("Exception while fetching input document for " + documentReference.getName());
+            logger.error("Exception during fetching input document for " + documentReference.getName());
         }
         return sdoc;
     }
@@ -170,7 +169,12 @@ public class SolrjDocumentData extends AbstractDocumentData
 
         return docs;
     }
-
+    
+    /**
+     * 
+     * @param attachmentReference reference to Attachment.
+     * @return SolrInput Document
+     */
     public SolrInputDocument getSolrInputAttachment(AttachmentReference attachmentReference)
     {
         SolrInputDocument sdoc = new SolrInputDocument();
@@ -260,8 +264,9 @@ public class SolrjDocumentData extends AbstractDocumentData
                             if (!blackListedPropeties.contains(property.getName())) {
                                 SolrInputDocument sdoc = new SolrInputDocument();
                                 sdoc.addField(ID, getPropertyId(documentReference, property));
-                                String propertyName=docRef.getLastSpaceReference().getName() + "." + docRef.getName() + "."
-                                    + property.getName() + "_" + getLanguage(documentReference);
+                                String propertyName =
+                                    docRef.getLastSpaceReference().getName() + "." + docRef.getName() + "."
+                                        + property.getName() + "_" + getLanguage(documentReference);
                                 sdoc.addField(PROPERTY_NAME, propertyName);
                                 sdoc.addField(propertyName, property.getValue());
                                 sdoc.addField(TYPE, "PROPERTY");
@@ -283,8 +288,8 @@ public class SolrjDocumentData extends AbstractDocumentData
     }
 
     /**
-     * @param attachment
-     * @return
+     * @param attachment reference to the attachment.
+     * @return the ContentText
      */
     private String getContentAsText(AttachmentReference attachment)
     {
@@ -305,7 +310,13 @@ public class SolrjDocumentData extends AbstractDocumentData
 
         return contentText;
     }
-
+    
+    /**
+     * 
+     * @param documentReference reference to document.
+     * @param sdoc SOlr Input Document.
+     * @param lang language of the document.
+     */
     private void addDocumentReferenceFields(DocumentReference documentReference, SolrInputDocument sdoc, String lang)
     {
 
@@ -315,7 +326,12 @@ public class SolrjDocumentData extends AbstractDocumentData
         sdoc.addField(SPACE, documentReference.getLastSpaceReference().getName());
         sdoc.addField(LANGUAGE, lang);
     }
-
+    
+    /**
+     * 
+     * @param reference to the Attachment
+     * @return mimetype.
+     */
     private String getMimeType(AttachmentReference reference)
     {
         String mimetype = getXWikiContext().getEngineContext().getMimeType(reference.getName().toLowerCase());
