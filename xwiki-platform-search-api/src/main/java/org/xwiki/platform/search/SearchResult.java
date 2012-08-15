@@ -26,41 +26,99 @@ import org.xwiki.model.reference.DocumentReference;
  */
 public class SearchResult
 {
-
+    /**
+     * id of the document.
+     */
     private String id;
-
+    
+    /**
+     * reference of the Document.
+     */
     private DocumentReference reference;
-
+    
+     /**
+     * title of the document.
+     */
     private String title;
-
+    
+    /**
+     *  score of the document.
+     */
     private float score;
-
+    
+    /**
+     * content of the document.
+     */
     private String content;
-
+    
+    /**
+     * Name of the wiki.
+     */
     private String wikiName;
-
+    
+    /**
+     * Name of the space.
+     */
     private String spaceName;
-
+    
+    /**
+     * Name of the page.
+     */
     private String pageName;
-
+    
+    /**
+     * Highlighted content in the returned document.
+     */
     private String highlightText;
-
+    
+    /**
+     * language of the document.
+     */
     private String language;
-
+    
+    /**
+     * url of the attachment.
+     */
     private String url;
-
+    
+    /**
+     * type of the attachment.
+     */
     private String type;
-
+    
+    /**
+     * filename of the attachment.
+     */
     private String fileName;
-
+    
+    /**
+     * mimtype of teh attachment.
+     */
     private String mimeType;
-
+    
+    /**
+     * name of the Object.
+     */
     private String objectName;
-
+    
+    /**
+     * Name of the property.
+     */
     private String propertyName;
-
+    
+    /**
+     * Value of the property.
+     */
     private String propertyValue;
-
+    
+    /**
+     * 
+     * @param id of the document
+     * @param wikiName  name of the Wiki
+     * @param spaceName name of the space
+     * @param pageName name of the page.
+     * @param language language of the page.
+     */
     public SearchResult(String id, String wikiName, String spaceName, String pageName, String language)
     {
         this.reference = new DocumentReference(wikiName, spaceName, pageName, language);
@@ -126,7 +184,11 @@ public class SearchResult
 
         return reference;
     }
-
+     
+    /**
+     * 
+     * @return String the url.
+     */
     public String getDocumentLink()
     {
         String link = "";
@@ -197,7 +259,7 @@ public class SearchResult
     }
 
     /**
-     * @param pageName
+     * @param pageName Name of the page
      */
     public void setPageName(String pageName)
     {
@@ -205,7 +267,7 @@ public class SearchResult
     }
 
     /**
-     * @param url
+     * @param url of the attachment
      */
     public void setURL(String url)
     {
@@ -219,7 +281,13 @@ public class SearchResult
     {
         return this.url;
     }
-
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * 
+     * @see java.lang.Object#toString()
+     */
     public String toString()
     {
         return pageName;

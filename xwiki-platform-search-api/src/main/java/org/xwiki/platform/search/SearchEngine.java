@@ -35,6 +35,9 @@ public interface SearchEngine
      * @return instance of the search engine
      */
     Object getSearchEngine();
-
+    /**
+     * 
+     * @return instance of Core Container.
+     */
     Object getCoreContainer();
 }

@@ -32,7 +32,7 @@ public class SearchException extends Exception
     private static final long serialVersionUID = -4071116940987116724L;
 
     /**
-     * @param message
+     * @param message .
      */
     public SearchException(String message)
     {
@@ -40,8 +40,9 @@ public class SearchException extends Exception
     }
 
     /**
-     * @param message
-     * @param t
+     * @param message to be displayed
+     * @param t exception object
+     * 
      */
     public SearchException(String message, Throwable t)
     {
@@ -49,7 +50,7 @@ public class SearchException extends Exception
     }
 
     /**
-     * @param t
+     * @param t .
      */
     public SearchException(Throwable t)
     {

@@ -23,19 +23,42 @@ package org.xwiki.platform.search;
  * @version $Id$
  */
 public enum WikiElement
-{
+{   
+    /**
+     * 
+     */
     DOCUMENT(1),
+    /**
+     * 
+     */
     ATTACHMENT(2),
+    /**
+     * 
+     */
     OBJECT(3),
+    /**
+     * 
+     */
     PROPERTY(4);
-
+    
+    /**
+     * 
+     */
     private int id;
-
+    
+    /**
+     * 
+     * @param id of the element
+     */
     WikiElement(int id)
     {
         this.id = id;
     }
-
+    
+    /**
+     * 
+     * @return teh id.
+     */
     public int getId()
     {
         return this.id;

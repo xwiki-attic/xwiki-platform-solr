@@ -35,8 +35,7 @@ public interface DocumentData
     /**
      * Returns the document id used by indexer.
      * 
-     * @param documentReference
-     * @param language of the document
+     * @param documentReference reference to the document
      * @return document id.
      */
     String getDocumentId(DocumentReference documentReference);
@@ -44,7 +43,7 @@ public interface DocumentData
     /**
      * Returns the attachment id used by indexer.
      * 
-     * @param attachmentReference
+     * @param attachmentReference reference to the attachment
      * @return attachment id.
      */
     String getAttachmentId(AttachmentReference attachmentReference);
@@ -52,8 +51,8 @@ public interface DocumentData
     /**
      * Returns the object id used by indexer.
      * 
-     * @param documentReference
-     * @param object
+     * @param documentReference reference to the document
+     * @param object object 
      * @return object id
      */
     String getObjectId(DocumentReference documentReference, Object object);
@@ -61,16 +60,16 @@ public interface DocumentData
     /**
      * Returns the property id used by indexer.
      * 
-     * @param documentReference
-     * @param property
-     * @return
+     * @param documentReference reference to the document
+     * @param property of the Documents.
+     * @return the property ID
      */
     String getPropertyId(DocumentReference documentReference, Object property);
 
     /**
      * List of objects to be indexed in search engine specific input format.
      * 
-     * @param documentReference
+     * @param documentReference reference to the document
      * @return list of documents
      */
     Object getInputDocument(DocumentReference documentReference);
@@ -78,7 +77,7 @@ public interface DocumentData
     /**
      * List of attachments to be indexed in search engine specific input format.
      * 
-     * @param attachmentReference
+     * @param documentReference reference to the document
      * @return list of attachments.
      */
     List< ? > getInputAttachments(DocumentReference documentReference);
@@ -86,7 +85,7 @@ public interface DocumentData
     /**
      * List of objects to be indexed in search engine specific input format.
      * 
-     * @param documentReference
+     * @param documentReference reference to the document
      * @return list of objects
      */
     List< ? > getInputObjects(DocumentReference documentReference);
@@ -94,12 +93,22 @@ public interface DocumentData
     /**
      * List of properties to be indexed in search engine specific input format.
      * 
-     * @param documentReference
+     * @param documentReference reference to the document
      * @return list of properties
      */
     List< ? > getInputProperties(DocumentReference documentReference);
     
+    /**
+     * 
+     * @param documentReference reference to the document.
+     * @return the List of Object Id
+     */
     List<String> getObjectIdList(DocumentReference documentReference);
     
+    /**
+     * 
+     * @param documentReference reference to the document.
+     * @return the list of Property ID.
+     */
     List<String> getPropertyIdList(DocumentReference documentReference);
 }

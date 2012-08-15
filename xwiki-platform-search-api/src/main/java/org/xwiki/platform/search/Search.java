@@ -21,12 +21,8 @@ package org.xwiki.platform.search;
 
 import java.util.List;
 import java.util.Map;
-
-import org.xwiki.bridge.DocumentAccessBridge;
-import org.xwiki.bridge.DocumentModelBridge;
 import org.xwiki.component.annotation.Role;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.platform.search.index.DocumentIndexerStatus;
@@ -76,9 +72,10 @@ public interface Search
     /**
      * Build the index for the current wiki.
      * 
+     * @param wikiReference WikiReference reference to the Wiki
      * @return number of documents to index.
      * @throws SearchIndexingException Exception thrown in case of indexing errors.
-     * @throws XWikiException
+     * @throws XWikiException thrown in case of XWiki syntax errors.
      */
     int buildWikiIndex(WikiReference wikiReference) throws SearchIndexingException, XWikiException;
 
@@ -88,32 +85,40 @@ public interface Search
      * @param reference SpaceReference
      * @return number of documents to index.
      * @throws SearchIndexingException Exception thrown in case of indexing errors.
-     * @throws XWikiException
+     * @throws XWikiException thrown in case of XWiki syntax errors.
      */
     int buildWikiSpaceIndex(SpaceReference reference) throws SearchIndexingException, XWikiException;
 
     /**
-     * @return
-     * @throws SearchIndexingException
-     * @throws XWikiException
+     * @param wikiReference WikiReference reference to the Wiki
+     * @return the boolean value true is successfully deleted.
+     * @throws SearchIndexingException thrown in case of indexing errors.
+     * @throws XWikiException thrown in case of XWiki syntax errors.
      */
     boolean deleteWikiIndex(WikiReference wikiReference) throws SearchIndexingException, XWikiException;
 
     /**
-     * @return
-     * @throws SearchIndexingException
-     * @throws XWikiException
+     * @param spaceReference reference to XWiki space.
+     * @return the boolean value true is successfully deleted.
+     * @throws SearchIndexingException thrown in case of indexing errors.
+     * @throws XWikiException thrown in case of XWiki syntax errors.
      */
     boolean deleteSpaceIndex(SpaceReference spaceReference) throws SearchIndexingException, XWikiException;
     
-    boolean deleteEntireIndex() throws SearchIndexingException,XWikiException;
+    /**
+     * 
+     * @return the boolean value true is successfully deleted.
+     * @throws SearchIndexingException thrown in case of indexing errors.
+     * @throws XWikiException thrown in case of XWiki syntax errors.
+     */
+    boolean deleteEntireIndex() throws SearchIndexingException, XWikiException;
     
     /**
      * Build the index for the current wiki farm.
      * 
      * @return number of documents to index.
-     * @throws SearchIndexingException
-     * @throws XWikiException
+     * @throws SearchIndexingException thrown in case of indexing errors.
+     * @throws XWikiException thrown in case of XWiki syntax errors.
      */
     int buildWikiFarmIndex() throws SearchIndexingException, XWikiException;
 
@@ -151,6 +156,7 @@ public interface Search
     /**
      * Rebuilds the index for the current wiki.
      * 
+     * @param wikiReference WikiReference reference to the Wiki
      * @return the Number of documents scheduled for indexing. -1 in case of errors
      */
     int reBuildWikiIndex(WikiReference wikiReference);
@@ -158,7 +164,7 @@ public interface Search
     /**
      * Rebuilds the index for given spaces in the current wiki.
      * 
-     * @param spaces List of spaces to be indexed
+     * @param spaceReference List of spaces to be indexed
      * @return the Number of documents scheduled for indexing. -1 in case of errors
      */
     int reBuildSpaceIndex(SpaceReference spaceReference);
@@ -174,18 +180,32 @@ public interface Search
     /**
      * Search for the query in the current wiki for all the languages.
      * 
-     * @param query and parameters as a SearchRequest object.
+     * @param request as a SearchRequest object.
      * @return SearchResponse to the query searched.
      */
     SearchResponse search(SearchRequest request);
 
-
+    /**
+     * 
+     * @return map containing the Indexer Sattus.
+     */
     Map<String, DocumentIndexerStatus> getStatus();
-
+    
+    /**
+     * 
+     * @return String.
+     */
     String getStatusAsJson();
-
+    /**
+     * 
+     * @return Object.
+     */
     Object getVelocityUtils();
-
+    
+    /**
+     * 
+     * @return SerchRequest
+     */
     SearchRequest getSearchRequest();
 
 }

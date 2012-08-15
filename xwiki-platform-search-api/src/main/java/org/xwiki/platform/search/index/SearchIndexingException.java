@@ -33,7 +33,7 @@ public class SearchIndexingException extends SearchException
     private static final long serialVersionUID = 1L;
 
     /**
-     * @param message
+     * @param message to be displayed.
      */
     public SearchIndexingException(String message)
     {
@@ -41,8 +41,8 @@ public class SearchIndexingException extends SearchException
     }
 
     /**
-     * @param message
-     * @param t
+     * @param message to be displayed.
+     * @param t .
      */
     public SearchIndexingException(String message, Throwable t)
     {
@@ -50,7 +50,7 @@ public class SearchIndexingException extends SearchException
     }
 
     /**
-     * @param t
+     * @param t .
      */
     public SearchIndexingException(Throwable t)
     {

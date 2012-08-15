@@ -34,37 +34,37 @@ public interface DocumentField
     String ID = "id";
 
     /**
-     * Keyword field, holds the name of the virtual wiki a document belongs to
+     * Keyword field, holds the name of the virtual wiki a document belongs to.
      */
     String WIKI = "wiki";
 
     /**
-     * Title of the document
+     * Title of the document.
      */
     String TITLE = "title";
 
     /**
-     * Name of the document
+     * Name of the document.
      */
     String NAME = "name";
 
     /**
-     * Name of the space the document belongs to
+     * Name of the space the document belongs to.
      */
     String SPACE = "space";
 
     /**
-     * FullName of the document (example : Main.WebHome)
+     * FullName of the document (example : Main.WebHome).
      */
     String FULLNAME = "fullname";
 
     /**
-     * Version of the document
+     * Version of the document.
      */
     String VERSION = "version";
 
     /**
-     * Language of the document
+     * Language of the document.
      */
     String LANGUAGE = "lang";
 
@@ -75,37 +75,38 @@ public interface DocumentField
     String TYPE = "type";
 
     /**
-     * Filename, only used for attachments
+     * Filename, only used for attachments.
      */
     String FILENAME = "filename";
 
     /**
-     * XWiki object type, only used for objects
+     * XWiki object type, only used for objects .
      */
+    
     String OBJECT = "object";
 
     /**
-     * XWiki object type, only used for objects
+     * XWiki object type, only used for objects.
      */
     String OBJECT_CONTENT = "objcontent";
 
     /**
-     * Last modifier
+     * Last modifier.
      */
     String AUTHOR = "author";
 
     /**
-     * Creator of the document
+     * Creator of the document.
      */
     String CREATOR = "creator";
 
     /**
-     * Date of last modification
+     * Date of last modification.
      */
     String DATE = "date";
 
     /**
-     * Date of creation
+     * Date of creation.
      */
     String CREATIONDATE = "creationdate";
 
@@ -115,7 +116,7 @@ public interface DocumentField
     String HIDDEN = "hidden";
 
     /**
-     * Document score
+     * Document score.
      */
     String SCORE = "score";
 
@@ -125,12 +126,12 @@ public interface DocumentField
     String DOCUMENT_CONTENT = "doccontent";
 
     /**
-     * Attachment content
+     * Attachment content.
      */
     String ATTACHMENT_CONTENT = "attcontent";
 
     /**
-     * not in use
+     * not in use.
      */
     String KEYWORDS = "kw";
 
@@ -152,5 +153,5 @@ public interface DocumentField
     /**
      * For storing property name.
      */
-    String PROPERTY_NAME="propertyname";
+    String PROPERTY_NAME = "propertyname";
 }

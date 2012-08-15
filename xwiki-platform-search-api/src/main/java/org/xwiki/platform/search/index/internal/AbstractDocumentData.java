@@ -20,7 +20,6 @@
 package org.xwiki.platform.search.index.internal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -53,14 +52,23 @@ import com.xpn.xwiki.util.XWikiStubContextProvider;
  * @version $Id$
  */
 public abstract class AbstractDocumentData implements DocumentData
-{
-    @Inject
+{   
+    /**
+     * DocumentAccessBridge component.
+     */
+    @Inject 
     protected DocumentAccessBridge documentAccessBridge;
-
+    
+    /**
+     * 
+     */
     @Inject
     @Named("compactwiki")
     protected EntityReferenceSerializer<String> serializer;
-
+    
+    /**
+     * 
+     */
     @Inject
     @Named("explicit")
     protected DocumentReferenceResolver<EntityReference> resolver;

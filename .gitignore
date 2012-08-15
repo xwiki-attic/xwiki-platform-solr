@@ -32,5 +32,7 @@ nbproject
 *.log
 .sonar-ide.properties
 .clover
+/*/.checkstyle
 
 solr/data/*
+

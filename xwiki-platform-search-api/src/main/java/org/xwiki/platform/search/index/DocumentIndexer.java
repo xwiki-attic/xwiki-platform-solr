@@ -29,7 +29,7 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 
 /**
- * XWiki DoucumentIndexer API
+ * XWiki DoucumentIndexer API.
  * 
  * @version $Id$
  */
@@ -39,7 +39,7 @@ public interface DocumentIndexer
     /**
      * Index the document.
      * 
-     * @param document reference to the document to be indexed.
+     * @param docs document reference to the document to be indexed.
      * @return true if document indexing is successful.
      */
     boolean indexDocument(DocumentReference docs);
@@ -47,8 +47,8 @@ public interface DocumentIndexer
     /**
      * Index the documents.
      * 
-     * @param documents List of documents to be indexed.
-     * @return the Number of documents scheduled for indexing. -1 in case of errors.
+     * @param docs documents List of documents to be indexed.
+     * 
      */
     void indexDocuments(List<DocumentReference> docs);
 
@@ -56,15 +56,15 @@ public interface DocumentIndexer
      * Index the documents.
      * 
      * @param reference Entity reference of Wiki or Space
-     * @param documents List of documents to be indexed.
-     * @return the Number of documents scheduled for indexing. -1 in case of errors.
+     * @param docs documents List of documents to be indexed.
+     * 
      */
     void indexDocuments(EntityReference reference, List<DocumentReference> docs);
 
     /**
      * Delete the index for document.
      * 
-     * @param doc List of document references to which index needs to be deleted.
+     * @param doc document Document reference to which index needs to be deleted.
      * @return true if document index deletion is successful.
      */
     boolean deleteIndex(DocumentReference doc);
@@ -72,8 +72,8 @@ public interface DocumentIndexer
     /**
      * Delete the index for the given list of documents.
      * 
-     * @param document Document reference to which index needs to be deleted.
-     * @return true if document index deletion is successful.
+     * @param docs list of Document reference to which index needs to be deleted.
+     * 
      */
     void deleteIndex(List<DocumentReference> docs);
 
@@ -81,8 +81,8 @@ public interface DocumentIndexer
      * Delete the index for the given list of documents.
      * 
      * @param reference Entity reference of Wiki or Space
-     * @param document Document reference to which index needs to be deleted.
-     * @return true if document index deletion is successful.
+     * @param docs list of Document reference to which index needs to be deleted.
+     * 
      */
     void deleteIndex(EntityReference reference, List<DocumentReference> docs);
 
@@ -94,7 +94,7 @@ public interface DocumentIndexer
     boolean deleteEntireIndex();
 
     /**
-     * Sets the SearchEngineObject
+     * Sets the SearchEngineObject.
      * 
      * @param server reference to the backend used
      */

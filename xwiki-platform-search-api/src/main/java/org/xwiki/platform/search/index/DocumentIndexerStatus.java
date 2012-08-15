@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.xwiki.model.reference.DocumentReference;
 
-
 /**
  * Status of the document indexer.
  * 
@@ -31,29 +30,55 @@ import org.xwiki.model.reference.DocumentReference;
  */
 public abstract class DocumentIndexerStatus
 {
+    /**
+     * stores the estimated completion time.
+     */
     protected long estimatedCompletionTime;
 
+    /**
+     * stores the estimated completion time as string.
+     */
     protected String estimatedCompletionTimeAsString;
 
+    /**
+     * stores the indexing speed.
+     */
     protected float indexingSpeed;
 
+    /**
+     * stores the no of indexed docs.
+     */
     protected int indexedDocs;
 
+    /**
+     * stores the total document count.
+     */
     protected int totalDocCount;
 
+    /**
+     * stores the elapsed time in indexing.
+     */
     protected long elapsedTime;
 
+    /**
+     * elapsed time in indexing as String.
+     */
     protected String elapsedTimeAsString;
-    
-    protected String title;
-    
-    protected String entityName;
-    
-    protected String entityType;
-    
 
-    
-    
+    /**
+     * 
+     */
+    protected String title;
+
+    /**
+     * 
+     */
+    protected String entityName;
+
+    /**
+     * 
+     */
+    protected String entityType;
 
     /**
      * @return the indexedDocs
@@ -217,13 +242,23 @@ public abstract class DocumentIndexerStatus
         return (this.totalDocCount - this.indexedDocs);
     }
 
-    public abstract void addStepDetails(long elapsedTime1, int docsIndexed,List<?> recentlyIndexedDocs);
+    /**
+     * @param elapsedTime1 .
+     * @param docsIndexed no of document indexed
+     * @param recentlyIndexedDocs list of recently indexed docs
+     */
+    public abstract void addStepDetails(long elapsedTime1, int docsIndexed, List< ? > recentlyIndexedDocs);
 
-
+    /**
+     * @param secondsInput time in seconds.
+     * @return String
+     */
     protected String formatIntoHHMMSS(int secondsInput)
     {
-        int hours = (int) (secondsInput / 3600), remainder = (int) (secondsInput % 3600), minutes =
-            (int) remainder / 60, seconds = remainder % 60;
+        int hours = (int) (secondsInput / 3600);
+        int remainder = (int) (secondsInput % 3600);
+        int minutes = (int) remainder / 60;
+        int seconds = remainder % 60;
 
         return ((hours < 10 ? "0" : "") + hours + ":" + (minutes < 10 ? "0" : "") + minutes + ":"
             + (seconds < 10 ? "0" : "") + seconds);
@@ -264,8 +299,6 @@ public abstract class DocumentIndexerStatus
     /**
      * @return the recentlyIndexedDocs
      */
-    public abstract List<?> getRecentlyIndexedDocs();
-
-
+    public abstract List< ? > getRecentlyIndexedDocs();
 
 }

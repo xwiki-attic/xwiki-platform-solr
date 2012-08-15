@@ -90,8 +90,8 @@ public class SolrjSearchRequest implements SearchRequest
     protected List<String> languages;
 
     protected EntityReference entityReference;
-    
-    protected  List<String> fields;
+
+    protected List<String> fields;
 
     /**
      * {@inheritDoc}
@@ -101,14 +101,14 @@ public class SolrjSearchRequest implements SearchRequest
     @Override
     public String processRequestQuery(String query)
     {
-        fields= getFields();
+        fields = getFields();
         String language = getXWikiContext().getLanguage();
         String[] params = query.trim().split(" ");
         Map<String, String> paramMap = new HashMap<String, String>();
         for (String param : params) {
             if (param.contains(":")) {
                 String[] pa = param.split(":");
-                String cleanField=pa[0].replaceAll("[+-]","");
+                String cleanField = pa[0].replaceAll("[+-]", "");
                 if (fields.contains(cleanField + "_" + language)) {
                     pa[0] = pa[0] + "_" + language;
 
@@ -120,7 +120,7 @@ public class SolrjSearchRequest implements SearchRequest
         }
 
         StringBuilder builder = new StringBuilder();
-        
+
         for (Entry<String, String> entry : paramMap.entrySet()) {
             builder.append(entry.getKey());
             if (entry.getValue() != null) {
@@ -128,34 +128,35 @@ public class SolrjSearchRequest implements SearchRequest
             }
             builder.append(" ");
         }
-        
-        String queryString=builder.toString();
-        //If query doesn't have language, Add a language filter query.
-        if(!queryString.contains(DocumentField.LANGUAGE)){
-            this.searchParametersMap.put("fq", "lang:"+language);
+
+        String queryString = builder.toString();
+        // If query doesn't have language, Add a language filter query.
+        if (!queryString.contains(DocumentField.LANGUAGE)) {
+            this.searchParametersMap.put("fq", "lang:" + language);
         }
 
         return queryString;
     }
-    
-    public String processQueryFrequency(String qfString){
-        String[] qfArray=qfString.split(" ");
-        Map<String,String> qfMap=new HashMap<String, String>();
-        fields= getFields();
+
+    public String processQueryFrequency(String qfString)
+    {
+        String[] qfArray = qfString.split(" ");
+        Map<String, String> qfMap = new HashMap<String, String>();
+        fields = getFields();
         String language = getXWikiContext().getLanguage();
         for (String qfItem : qfArray) {
             if (qfItem.contains("^")) {
                 String[] qf = qfItem.split("\\^");
                 if (fields.contains(qf[0] + "_" + language)) {
                     qfMap.put(qf[0] + "_" + language, qf[1]);
-                }else if(fields.contains(qf[0])){
+                } else if (fields.contains(qf[0])) {
                     qfMap.put(qf[0], qf[1]);
                 }
-   
+
             }
         }
-        
-        StringBuilder builder=new StringBuilder();
+
+        StringBuilder builder = new StringBuilder();
         for (Entry<String, String> entry : qfMap.entrySet()) {
             builder.append(entry.getKey());
             if (entry.getValue() != null) {
@@ -163,7 +164,7 @@ public class SolrjSearchRequest implements SearchRequest
             }
             builder.append(" ");
         }
-        
+
         return builder.toString().trim();
     }
 

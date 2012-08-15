@@ -35,27 +35,64 @@ public interface SearchRequest
 
     /**
      * 
-     * @param query
-     * @return
+     * @param query to be processed
+     * @return String 
      */
     String processRequestQuery(String query);
     
+    /**
+     * 
+     * @param qfString query fields 
+     * @return String
+     */
     String processQueryFrequency(String qfString);
     
-    Map<String,String> getSearchParametersMap();
+    /**
+     * 
+     * @return the search Parameters
+     */
+    Map<String, String> getSearchParametersMap();
     
-    Map<String,String> getFilterParametersMap();
+    /**
+     * 
+     * @return the filter Parameter
+     */
+    Map<String, String> getFilterParametersMap();
     
+    /**
+     * 
+     * @param query from the user
+     */
     void setQueryString(String query);
     
+    /**
+     * 
+     * @return the Query String
+     */
     String getQueryString();
     
+    /**
+     * 
+     * @param languages 
+     */
     void setLanguages(List<String> languages);
     
+    /**
+     * 
+     * @param entityReference gives the references to Document, Attachment.
+     */
     void setEntityReference(EntityReference entityReference);
     
-    void setSearchParametersMap(Map<String,String> searchParametersMap);
+    /**
+     * 
+     * @param searchParametersMap map of the search Parameters
+     */
+    void setSearchParametersMap(Map<String, String> searchParametersMap);
     
-    void setFilterParametersMap(Map<String,String> filterParametersMap);
+    /**
+     * 
+     * @param filterParametersMap filter Parameters Map 
+     */
+    void setFilterParametersMap(Map<String, String> filterParametersMap);
 
 }

@@ -21,11 +21,7 @@
 package org.xwiki.platform.search;
 
 import java.util.List;
-import java.util.Map;
-
 import org.xwiki.component.annotation.Role;
-import org.xwiki.model.reference.EntityReference;
-
 /**
  * @version $Id$
  */
@@ -40,7 +36,7 @@ public interface SearchResponse
     int getEndIndex(int beginIndex, int items);
 
     /**
-     * Max score of the search results
+     * Max score of the search results.
      *
      * @return maximum score of the search results.
      */
@@ -102,10 +98,8 @@ public interface SearchResponse
     boolean hasPrevious(int beginIndex);
 
     /**
-     * @param queryResponse
-     * @param languages
-     * @param entityReference
-     * @param searchParams
+     * @param queryResponse 
+     * 
      */
     void processQueryResult(Object queryResponse);
 
