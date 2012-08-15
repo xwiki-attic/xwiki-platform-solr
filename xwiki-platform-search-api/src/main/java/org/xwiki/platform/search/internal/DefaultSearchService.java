@@ -54,6 +54,10 @@ import com.google.gson.Gson;
 @Singleton
 public class DefaultSearchService implements ScriptService, EventListener, Initializable, SearchService
 {
+    /**
+     * Search service.
+     */
+    private static Search search;
 
     /**
      * Logger.
@@ -67,11 +71,7 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
     @Inject
     private ComponentManager componentManager;
 
-    /**
-     * Search service.
-     */
-    private static Search search;
-
+    
     /**
      * Properties.
      */
@@ -138,7 +138,7 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
             search = this.componentManager.getInstance(Search.class, componentHint);
 
         } catch (ComponentLookupException e) {
-            logger.error("Error creating a Search component with hint[" + componentHint + "] :: " + e.getMessage());
+            logger.error("Error in creating a Search component with hint[" + componentHint + "] :: " + e.getMessage());
             throw new SearchException("Error creating a Search component with hint[" + componentHint + "]", e);
         }
 
@@ -174,13 +174,23 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
             logger.error("Exception in intializing Search component with hint [" + componentHint + "]", e.getMessage());
         }
     }
-
+    
+    /**
+     * 
+     * @param collection .
+     * @return String
+     */
     public String toJsonFromCollection(Collection collection)
     {
         Gson gson = new Gson();
         return gson.toJson(collection);
     }
-
+    
+    /**
+     * 
+     * @param object .
+     * @return String
+     */
     public String toJsonFromObject(Object object)
     {
         Gson gson = new Gson();

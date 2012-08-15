@@ -60,33 +60,48 @@ public abstract class AbstractDocumentData implements DocumentData
     protected DocumentAccessBridge documentAccessBridge;
     
     /**
-     * 
+     * EntityReferenceSerializer component.
      */
     @Inject
     @Named("compactwiki")
     protected EntityReferenceSerializer<String> serializer;
     
     /**
-     * 
+     * DocumentReferenceResolver component.
      */
     @Inject
     @Named("explicit")
     protected DocumentReferenceResolver<EntityReference> resolver;
-
+    
+    /**
+     * Logger component.
+     */
     @Inject
     protected Logger logger;
     
+    /**
+     * BlockRenderer component.
+     */
     @Inject
     @Named("plain/1.0")
     protected BlockRenderer renderer;
-
+    
+    /**
+     * ExecutionContextManager component.
+     */
     @Inject
     protected ExecutionContextManager executionContextManager;
-
+    
+    /**
+     * Execution component.
+     */
     @Inject
     protected Execution execution;
-
-    @Inject
+    
+    /**
+     * XWikiStubContextProvider component.
+     */
+    @Inject 
     protected XWikiStubContextProvider contextProvider;
 
     /**
@@ -162,7 +177,12 @@ public abstract class AbstractDocumentData implements DocumentData
         buffer.append(baseProperty.getId());
         return buffer.toString();
     }
-
+    
+    /**
+     * 
+     * @param documentReference reference to the document.
+     * @return String language
+     */
     protected String getLanguage(DocumentReference documentReference)
     {
         String language = null;
@@ -171,24 +191,28 @@ public abstract class AbstractDocumentData implements DocumentData
                 && !StringUtils.isEmpty(documentReference.getLocale().getDisplayLanguage())) {
                 language = documentReference.getLocale().toString();
             } else if (!StringUtils.isEmpty(documentAccessBridge.getDocument(documentReference).getRealLanguage())) {
-                language=documentAccessBridge.getDocument(documentReference).getRealLanguage();
-            }else{
+                language = documentAccessBridge.getDocument(documentReference).getRealLanguage();
+            } else {
                 //Multilingual and Default placeholder
-                language = "en" ;
+                language = "en";
             }
         } catch (Exception e) {
             logger.error("Exception while fetching the language of the document - " + documentReference);
         }
         return language;
     }
-
+    
+    /**
+     * 
+     * @return Execution Context.
+     */
     protected ExecutionContext getExecutionContext()
     {
         return this.execution.getContext();
     }
 
     /**
-     * gets the XWikiContext
+     * gets the XWikiContext.
      * 
      * @return the XWikiContext
      */
@@ -203,8 +227,14 @@ public abstract class AbstractDocumentData implements DocumentData
         return context;
     }
     
-    public List<String> getObjectIdList(DocumentReference documentReference){
-        List<String> idList=new ArrayList<String>();
+    /**
+     * 
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.index.DocumentData#getObjectIdList(org.xwiki.model.reference.DocumentReference)
+     */
+    public List<String> getObjectIdList(DocumentReference documentReference) {
+        List<String> idList = new ArrayList<String>();
         XWikiDocument xdoc;
         try {
             xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
@@ -217,14 +247,20 @@ public abstract class AbstractDocumentData implements DocumentData
                 }
             }
         } catch (XWikiException e) {
-            logger.info("Error fetching the document "+documentReference.getName());
+            logger.info("Error in fetching the document " + documentReference.getName());
         }
 
         return idList;
     }
     
-    public List<String> getPropertyIdList(DocumentReference documentReference){
-        List<String> idList=new ArrayList<String>();
+    /**
+     * 
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.index.DocumentData#getPropertyIdList(org.xwiki.model.reference.DocumentReference)
+     */
+    public List<String> getPropertyIdList(DocumentReference documentReference) {
+        List<String> idList = new ArrayList<String>();
         XWikiDocument xdoc = null;
         try {
             xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
@@ -240,7 +276,7 @@ public abstract class AbstractDocumentData implements DocumentData
                 }
             }
         } catch (XWikiException e) {
-            logger.info("Error fetching the document "+documentReference.getName());
+            logger.info("Error fetching the document " + documentReference.getName());
         }
 
         return idList;

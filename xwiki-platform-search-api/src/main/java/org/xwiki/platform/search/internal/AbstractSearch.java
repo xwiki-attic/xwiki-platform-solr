@@ -21,8 +21,6 @@ package org.xwiki.platform.search.internal;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-
 import javax.inject.Inject;
 
 import org.slf4j.Logger;
@@ -36,7 +34,6 @@ import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.event.Event;
 import org.xwiki.platform.search.Search;
-import org.xwiki.platform.search.SearchResponse;
 import org.xwiki.platform.search.index.SearchIndexingException;
 
 import com.xpn.xwiki.XWikiContext;
@@ -50,30 +47,50 @@ import com.xpn.xwiki.util.XWikiStubContextProvider;
  * @version $Id$
  */
 public abstract class AbstractSearch implements Search, EventListener
-{
-    @Inject
-    protected Logger logger;
-
-    @Inject
-    protected Execution execution;
-
-    @Inject
-    protected XWikiStubContextProvider contextProvider;
-
-    @Inject
-    protected DocumentAccessBridge documentAccessBridge;
-
+{   
+    /**
+     * Stores the list of Events.
+     */
     private static final List<Event> EVENTS = Arrays.<Event> asList(new DocumentUpdatedEvent(),
         new DocumentCreatedEvent(), new DocumentDeletedEvent(), new AttachmentAddedEvent(),
         new AttachmentDeletedEvent(), new AttachmentUpdatedEvent());
-
+    
+    /**
+     * Logger component.
+     */
+    @Inject
+    protected Logger logger;
+    
+    /**
+     * Execution component.
+     */
+    @Inject
+    protected Execution execution;
+    
+    /**
+     * XWikiStubContextProvider component.
+     */
+    @Inject
+    protected XWikiStubContextProvider contextProvider;
+    
+    /**
+     * DocumentAccessBridge component.
+     */
+    @Inject
+    protected DocumentAccessBridge documentAccessBridge;
+    
+    
+    /**
+     * 
+     * @return Execution Context.
+     */
     private ExecutionContext getExecutionContext()
     {
         return this.execution.getContext();
     }
 
     /**
-     * gets the XWikiContext
+     * gets the XWikiContext.
      *
      * @return the XWikiContext
      */
@@ -103,7 +120,7 @@ public abstract class AbstractSearch implements Search, EventListener
         if (xcontext.getWiki().isVirtualMode()) {
             List<String> wikis = xcontext.getWiki().getVirtualWikisDatabaseNames(xcontext);
             for (String wikiName : wikis) {
-                WikiReference wikiReference=new WikiReference(wikiName);
+                WikiReference wikiReference = new WikiReference(wikiName);
                 totalDocCount += buildWikiIndex(wikiReference);
             }
         }
