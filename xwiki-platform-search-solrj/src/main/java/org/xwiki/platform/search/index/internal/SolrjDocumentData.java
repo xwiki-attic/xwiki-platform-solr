@@ -34,18 +34,19 @@ import static org.xwiki.platform.search.DocumentField.MIME_TYPE;
 import static org.xwiki.platform.search.DocumentField.NAME;
 import static org.xwiki.platform.search.DocumentField.OBJECT;
 import static org.xwiki.platform.search.DocumentField.OBJECT_CONTENT;
+import static org.xwiki.platform.search.DocumentField.PROPERTY_NAME;
 import static org.xwiki.platform.search.DocumentField.SPACE;
 import static org.xwiki.platform.search.DocumentField.TITLE;
 import static org.xwiki.platform.search.DocumentField.TYPE;
 import static org.xwiki.platform.search.DocumentField.VERSION;
 import static org.xwiki.platform.search.DocumentField.WIKI;
-import static org.xwiki.platform.search.DocumentField.PROPERTY_NAME;
 
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -82,6 +83,51 @@ public class SolrjDocumentData extends AbstractDocumentData
     public static final String HINT = "solrj-document-data";
 
     /**
+     * Underscore.
+     */
+    private static final String USCORE = "_";
+
+    /**
+     * Wiki name seperator.
+     */
+    private static final String DOT = ".";
+
+    /**
+     * validkey property field.
+     */
+    private static final String VALID_KEY_FIELD = "validkey";
+
+    /**
+     * password field.
+     */
+    private static final String PWD_FIELD = "password";
+
+    /**
+     * Fetch translated document.
+     * 
+     * @param documentReference to be translated.
+     * @return translated document
+     */
+    private XWikiDocument getTranslatedDocument(DocumentReference documentReference)
+    {
+        XWikiDocument tdoc = null;
+        try {
+            XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
+
+            String doclang = "";
+            Locale locale = documentReference.getLocale();
+            if (locale != null && !StringUtils.isEmpty(locale.toString())) {
+                doclang = documentReference.getLocale().toString();
+            }
+
+            tdoc = xdoc.getTranslatedDocument(doclang, getXWikiContext());
+        } catch (Exception e) {
+            logger.error("Error translating the document " + documentReference.getName());
+        }
+        return tdoc;
+    }
+
+    /**
      * {@inheritDoc}
      * 
      * @see org.xwiki.platform.search.index.DocumentData#getInputDocuments(org.xwiki.model.reference.DocumentReference)
@@ -92,21 +138,13 @@ public class SolrjDocumentData extends AbstractDocumentData
         SolrInputDocument sdoc = new SolrInputDocument();
         try {
 
-            XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
-
-            String doclang = "";
-            if (documentReference.getLocale() != null 
-                && !StringUtils.isEmpty(documentReference.getLocale().toString())) {
-                doclang = documentReference.getLocale().toString();
-            }
-
-            XWikiDocument tdoc = xdoc.getTranslatedDocument(doclang, getXWikiContext());
+            XWikiDocument tdoc = getTranslatedDocument(documentReference);
 
             String language = getLanguage(documentReference);
             sdoc.addField(ID, getDocumentId(documentReference));
             addDocumentReferenceFields(documentReference, sdoc, language);
             sdoc.addField(TYPE, documentReference.getType().name());
-            sdoc.addField(FULLNAME + "_" + language, serializer.serialize(documentReference));
+            sdoc.addField(FULLNAME + USCORE + language, serializer.serialize(documentReference));
 
             // Replace xwiki document with document model bridge once the bug is fixed.
 
@@ -114,27 +152,27 @@ public class SolrjDocumentData extends AbstractDocumentData
             WikiPrinter printer = new DefaultWikiPrinter();
             renderer.render(tdoc.getXDOM(), printer);
 
-            sdoc.addField(TITLE + "_" + language, tdoc.getTitle());
-            sdoc.addField(DOCUMENT_CONTENT + "_" + language, printer.toString());
+            sdoc.addField(TITLE + USCORE + language, tdoc.getTitle());
+            sdoc.addField(DOCUMENT_CONTENT + USCORE + language, printer.toString());
             sdoc.addField(VERSION, tdoc.getVersion());
 
-            sdoc.addField(AUTHOR, xdoc.getAuthorReference().getName());
-            sdoc.addField(CREATOR, xdoc.getCreatorReference().getName());
-            sdoc.addField(CREATIONDATE, xdoc.getCreationDate());
-            sdoc.addField(DATE, xdoc.getContentUpdateDate());
+            sdoc.addField(AUTHOR, tdoc.getAuthorReference().getName());
+            sdoc.addField(CREATOR, tdoc.getCreatorReference().getName());
+            sdoc.addField(CREATIONDATE, tdoc.getCreationDate());
+            sdoc.addField(DATE, tdoc.getContentUpdateDate());
 
             // Index Comments
 
-            List<BaseObject> comments = xdoc.getComments();
+            List<BaseObject> comments = tdoc.getComments();
             if (comments != null) {
                 StringBuffer buffer = new StringBuffer();
-                for (BaseObject comment : xdoc.getComments()) {
+                for (BaseObject comment : tdoc.getComments()) {
                     logger.info(comment.toXMLString());
                     String commentString = comment.getStringValue("comment");
                     String author = comment.getStringValue("author");
-                    buffer.append(commentString + " by " + author + "  ");
+                    buffer.append(commentString + " by " + author + " ");
                 }
-                sdoc.addField(COMMENT + "_" + language, buffer.toString());
+                sdoc.addField(COMMENT + USCORE + language, buffer.toString());
             }
 
         } catch (Exception e) {
@@ -151,7 +189,7 @@ public class SolrjDocumentData extends AbstractDocumentData
     @Override
     public List<SolrInputDocument> getInputAttachments(DocumentReference documentReference)
     {
-        List<SolrInputDocument> docs = null;
+        List<SolrInputDocument> docs = Collections.EMPTY_LIST;
         try {
             List<AttachmentReference> attachmentReferences =
                 documentAccessBridge.getAttachmentReferences(documentReference);
@@ -169,9 +207,8 @@ public class SolrjDocumentData extends AbstractDocumentData
 
         return docs;
     }
-    
+
     /**
-     * 
      * @param attachmentReference reference to Attachment.
      * @return SolrInput Document
      */
@@ -181,7 +218,7 @@ public class SolrjDocumentData extends AbstractDocumentData
 
         DocumentReference documentReference = attachmentReference.getDocumentReference();
 
-        String lang = "_" + getLanguage(documentReference);
+        String lang = USCORE + getLanguage(documentReference);
         sdoc.addField(ID, getAttachmentId(attachmentReference));
         sdoc.addField(ATTACHMENT_CONTENT + lang, getContentAsText(attachmentReference));
         sdoc.addField(MIME_TYPE, getMimeType(attachmentReference));
@@ -209,7 +246,7 @@ public class SolrjDocumentData extends AbstractDocumentData
             XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
             Map<DocumentReference, List<BaseObject>> map = xdoc.getXObjects();
             inputObjects = new ArrayList<SolrInputDocument>();
-            List<String> blackListedPropeties = new ArrayList<String>(Arrays.asList("password", "validkey"));
+            List<String> blackListedPropeties = new ArrayList<String>(Arrays.asList(PWD_FIELD, VALID_KEY_FIELD));
             if (map != null) {
                 for (Entry<DocumentReference, List<BaseObject>> entry : map.entrySet()) {
                     DocumentReference docRef = entry.getKey();
@@ -225,8 +262,8 @@ public class SolrjDocumentData extends AbstractDocumentData
                         }
                         sdoc.addField(ID, getObjectId(documentReference, object));
                         addDocumentReferenceFields(documentReference, sdoc, getLanguage(documentReference));
-                        sdoc.addField(OBJECT, docRef.getLastSpaceReference().getName() + "." + docRef.getName());
-                        sdoc.addField(OBJECT_CONTENT + "_" + getLanguage(documentReference), buffer.toString());
+                        sdoc.addField(OBJECT, docRef.getLastSpaceReference().getName() + DOT + docRef.getName());
+                        sdoc.addField(OBJECT_CONTENT + USCORE + getLanguage(documentReference), buffer.toString());
                         sdoc.addField(TYPE, "OBJECT");
                         inputObjects.add(sdoc);
                     }
@@ -252,7 +289,7 @@ public class SolrjDocumentData extends AbstractDocumentData
             XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
             Map<DocumentReference, List<BaseObject>> map = xdoc.getXObjects();
             inputProperties = new ArrayList<SolrInputDocument>();
-            List<String> blackListedPropeties = new ArrayList<String>(Arrays.asList("password", "validkey"));
+            List<String> blackListedPropeties = new ArrayList<String>(Arrays.asList(PWD_FIELD, VALID_KEY_FIELD));
             if (map != null) {
                 for (Entry<DocumentReference, List<BaseObject>> entry : map.entrySet()) {
                     DocumentReference docRef = entry.getKey();
@@ -265,8 +302,8 @@ public class SolrjDocumentData extends AbstractDocumentData
                                 SolrInputDocument sdoc = new SolrInputDocument();
                                 sdoc.addField(ID, getPropertyId(documentReference, property));
                                 String propertyName =
-                                    docRef.getLastSpaceReference().getName() + "." + docRef.getName() + "."
-                                        + property.getName() + "_" + getLanguage(documentReference);
+                                    docRef.getLastSpaceReference().getName() + DOT + docRef.getName() + DOT
+                                        + property.getName() + USCORE + getLanguage(documentReference);
                                 sdoc.addField(PROPERTY_NAME, propertyName);
                                 sdoc.addField(propertyName, property.getValue());
                                 sdoc.addField(TYPE, "PROPERTY");
@@ -310,9 +347,8 @@ public class SolrjDocumentData extends AbstractDocumentData
 
         return contentText;
     }
-    
+
     /**
-     * 
      * @param documentReference reference to document.
      * @param sdoc SOlr Input Document.
      * @param lang language of the document.
@@ -321,14 +357,13 @@ public class SolrjDocumentData extends AbstractDocumentData
     {
 
         logger.info("Language of the document [" + documentReference.getName() + "] is [" + lang + "]");
-        sdoc.addField(NAME + "_" + lang, documentReference.getName());
+        sdoc.addField(NAME + USCORE + lang, documentReference.getName());
         sdoc.addField(WIKI, documentReference.getWikiReference().getName());
         sdoc.addField(SPACE, documentReference.getLastSpaceReference().getName());
         sdoc.addField(LANGUAGE, lang);
     }
-    
+
     /**
-     * 
      * @param reference to the Attachment
      * @return mimetype.
      */

@@ -19,7 +19,6 @@
  */
 package org.xwiki.platform.search.internal;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,17 +31,14 @@ import org.xwiki.bridge.event.ApplicationReadyEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
-import org.xwiki.component.phase.Initializable;
-import org.xwiki.component.phase.InitializationException;
 import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.event.Event;
 import org.xwiki.platform.search.Search;
 import org.xwiki.platform.search.SearchException;
 import org.xwiki.platform.search.SearchService;
+import org.xwiki.platform.search.index.SearchIndex;
 import org.xwiki.script.service.ScriptService;
-
-import com.google.gson.Gson;
 
 /**
  * Implementation of {@link SearchService}.
@@ -52,12 +48,17 @@ import com.google.gson.Gson;
 @Component
 @Named("search")
 @Singleton
-public class DefaultSearchService implements ScriptService, EventListener, Initializable, SearchService
+public class DefaultSearchService implements ScriptService, EventListener, SearchService
 {
     /**
      * Search service.
      */
     private static Search search;
+
+    /**
+     * Search indexing service.
+     */
+    private static SearchIndex searchIndex;
 
     /**
      * Logger.
@@ -71,7 +72,6 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
     @Inject
     private ComponentManager componentManager;
 
-    
     /**
      * Properties.
      */
@@ -115,13 +115,12 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
     /**
      * {@inheritDoc}
      * 
-     * @see org.xwiki.component.phase.Initializable#initialize()
+     * @see org.xwiki.platform.search.SearchService#getSearchIndex()
      */
     @Override
-    public void initialize() throws InitializationException
+    public SearchIndex getSearchIndex()
     {
-        // TODO Auto-generated method stub
-
+        return searchIndex;
     }
 
     /**
@@ -136,6 +135,7 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
         try {
 
             search = this.componentManager.getInstance(Search.class, componentHint);
+            searchIndex = this.componentManager.getInstance(SearchIndex.class, componentHint);
 
         } catch (ComponentLookupException e) {
             logger.error("Error in creating a Search component with hint[" + componentHint + "] :: " + e.getMessage());
@@ -153,9 +153,7 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
     @Override
     public void onEvent(Event arg0, Object arg1, Object arg2)
     {
-        // TODO Auto-generated method stub
         String componentHint = null;
-
         try {
 
             // Read properties.
@@ -173,28 +171,6 @@ public class DefaultSearchService implements ScriptService, EventListener, Initi
         } catch (SearchException e) {
             logger.error("Exception in intializing Search component with hint [" + componentHint + "]", e.getMessage());
         }
-    }
-    
-    /**
-     * 
-     * @param collection .
-     * @return String
-     */
-    public String toJsonFromCollection(Collection collection)
-    {
-        Gson gson = new Gson();
-        return gson.toJson(collection);
-    }
-    
-    /**
-     * 
-     * @param object .
-     * @return String
-     */
-    public String toJsonFromObject(Object object)
-    {
-        Gson gson = new Gson();
-        return gson.toJson(object);
     }
 
 }

@@ -27,6 +27,7 @@ import org.xwiki.component.annotation.Role;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
+import org.xwiki.platform.search.index.internal.AbstractDocumentIndexerStatus;
 
 /**
  * XWiki DoucumentIndexer API.
@@ -103,7 +104,7 @@ public interface DocumentIndexer
     /**
      * @return status of indexing process as a Map of indexing thread and its status.
      */
-    Map<String, DocumentIndexerStatus> getStatus();
+    Map<String, AbstractDocumentIndexerStatus> getStatus();
 
     /**
      * @param threadId of Indexing thread.

@@ -19,6 +19,8 @@
  */
 package org.xwiki.platform.search;
 
+import org.xwiki.platform.search.index.SearchIndex;
+
 /**
  * @version $Id$
  */
@@ -31,5 +33,12 @@ public interface SearchService
      * @return reference to Search.
      */
     Search getSearch();
+    
+    /**
+     * Search indexing service.
+     * 
+     * @return reference to search indexing factory.
+     */
+    SearchIndex getSearchIndex();
 
 }

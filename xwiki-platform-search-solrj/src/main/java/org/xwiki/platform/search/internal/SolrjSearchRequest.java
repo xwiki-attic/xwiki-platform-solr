@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.SimpleOrderedMap;
@@ -38,19 +39,10 @@ import org.apache.solr.core.SolrInfoMBean;
 import org.apache.solr.handler.admin.LukeRequestHandler;
 import org.apache.solr.request.LocalSolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
-import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
-import org.xwiki.context.Execution;
-import org.xwiki.context.ExecutionContextManager;
-import org.xwiki.model.reference.EntityReference;
-import org.xwiki.platform.search.DocumentField;
 import org.xwiki.platform.search.SearchEngine;
-import org.xwiki.platform.search.SearchRequest;
-
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.util.XWikiStubContextProvider;
 
 /**
  * @version $Id$
@@ -58,75 +50,19 @@ import com.xpn.xwiki.util.XWikiStubContextProvider;
 @Component
 @Named(SolrjSearchRequest.HINT)
 @InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
-public class SolrjSearchRequest implements SearchRequest
+public class SolrjSearchRequest extends AbstractSearchRequest
 {
     /**
-     * solrjrequest HINT.
+     * solrj HINT.
      */
-    public static final String HINT = "solrjrequest";
-     
-    /**
-     * searchParametersMap.
-     */
-    protected Map<String, String> searchParametersMap;
-    
-    /**
-     *filterParametersMap.
-     */
-    protected Map<String, String> filterParametersMap;
-    
-    /**
-     *  query String.
-     */
-    protected String queryString;
-    
-    /**
-     * List of languages.
-     */
-    protected List<String> languages;
-    
-    /**
-     * EntityReference.
-     */
-    protected EntityReference entityReference;
-    
-    /**
-     * List of fields.
-     */
-    protected List<String> fields;
-    
-    /**
-     * XWikiStubContextProvider conponent.
-     */
-    @Inject
-    protected XWikiStubContextProvider contextProvider;
-    
-    
-    /**
-     * ExecutionContextManager component.
-     */
-    @Inject
-    private ExecutionContextManager executionContextManager;
-    
-    /**
-     *  Execution component.
-     */
-    @Inject
-    private Execution execution;
-    
+    public static final String HINT = "solrj";
+
     /**
      * SearchEngine component.
      */
     @Inject
     @Named(SolrjSearchEngine.HINT)
     private SearchEngine searchEngine;
-    
-    /**
-     * Logger  component.
-     */
-    @Inject
-    private Logger logger;
-    
 
     /**
      * {@inheritDoc}
@@ -138,14 +74,15 @@ public class SolrjSearchRequest implements SearchRequest
     {
         fields = getFields();
         String language = getXWikiContext().getLanguage();
+        String lang = SEPERATOR + language;
         String[] params = query.trim().split(" ");
         Map<String, String> paramMap = new HashMap<String, String>();
         for (String param : params) {
-            if (param.contains(":")) {
-                String[] pa = param.split(":");
+            if (param.contains(COLON)) {
+                String[] pa = param.split(COLON);
                 String cleanField = pa[0].replaceAll("[+-]", "");
-                if (fields.contains(cleanField + "_" + language)) {
-                    pa[0] = pa[0] + "_" + language;
+                if (fields.contains(cleanField + lang)) {
+                    pa[0] = pa[0] + lang;
 
                 }
                 paramMap.put(pa[0], pa[1]);
@@ -158,23 +95,16 @@ public class SolrjSearchRequest implements SearchRequest
 
         for (Entry<String, String> entry : paramMap.entrySet()) {
             builder.append(entry.getKey());
-            if (entry.getValue() != null) {
-                builder.append(":" + entry.getValue());
+            if (!StringUtils.isEmpty(entry.getValue())) {
+                builder.append(COLON + entry.getValue());
             }
             builder.append(" ");
         }
 
-        String queryString = builder.toString();
-        // If query doesn't have language, Add a language filter query.
-        if (!queryString.contains(DocumentField.LANGUAGE)) {
-            this.searchParametersMap.put("fq", "lang:" + language);
-        }
-
-        return queryString;
+        return builder.toString();
     }
-    
+
     /**
-     * 
      * {@inheritDoc}
      * 
      * @see org.xwiki.platform.search.SearchRequest#processQueryFrequency(java.lang.String)
@@ -186,10 +116,10 @@ public class SolrjSearchRequest implements SearchRequest
         fields = getFields();
         String language = getXWikiContext().getLanguage();
         for (String qfItem : qfArray) {
-            if (qfItem.contains("^")) {
+            if (qfItem.contains(BOOST_INDEX)) {
                 String[] qf = qfItem.split("\\^");
-                if (fields.contains(qf[0] + "_" + language)) {
-                    qfMap.put(qf[0] + "_" + language, qf[1]);
+                if (fields.contains(qf[0] + SEPERATOR + language)) {
+                    qfMap.put(qf[0] + SEPERATOR + language, qf[1]);
                 } else if (fields.contains(qf[0])) {
                     qfMap.put(qf[0], qf[1]);
                 }
@@ -201,16 +131,15 @@ public class SolrjSearchRequest implements SearchRequest
         for (Entry<String, String> entry : qfMap.entrySet()) {
             builder.append(entry.getKey());
             if (entry.getValue() != null) {
-                builder.append("^" + entry.getValue());
+                builder.append(BOOST_INDEX + entry.getValue());
             }
             builder.append(" ");
         }
 
         return builder.toString().trim();
     }
-    
+
     /**
-     * 
      * @return List of Fields.
      */
     private List<String> getFields()
@@ -228,7 +157,7 @@ public class SolrjSearchRequest implements SearchRequest
         handler.handleRequest(req, response);
         NamedList list = response.getValues();
 
-        ArrayList<String> fieldsList = new ArrayList<String>();
+        List<String> fieldsList = new ArrayList<String>();
         for (Object obj : list.getAll("fields")) {
             SimpleOrderedMap map = (SimpleOrderedMap) obj;
             Iterator<Map.Entry<String, Object>> entries = map.iterator();
@@ -240,116 +169,6 @@ public class SolrjSearchRequest implements SearchRequest
 
         return fieldsList;
 
-    }
-
-    /**
-     * gets the XWikiContext.
-     * 
-     * @return the XWikiContext
-     */
-    protected XWikiContext getXWikiContext()
-    {
-        XWikiContext context = (XWikiContext) execution.getContext().getProperty(XWikiContext.EXECUTIONCONTEXT_KEY);
-        if (context == null) {
-            context = this.contextProvider.createStubContext();
-            logger.info(context.toString());
-            this.execution.getContext().setProperty(XWikiContext.EXECUTIONCONTEXT_KEY, context);
-        }
-        return context;
-    }
-
-    /**
-     * @return the queryString
-     */
-    @Override
-    public String getQueryString()
-    {
-        return queryString;
-    }
-
-    /**
-     * @param queryString the queryString to set
-     */
-    @Override
-    public void setQueryString(String queryString)
-    {
-        this.queryString = queryString;
-    }
-
-    /**
-     * @return the searchParametersMap
-     */
-    public Map<String, String> getSearchParametersMap()
-    {
-        if (searchParametersMap == null) {
-            searchParametersMap = new HashMap<String, String>();
-        }
-        return searchParametersMap;
-    }
-
-    /**
-     * @param searchParametersMap the searchParametersMap to set
-     */
-    public void setSearchParametersMap(Map<String, String> searchParametersMap)
-    {
-        this.searchParametersMap = searchParametersMap;
-    }
-
-    /**
-     * @return the filterParametersMap
-     */
-    public Map<String, String> getFilterParametersMap()
-    {
-        if (filterParametersMap == null) {
-            filterParametersMap = new HashMap<String, String>();
-        }
-        return filterParametersMap;
-    }
-
-    /**
-     * @param filterParametersMap the filterParametersMap to set
-     */
-    public void setFilterParametersMap(Map<String, String> filterParametersMap)
-    {
-        this.filterParametersMap = filterParametersMap;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.SearchRequest#setLanguages(java.util.List)
-     */
-    @Override
-    public void setLanguages(List<String> languages)
-    {
-        this.languages = languages;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.SearchRequest#setEntityReference(org.xwiki.model.reference.EntityReference)
-     */
-    @Override
-    public void setEntityReference(EntityReference entityReference)
-    {
-        this.entityReference = entityReference;
-    }
-
-    /**
-     * @return the languages
-     */
-    public List<String> getLanguages()
-    {
-        return languages;
-    }
-
-    /**
-     * @return the entityReference
-     */
-    public EntityReference getEntityReference()
-    {
-        return entityReference;
     }
 
 }

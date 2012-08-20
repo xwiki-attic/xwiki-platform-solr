@@ -17,12 +17,20 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.platform.search;
+package org.xwiki.platform.search.index.internal;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+import org.xwiki.component.annotation.Component;
 
 /**
  * @version $Id$
  */
-public interface SearchQuery
+@Component
+@Named("solrj")
+@Singleton
+public class SolrjRebuildIndex extends AbstractRebuildIndex
 {
 
 }

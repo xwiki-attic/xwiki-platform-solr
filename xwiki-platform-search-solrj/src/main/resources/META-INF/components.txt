@@ -4,3 +4,8 @@ org.xwiki.platform.search.internal.SolrjSearchResponse
 org.xwiki.platform.search.internal.SolrjSearchRequest
 org.xwiki.platform.search.index.internal.SolrjDocumentIndexer
 org.xwiki.platform.search.index.internal.SolrjDocumentData
+org.xwiki.platform.search.index.internal.SolrjSearchIndex
+org.xwiki.platform.search.index.internal.SolrjBuildIndex
+org.xwiki.platform.search.index.internal.SolrjRebuildIndex
+org.xwiki.platform.search.index.internal.SolrjDeleteIndex
+

@@ -19,16 +19,10 @@
  */
 package org.xwiki.platform.search;
 
-import java.util.List;
 import java.util.Map;
-import org.xwiki.component.annotation.Role;
-import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.SpaceReference;
-import org.xwiki.model.reference.WikiReference;
-import org.xwiki.platform.search.index.DocumentIndexerStatus;
-import org.xwiki.platform.search.index.SearchIndexingException;
 
-import com.xpn.xwiki.XWikiException;
+import org.xwiki.component.annotation.Role;
+import org.xwiki.platform.search.index.internal.AbstractDocumentIndexerStatus;
 
 /**
  * XWiki Search API.
@@ -38,13 +32,6 @@ import com.xpn.xwiki.XWikiException;
 @Role
 public interface Search
 {
-    /**
-     * Delete the index for document.
-     * 
-     * @param document Document reference to which index needs to be deleted.
-     * @return true if document index deletion is successful.
-     */
-    boolean deleteDocumentIndex(DocumentReference document);
 
     /**
      * Gets the backend implementation.It could be embedded Solr, remote Solr, internal Lucene, distributed Lucene.
@@ -54,120 +41,11 @@ public interface Search
     String getImplementation();
 
     /**
-     * Index the document.
-     * 
-     * @param document reference to the document to be indexed.
-     * @return true if document indexing is successful.
-     */
-    boolean buildDocumentIndex(DocumentReference document);
-
-    /**
-     * Index the documents.
-     * 
-     * @param documents List of documents to be indexed.
-     * @return the Number of documents scheduled for indexing. -1 in case of errors.
-     */
-    int buildDocumentIndex(List<DocumentReference> documents);
-
-    /**
-     * Build the index for the current wiki.
-     * 
-     * @param wikiReference WikiReference reference to the Wiki
-     * @return number of documents to index.
-     * @throws SearchIndexingException Exception thrown in case of indexing errors.
-     * @throws XWikiException thrown in case of XWiki syntax errors.
-     */
-    int buildWikiIndex(WikiReference wikiReference) throws SearchIndexingException, XWikiException;
-
-    /**
-     * Build the index for the given space.
-     * 
-     * @param reference SpaceReference
-     * @return number of documents to index.
-     * @throws SearchIndexingException Exception thrown in case of indexing errors.
-     * @throws XWikiException thrown in case of XWiki syntax errors.
-     */
-    int buildWikiSpaceIndex(SpaceReference reference) throws SearchIndexingException, XWikiException;
-
-    /**
-     * @param wikiReference WikiReference reference to the Wiki
-     * @return the boolean value true is successfully deleted.
-     * @throws SearchIndexingException thrown in case of indexing errors.
-     * @throws XWikiException thrown in case of XWiki syntax errors.
-     */
-    boolean deleteWikiIndex(WikiReference wikiReference) throws SearchIndexingException, XWikiException;
-
-    /**
-     * @param spaceReference reference to XWiki space.
-     * @return the boolean value true is successfully deleted.
-     * @throws SearchIndexingException thrown in case of indexing errors.
-     * @throws XWikiException thrown in case of XWiki syntax errors.
-     */
-    boolean deleteSpaceIndex(SpaceReference spaceReference) throws SearchIndexingException, XWikiException;
-    
-    /**
-     * 
-     * @return the boolean value true is successfully deleted.
-     * @throws SearchIndexingException thrown in case of indexing errors.
-     * @throws XWikiException thrown in case of XWiki syntax errors.
-     */
-    boolean deleteEntireIndex() throws SearchIndexingException, XWikiException;
-    
-    /**
-     * Build the index for the current wiki farm.
-     * 
-     * @return number of documents to index.
-     * @throws SearchIndexingException thrown in case of indexing errors.
-     * @throws XWikiException thrown in case of XWiki syntax errors.
-     */
-    int buildWikiFarmIndex() throws SearchIndexingException, XWikiException;
-
-    /**
      * To initialize and load configuration for the search component.
      * 
      * @throws SearchException in case of error while initializing the component.
      */
     void initialize() throws SearchException;
-
-    /**
-     * Searches the configured Indexes using the specified solrquery for documents in the given languages belonging to
-     * one of the given virtual wikis.Searches the configured Indexes using the specified query for documents in the
-     * given languages.With virtual wikis enabled in your xwiki installation this will deliver results from all virtual
-     * wikis.
-     * 
-     * @return the search response.
-     */
-
-    /**
-     * Rebuilds the index for the whole wiki farm.
-     * 
-     * @return the Number of documents scheduled for indexing. -1 in case of errors.
-     */
-    int reBuildFarmIndex();
-
-    /**
-     * Rebuilds the index for the given wiki's in a wiki farm.
-     * 
-     * @param wikis List of wikis to be indexed.
-     * @return the Number of documents scheduled for indexing. -1 in case of errors.
-     */
-    int reBuildFarmIndex(List<WikiReference> wikis);
-
-    /**
-     * Rebuilds the index for the current wiki.
-     * 
-     * @param wikiReference WikiReference reference to the Wiki
-     * @return the Number of documents scheduled for indexing. -1 in case of errors
-     */
-    int reBuildWikiIndex(WikiReference wikiReference);
-    
-    /**
-     * Rebuilds the index for given spaces in the current wiki.
-     * 
-     * @param spaceReference List of spaces to be indexed
-     * @return the Number of documents scheduled for indexing. -1 in case of errors
-     */
-    int reBuildSpaceIndex(SpaceReference spaceReference);
 
     /**
      * Search for the query in the current wiki for all the languages.
@@ -186,25 +64,24 @@ public interface Search
     SearchResponse search(SearchRequest request);
 
     /**
-     * 
      * @return map containing the Indexer Sattus.
      */
-    Map<String, DocumentIndexerStatus> getStatus();
-    
+    Map<String, AbstractDocumentIndexerStatus> getStatus();
+
     /**
-     * 
      * @return String.
      */
     String getStatusAsJson();
+
     /**
-     * 
      * @return Object.
      */
     Object getVelocityUtils();
-    
+
     /**
+     * Search request implementation for given hint.
      * 
-     * @return SerchRequest
+     * @return search request object.
      */
     SearchRequest getSearchRequest();
 

@@ -41,23 +41,28 @@ import org.apache.solr.util.RefCounted;
  */
 public class VelocityUtils
 {
-   /**
-    *  SolrServer .
-    */
+
+    /**
+     * configuration directory.
+     */
+    private static final String CONF_DIR = "conf";
+
+    /**
+     * SolrServer .
+     */
     private SolrServer solrServer;
-    
+
     /**
      * SolrCore object.
      */
     private SolrCore core;
-    
+
     /**
      * CoreContainer.
      */
     private CoreContainer coreContainer;
-    
+
     /**
-     * 
      * @param coreContainer CoreContainer.
      * @param solrServer SolrServer.
      */
@@ -70,10 +75,9 @@ public class VelocityUtils
             this.core = c;
         }
     }
-    
+
     /**
-     * 
-     * 
+     * @return {@link NamedList} Map of Indexing statistics.
      */
     public NamedList getIndexingStatistics()
     {
@@ -84,11 +88,10 @@ public class VelocityUtils
         NamedList list = s.getStatistics();
         return list;
     }
-    
+
     /**
-     * 
-     * @param key
-     * @return
+     * @param key statistics key.
+     * @return {@link NamedList} Map of Indexing statistics.
      */
     private NamedList getStatistics(String key)
     {
@@ -102,63 +105,56 @@ public class VelocityUtils
         }
         return null;
     }
-    
+
     /**
-     * 
-     * @return
+     * @return {@link NamedList} Map of Luke statistics.
      */
     public NamedList getLukeStatistics()
     {
         return getStatistics("/admin/luke");
     }
-    
+
     /**
-     * 
-     * @return
+     * @return {@link NamedList} Map of System statistics.
      */
     public NamedList getSystemStatistics()
     {
         return getStatistics("/admin/system");
     }
-    
+
     /**
-     * 
-     * @return
+     * @return {@link NamedList} Map of File statistics.
      */
     public NamedList getFileStatistics()
     {
         return getStatistics("/admin/file");
     }
-    
+
     /**
-     * 
-     * @return
+     * @return {@link NamedList} Map of plugin statistics.
      */
     public NamedList getPluginsStatistics()
     {
         return getStatistics("/admin/plugins");
     }
-    
+
     /**
-     * 
-     * @return
+     * @return {@link NamedList} Map of jvm statistics.
      */
     public NamedList getJvmStatistics()
     {
         return getStatistics("/admin/properties");
     }
-    
+
     /**
-     * 
-     * @return
+     * @return {@link NamedList} Map of thread statistics.
      */
     public NamedList getThreadStatistics()
     {
         return getStatistics("/admin/threads");
     }
-    
+
     /**
-     * 
      * @return property.
      */
     private String getSolrConfigHome()
@@ -166,11 +162,10 @@ public class VelocityUtils
         String property = System.getProperty("solr.solr.home");
         return property;
     }
-    
+
     /**
-     * 
-     * @param filePath 
-     * @return
+     * @param filePath path of the file.
+     * @return file content.
      */
     private String readFileFromPath(String filePath)
     {
@@ -196,25 +191,22 @@ public class VelocityUtils
         }
         return null;
     }
-    
+
     /**
-     * 
-     * @return gets the path of Solrschema.xml  file
+     * @return gets the path of Solrschema.xml file
      */
     public String getSolrSchemaXml()
     {
-        String filePath = getSolrConfigHome() + File.separatorChar + "conf" + File.separatorChar + "schema.xml";
-        System.out.println(filePath);
+        String filePath = getSolrConfigHome() + File.separatorChar + CONF_DIR + File.separatorChar + "schema.xml";
         return readFileFromPath(filePath);
     }
-    
+
     /**
-     * 
-     * @return gets the path of SolrConfig.xml  file.
+     * @return gets the path of SolrConfig.xml file.
      */
     public String getSolrConfigXml()
     {
-        String filePath = getSolrConfigHome() + File.separatorChar + "conf" + File.separatorChar + "solrconfig.xml";
+        String filePath = getSolrConfigHome() + File.separatorChar + CONF_DIR + File.separatorChar + "solrconfig.xml";
         return readFileFromPath(filePath);
     }
 }

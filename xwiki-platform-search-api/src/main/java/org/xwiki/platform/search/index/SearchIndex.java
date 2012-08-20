@@ -17,50 +17,31 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.platform.search;
+package org.xwiki.platform.search.index;
+
+import org.xwiki.component.annotation.Role;
 
 /**
  * @version $Id$
  */
-public enum WikiElement
-{   
+@Role
+public interface SearchIndex
+{
     /**
-     * 
+     * @throws SearchIndexingException in case of errors instantiating build index.
+     * @return instance of build index.
      */
-    DOCUMENT(1),
+    BuildIndex getBuildIndexInstance() throws SearchIndexingException;
+
     /**
-     * 
+     * @throws SearchIndexingException in case of errors instantiating delete index.
+     * @return instance of delete index.
      */
-    ATTACHMENT(2),
+    DeleteIndex getDeleteIndexInstance() throws SearchIndexingException;
+
     /**
-     * 
+     * @throws SearchIndexingException in case of errors instantiating rebuild index.
+     * @return instance of rebuild index.
      */
-    OBJECT(3),
-    /**
-     * 
-     */
-    PROPERTY(4);
-    
-    /**
-     * 
-     */
-    private int id;
-    
-    /**
-     * 
-     * @param id of the element
-     */
-    WikiElement(int id)
-    {
-        this.id = id;
-    }
-    
-    /**
-     * 
-     * @return teh id.
-     */
-    public int getId()
-    {
-        return this.id;
-    }
+    RebuildIndex getRebuildIndexInstance() throws SearchIndexingException;
 }

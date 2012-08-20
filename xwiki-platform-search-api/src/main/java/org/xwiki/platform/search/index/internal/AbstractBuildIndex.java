@@ -17,47 +17,51 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.platform.search.internal;
+package org.xwiki.platform.search.index.internal;
+
+import java.util.List;
 
 import javax.inject.Inject;
 
 import org.slf4j.Logger;
-import org.xwiki.component.manager.ComponentManager;
-import org.xwiki.platform.search.Search;
-import org.xwiki.platform.search.SearchResponse;
-import org.xwiki.platform.search.index.DocumentIndexer;
+import org.xwiki.model.reference.WikiReference;
+import org.xwiki.platform.search.index.BuildIndex;
+import org.xwiki.platform.search.index.SearchIndexingException;
+import org.xwiki.platform.search.internal.DocumentHelper;
+
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.XWikiException;
 
 /**
+ * 
  * @version $Id$
  */
-public abstract class AbstractSearch extends DocumentHelper implements Search
+public abstract class AbstractBuildIndex extends DocumentHelper implements BuildIndex
 {
-
     /**
-     * Logger component.
+     * Logger.
      */
     @Inject
     protected Logger logger;
 
     /**
-     * Document Indexer for solrj.
-     */
-    protected DocumentIndexer indexer;
-
-    /**
-     * ComponentManager component.
-     */
-    @Inject
-    protected ComponentManager componentManager;
-
-    /**
      * {@inheritDoc}
      * 
-     * @see org.xwiki.platform.search.Search#search(java.lang.String)
+     * @see org.xwiki.platform.search.index.BuildIndex#buildWikiFarmIndex()
      */
     @Override
-    public SearchResponse search(String query)
+    public int buildWikiFarmIndex() throws SearchIndexingException, XWikiException
     {
-        return null;
+        XWikiContext xcontext = getXWikiContext();
+        int totalDocCount = 0;
+        if (xcontext.getWiki().isVirtualMode()) {
+            List<String> wikis = xcontext.getWiki().getVirtualWikisDatabaseNames(xcontext);
+            for (String wikiName : wikis) {
+                WikiReference wikiReference = new WikiReference(wikiName);
+                totalDocCount += buildWikiIndex(wikiReference);
+            }
+        }
+        return totalDocCount;
     }
+
 }

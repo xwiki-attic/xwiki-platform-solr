@@ -29,35 +29,30 @@ import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
-import org.xwiki.bridge.DocumentAccessBridge;
-import org.xwiki.context.Execution;
-import org.xwiki.context.ExecutionContext;
-import org.xwiki.context.ExecutionContextManager;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.platform.search.index.DocumentData;
+import org.xwiki.platform.search.internal.DocumentHelper;
 import org.xwiki.rendering.renderer.BlockRenderer;
 
-import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.BaseProperty;
-import com.xpn.xwiki.util.XWikiStubContextProvider;
 
 /**
  * @version $Id$
  */
-public abstract class AbstractDocumentData implements DocumentData
-{   
+public abstract class AbstractDocumentData extends DocumentHelper implements DocumentData
+{
+
     /**
-     * DocumentAccessBridge component.
+     * Id seperator.
      */
-    @Inject 
-    protected DocumentAccessBridge documentAccessBridge;
+    private static final String ID_SEPERATOR = ".";
     
     /**
      * EntityReferenceSerializer component.
@@ -65,44 +60,26 @@ public abstract class AbstractDocumentData implements DocumentData
     @Inject
     @Named("compactwiki")
     protected EntityReferenceSerializer<String> serializer;
-    
+
     /**
      * DocumentReferenceResolver component.
      */
     @Inject
     @Named("explicit")
     protected DocumentReferenceResolver<EntityReference> resolver;
-    
+
     /**
      * Logger component.
      */
     @Inject
     protected Logger logger;
-    
+
     /**
      * BlockRenderer component.
      */
     @Inject
     @Named("plain/1.0")
     protected BlockRenderer renderer;
-    
-    /**
-     * ExecutionContextManager component.
-     */
-    @Inject
-    protected ExecutionContextManager executionContextManager;
-    
-    /**
-     * Execution component.
-     */
-    @Inject
-    protected Execution execution;
-    
-    /**
-     * XWikiStubContextProvider component.
-     */
-    @Inject 
-    protected XWikiStubContextProvider contextProvider;
 
     /**
      * {@inheritDoc}
@@ -113,9 +90,9 @@ public abstract class AbstractDocumentData implements DocumentData
     public String getDocumentId(DocumentReference documentReference)
     {
         StringBuffer docId = new StringBuffer();
-        docId.append(documentReference.getWikiReference().getName().toLowerCase()).append(".");
-        docId.append(documentReference.getLastSpaceReference().getName().toLowerCase()).append(".");
-        docId.append(documentReference.getName().toLowerCase()).append(".");
+        docId.append(documentReference.getWikiReference().getName().toLowerCase()).append(ID_SEPERATOR);
+        docId.append(documentReference.getLastSpaceReference().getName().toLowerCase()).append(ID_SEPERATOR);
+        docId.append(documentReference.getName().toLowerCase()).append(ID_SEPERATOR);
         docId.append(getLanguage(documentReference));
 
         return docId.toString();
@@ -150,9 +127,9 @@ public abstract class AbstractDocumentData implements DocumentData
         }
         StringBuffer buffer = new StringBuffer();
         buffer.append(getDocumentId(documentReference));
-        buffer.append(".");
+        buffer.append(ID_SEPERATOR);
         buffer.append(baseObject.getReference().getName().toLowerCase());
-        buffer.append(".");
+        buffer.append(ID_SEPERATOR);
         buffer.append(baseObject.getId());
         return buffer.toString();
     }
@@ -171,15 +148,14 @@ public abstract class AbstractDocumentData implements DocumentData
         }
         StringBuffer buffer = new StringBuffer();
         buffer.append(getDocumentId(documentReference));
-        buffer.append(".");
+        buffer.append(ID_SEPERATOR);
         buffer.append(baseProperty.getName().toLowerCase());
-        buffer.append(".");
+        buffer.append(ID_SEPERATOR);
         buffer.append(baseProperty.getId());
         return buffer.toString();
     }
-    
+
     /**
-     * 
      * @param documentReference reference to the document.
      * @return String language
      */
@@ -193,7 +169,7 @@ public abstract class AbstractDocumentData implements DocumentData
             } else if (!StringUtils.isEmpty(documentAccessBridge.getDocument(documentReference).getRealLanguage())) {
                 language = documentAccessBridge.getDocument(documentReference).getRealLanguage();
             } else {
-                //Multilingual and Default placeholder
+                // Multilingual and Default placeholder
                 language = "en";
             }
         } catch (Exception e) {
@@ -201,39 +177,14 @@ public abstract class AbstractDocumentData implements DocumentData
         }
         return language;
     }
-    
-    /**
-     * 
-     * @return Execution Context.
-     */
-    protected ExecutionContext getExecutionContext()
-    {
-        return this.execution.getContext();
-    }
 
     /**
-     * gets the XWikiContext.
-     * 
-     * @return the XWikiContext
-     */
-    protected XWikiContext getXWikiContext()
-    {
-        XWikiContext context = (XWikiContext) execution.getContext().getProperty(XWikiContext.EXECUTIONCONTEXT_KEY);
-        if (context == null) {
-            context = this.contextProvider.createStubContext();
-            logger.info(context.toString());
-            getExecutionContext().setProperty(XWikiContext.EXECUTIONCONTEXT_KEY, context);
-        }
-        return context;
-    }
-    
-    /**
-     * 
      * {@inheritDoc}
      * 
      * @see org.xwiki.platform.search.index.DocumentData#getObjectIdList(org.xwiki.model.reference.DocumentReference)
      */
-    public List<String> getObjectIdList(DocumentReference documentReference) {
+    public List<String> getObjectIdList(DocumentReference documentReference)
+    {
         List<String> idList = new ArrayList<String>();
         XWikiDocument xdoc;
         try {
@@ -252,14 +203,14 @@ public abstract class AbstractDocumentData implements DocumentData
 
         return idList;
     }
-    
+
     /**
-     * 
      * {@inheritDoc}
      * 
      * @see org.xwiki.platform.search.index.DocumentData#getPropertyIdList(org.xwiki.model.reference.DocumentReference)
      */
-    public List<String> getPropertyIdList(DocumentReference documentReference) {
+    public List<String> getPropertyIdList(DocumentReference documentReference)
+    {
         List<String> idList = new ArrayList<String>();
         XWikiDocument xdoc = null;
         try {

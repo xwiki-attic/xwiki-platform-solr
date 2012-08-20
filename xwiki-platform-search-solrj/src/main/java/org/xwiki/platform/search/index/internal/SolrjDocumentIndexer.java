@@ -38,10 +38,8 @@ import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.bridge.DocumentModelBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentManager;
-import org.xwiki.context.Execution;
 import org.xwiki.context.ExecutionContext;
 import org.xwiki.context.ExecutionContextException;
-import org.xwiki.context.ExecutionContextManager;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
@@ -50,11 +48,8 @@ import org.xwiki.platform.search.DocumentField;
 import org.xwiki.platform.search.index.DocumentData;
 import org.xwiki.platform.search.index.DocumentIndexer;
 import org.xwiki.platform.search.index.DocumentIndexerStatus;
-import org.xwiki.platform.search.internal.SolrDocData;
+import org.xwiki.platform.search.internal.DocumentHelper;
 import org.xwiki.rendering.renderer.BlockRenderer;
-
-import com.google.gson.Gson;
-
 
 /**
  * @version $Id$
@@ -62,85 +57,76 @@ import com.google.gson.Gson;
 @Component
 @Named(SolrjDocumentIndexer.HINT)
 @Singleton
-public class SolrjDocumentIndexer implements DocumentIndexer
+public class SolrjDocumentIndexer extends DocumentHelper implements DocumentIndexer
 {
     /**
-    * solrjindexer HINT.
-    */
+     * solrjindexer HINT.
+     */
     public static final String HINT = "solrjindexer";
+
     /**
-     * Logger  component.
+     * Field seperator USCORE
      */
-    @Inject 
-    private Logger logger;
-    
+    private static final String USCORE = "_";
+
     /**
-     * ExecutionContextManager component.
-     */
-    @Inject 
-    private ExecutionContextManager executionContextManager;
-    
-    /**
-     * Execution component.
+     * Logger component.
      */
     @Inject
-    private Execution execution;
-    
+    private Logger logger;
+
     /**
      * Thread object reference variable.
      */
     private Thread thread;
-     
+
     /**
      * solrServer Object Reference Variable.
      */
     private SolrServer solrServer;
-    
+
     /**
      * BlockRenderer Component.
      */
     @Inject
     @Named("plain/1.0")
     private BlockRenderer renderer;
-    
+
     /**
      * ComponentManager component.
      */
     @Inject
     private ComponentManager componentManager;
-    
+
     /**
      * DocumentAccessBridge component.
      */
     @Inject
     private DocumentAccessBridge documentAccessBridge;
-    
+
     /**
      * indexerStatusMap to store Indexer status.
      */
-    private Map<String, DocumentIndexerStatus> indexerStatusMap = Collections
-        .synchronizedMap(new HashMap<String, DocumentIndexerStatus>());
-    
+    private Map<String, AbstractDocumentIndexerStatus> indexerStatusMap = Collections
+        .synchronizedMap(new HashMap<String, AbstractDocumentIndexerStatus>());
+
     /**
-     * 
-     * 
      * @version $Id$
      */
     private class IndexThread implements Runnable
     {
-        
+
         /**
          * list of Document Reference.
          */
         private List<DocumentReference> docList;
-        
+
         /**
          * Entity Reference.
          */
         private EntityReference entityReference;
-       
+
         /**
-         * 
          * @param entityReference refernce to Document ,atatchment.
          * @param docList list of document reference.
          */
@@ -149,9 +135,8 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             this.docList = docList;
             this.entityReference = entityReference;
         }
-        
+
         /**
-         * 
          * {@inheritDoc}
          * 
          * @see java.lang.Runnable#run()
@@ -161,8 +146,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         {
             ExecutionContext context = new ExecutionContext();
             // Create a SolrDocData object
-            SolrDocData solrdoc = new SolrDocData();
-            DocumentIndexerStatus indexerStatus = new SolrjDocumentIndexerStatus();
+            AbstractDocumentIndexerStatus indexerStatus = new SolrjDocumentIndexerStatus();
             indexerStatusMap.put(Thread.currentThread().getName(), indexerStatus);
 
             indexerStatus.setTotalDocCount(docList.size());
@@ -208,7 +192,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
                             // Attachments
                             List<SolrInputDocument> attachmentdocs = sdocdata.getInputAttachments(docRef);
-                            if  (attachmentdocs != null && !attachmentdocs.isEmpty()) {
+                            if (attachmentdocs != null && !attachmentdocs.isEmpty()) {
                                 docs.addAll(attachmentdocs);
                             }
                             // Objects
@@ -232,14 +216,14 @@ public class SolrjDocumentIndexer implements DocumentIndexer
 
                         for (SolrInputDocument doc : docs) {
                             String lang = (String) doc.getFieldValue(DocumentField.LANGUAGE);
-                            if (doc.getField(DocumentField.DOCUMENT_CONTENT + "_" + lang) != null) {
-                                doc.removeField(DocumentField.DOCUMENT_CONTENT + "_" + lang);
+                            if (doc.getField(DocumentField.DOCUMENT_CONTENT + USCORE + lang) != null) {
+                                doc.removeField(DocumentField.DOCUMENT_CONTENT + USCORE + lang);
                             }
-                            if (doc.getField(DocumentField.ATTACHMENT_CONTENT + "_" + lang) != null) {
-                                doc.removeField(DocumentField.ATTACHMENT_CONTENT + "_" + lang);
+                            if (doc.getField(DocumentField.ATTACHMENT_CONTENT + USCORE + lang) != null) {
+                                doc.removeField(DocumentField.ATTACHMENT_CONTENT + USCORE + lang);
                             }
-                            if (doc.getField(DocumentField.OBJECT_CONTENT + "_" + lang) != null) {
-                                doc.removeField(DocumentField.OBJECT_CONTENT + "_" + lang);
+                            if (doc.getField(DocumentField.OBJECT_CONTENT + USCORE + lang) != null) {
+                                doc.removeField(DocumentField.OBJECT_CONTENT + USCORE + lang);
                             }
                         }
 
@@ -263,92 +247,6 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             indexerStatusMap.remove(Thread.currentThread().getName());
 
         }
-    }
-   /**
-    * 
-    * 
-    * @version $Id$
-    */
-    private class DeleteIndexThread implements Runnable
-    {
-        
-        /**
-         * List of Document Reference.
-         */
-        private List<DocumentReference> docList;
-        
-        /**
-         * Entity Reference.
-         */
-        private EntityReference entityReference;
-        
-        /**
-         * 
-         * @param entityReference EntityReference
-         * @param docList of Document Reference.
-         */
-        public DeleteIndexThread(EntityReference entityReference, List<DocumentReference> docList)
-        {
-            this.docList = docList;
-            this.entityReference = entityReference;
-        }
-
-        @Override
-        public void run()
-        {
-            ExecutionContext context = new ExecutionContext();
-
-            try {
-                executionContextManager.initialize(context);
-            } catch (ExecutionContextException e) {
-                throw new RuntimeException("Failed to initialize Solrj indexer's execution context", e);
-            }
-
-            execution.pushContext(context);
-
-            try {
-                List<String> idList = new ArrayList<String>();
-                SolrjDocumentData sdocdata = componentManager.getInstance(DocumentData.class, SolrjDocumentData.HINT);
-                for (DocumentReference documentReference : docList) {
-
-                    try {
-
-                        // Add Document Id.
-                        idList.add(sdocdata.getDocumentId(documentReference));
-
-                        // Attachments
-                        List<AttachmentReference> attachmentReferenceList =
-                            documentAccessBridge.getAttachmentReferences(documentReference);
-                        for (AttachmentReference attachmentReference : attachmentReferenceList) {
-                            idList.add(sdocdata.getAttachmentId(attachmentReference));
-                        }
-
-                        // Objects
-                        idList.addAll(sdocdata.getObjectIdList(documentReference));
-
-                        // Properties
-                        idList.addAll(sdocdata.getPropertyIdList(documentReference));
-
-                    } catch (Exception e) {
-                        logger.error("Error while adding document ids for index deletion" + e.getMessage());
-                    }
-                }
-
-                try {
-                    solrServer.deleteById(idList);
-                    solrServer.commit();
-                } catch (Exception e) {
-                    logger.error("Error commiting solr documents", e);
-                }
-
-            } catch (Exception ex) {
-                logger.error("Error instantiating DocumentData component with hint[" + SolrjDocumentData.HINT + "]");
-            } finally {
-                execution.removeContext();
-            }
-
-        }
-
     }
 
     /**
@@ -387,45 +285,43 @@ public class SolrjDocumentIndexer implements DocumentIndexer
                 SolrjDocumentData sdocdata =
                     this.componentManager.getInstance(DocumentData.class, SolrjDocumentData.HINT);
                 UpdateResponse response = null;
-                Gson gson = new Gson();
                 // Document
                 SolrInputDocument sdoc = sdocdata.getInputDocument(doc);
                 if (sdoc != null) {
                     response = solrServer.add(sdoc);
-                    logger.info(gson.toJson(response));
                 }
 
                 // Attachments
-                List<SolrInputDocument> attachmentdocs = sdocdata.getInputAttachments(doc);
-                if (attachmentdocs != null && !attachmentdocs.isEmpty()) {
-                    response = solrServer.add(attachmentdocs);
-                    logger.info(gson.toJson(response));
-                }
+                addDocsToSolr(sdocdata.getInputAttachments(doc));
 
                 // Objects
-                List<SolrInputDocument> objDocs = sdocdata.getInputObjects(doc);
-                if (objDocs != null && !objDocs.isEmpty()) {
-                    solrServer.add(objDocs);
-                    logger.info(gson.toJson(response));
-                }
+                addDocsToSolr(sdocdata.getInputObjects(doc));
 
                 // Properties
-                List<SolrInputDocument> propDocs = sdocdata.getInputProperties(doc);
-                if (propDocs != null && !propDocs.isEmpty()) {
-                    response = solrServer.add(propDocs);
-                    logger.info(gson.toJson(response));
-                }
+                addDocsToSolr(sdocdata.getInputProperties(doc));
 
                 // Commit Response
                 response = solrServer.commit();
-                logger.info("Commit Response");
-                logger.info(gson.toJson(response));
                 return true;
             }
         } catch (Exception e) {
             logger.error("Error indexing document - [" + doc.getName() + "]");
         }
         return false;
+    }
+
+    /**
+     * @param documents to be added to solr server.
+     */
+    public void addDocsToSolr(List<SolrInputDocument> documents)
+    {
+        if (!documents.isEmpty()) {
+            try {
+                solrServer.add(documents);
+            } catch (Exception e) {
+                logger.error("Error adding documents to the solr server");
+            }
+        }
     }
 
     /**
@@ -442,7 +338,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             solrServer.commit();
             return true;
         } catch (Exception e) {
-            logger.error("Error deleting document.");
+            logger.error("Error deleting index of the document " + doc.getName());
         }
         return false;
     }
@@ -460,39 +356,9 @@ public class SolrjDocumentIndexer implements DocumentIndexer
             solrServer.commit();
             return true;
         } catch (Exception e) {
-            logger.error("Error deleting document.");
+            logger.error("Error deleting entire search index");
         }
         return false;
-    }
-
-    /**
-     * indexes the attachment using the Solr cell {@inheritDoc}.
-     * 
-     * @see org.xwiki.platform.search.index.DocumentIndexer#indexAttachment(org.xwiki.model.reference.AttachmentReference,
-     *      org.xwiki.bridge.DocumentModelBridge)
-     */
-    public boolean indexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
-    {
-        SolrDocData solrdoc = new SolrDocData();
-
-        try {
-            // String Content = getFullText(attachment);
-
-            // get the language
-            String language = doc.getRealLanguage();
-            if (language == null || language == "") {
-                language = "en";
-            }
-
-            SolrInputDocument sdoc = null;
-            solrServer.add(sdoc);
-            solrServer.commit();
-            return true;
-        } catch (Exception e) {
-            logger.error("Error indexing document - [" + attachment.getName() + "]");
-        }
-        return false;
-
     }
 
     /**
@@ -534,7 +400,7 @@ public class SolrjDocumentIndexer implements DocumentIndexer
      * @see org.xwiki.platform.search.index.DocumentIndexer#getStatus()
      */
     @Override
-    public Map<String, DocumentIndexerStatus> getStatus()
+    public Map<String, AbstractDocumentIndexerStatus> getStatus()
     {
         return indexerStatusMap;
     }
@@ -589,6 +455,19 @@ public class SolrjDocumentIndexer implements DocumentIndexer
         } catch (Exception e) {
             logger.error("Error deleting index for EntityReference:" + reference);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.xwiki.platform.search.index.DocumentIndexer#indexAttachment(org.xwiki.model.reference.AttachmentReference,
+     *      org.xwiki.bridge.DocumentModelBridge)
+     */
+    @Override
+    public boolean indexAttachment(AttachmentReference attachment, DocumentModelBridge doc)
+    {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }

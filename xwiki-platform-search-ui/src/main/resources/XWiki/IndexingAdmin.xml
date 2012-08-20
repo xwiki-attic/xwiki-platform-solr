@@ -267,21 +267,8 @@
 #set($docextras = [])
 $xwiki.jsx.use("XWiki.SearchAdminMacros")
 $xwiki.ssx.use("Main.SearchMacros")
-#set($searchobj = $services.search.getSearch() )
-#set($veltool=$searchobj.getVelocityUtils())
-&lt;h3&gt;Indexer statistics&lt;/h3&gt;
-&lt;table&gt;
-#set($namedlist=$veltool.getIndexingStatistics())
-#foreach($name in $namedlist.iterator())
-&lt;tr&gt;
-    &lt;td&gt;$name.key&lt;/td&gt;
-    &lt;td&gt;$name.value&lt;/td&gt;
-&lt;/tr&gt;
-#end
-&lt;/table&gt;
-&lt;h3&gt;Indexer&lt;/h3&gt;
-Index or Delete the Index using the select box below, then click on Start.
 
+&lt;div style="padding:10px;&gt;Index the wiki by clicking the button&lt;/div&gt;
 &lt;div id="indexing_request"&gt;
 
 #set($indexoption="$!request.getParameter('indexselect')")
@@ -305,27 +292,34 @@ Index or Delete the Index using the select box below, then click on Start.
   #set($extraClause = " AND space:${selectedSpace}")
 #end
 
+#set($searchindex=$services.search.getSearchIndex())
+
 #if($indexoption == "indexwiki")
     ### Call Index Wiki.
-    #set($totaldocs=$searchobj.buildWikiIndex($doc.getDocumentReference().getWikiReference()))
+    #set($buildindex=$searchindex.getBuildIndexInstance())
+    #set($totaldocs=$buildindex.buildWikiIndex($doc.getDocumentReference().getWikiReference()))
 
 #elseif($indexoption=="indexspace")
    ### Call Index Space.
    #if($selectedSpace != "")
+       #set($buildindex=$searchindex.getBuildIndexInstance())
        #set($spaceref= $xwiki.getDocument("${selectedSpace}.WebHome").getDocumentReference().getLastSpaceReference())
-       #set($totaldocs=$searchobj.buildWikiSpaceIndex($spaceref))
+       #set($totaldocs=$buildindex.buildWikiSpaceIndex($spaceref))
    #end
 #elseif($indexoption=="deletewiki")
    ### Call Index Space.
-   #set($totaldocs=$searchobj.deleteWikiIndex($doc.getDocumentReference().getWikiReference()))
+   #set($deleteindex=$searchindex.getDeleteIndexInstance())
+   #set($totaldocs=$deleteindex.deleteWikiIndex($doc.getDocumentReference().getWikiReference()))
 #elseif($indexoption=="deletespace")
    #if($selectedSpace != "")
+       #set($deleteindex=$searchindex.getDeleteIndexInstance())
        #set($spaceref= $xwiki.getDocument("${selectedSpace}.WebHome").getDocumentReference().getLastSpaceReference())
-       #set($totaldocs=$searchobj.deleteSpaceIndex($spaceref))
+       #set($totaldocs=$deleteindex.deleteSpaceIndex($spaceref))
    #end
 #elseif($indexoption=="deleteindex")
    ### Call Index Space.
-   #set($totaldocs=$searchobj.deleteEntireIndex())
+   #set($deleteindex=$searchindex.getDeleteIndexInstance())
+   #set($totaldocs=$deleteindex.deleteEntireIndex())
 #end
 
 
@@ -347,6 +341,7 @@ Index or Delete the Index using the select box below, then click on Start.
      &lt;input type="submit" class="button" id="startIndex" value="Start"/&gt; 
      &lt;/div&gt;
 &lt;/form&gt;
+
 &lt;/div&gt;
 &lt;div id="indexing_response"&gt;
 &lt;/div&gt;

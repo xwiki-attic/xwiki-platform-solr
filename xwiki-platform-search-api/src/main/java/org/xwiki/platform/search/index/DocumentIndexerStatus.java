@@ -21,284 +21,132 @@ package org.xwiki.platform.search.index;
 
 import java.util.List;
 
-import org.xwiki.model.reference.DocumentReference;
-
 /**
- * Status of the document indexer.
- * 
  * @version $Id$
  */
-public abstract class DocumentIndexerStatus
+public interface DocumentIndexerStatus
 {
-    /**
-     * stores the estimated completion time.
-     */
-    protected long estimatedCompletionTime;
-
-    /**
-     * stores the estimated completion time as string.
-     */
-    protected String estimatedCompletionTimeAsString;
-
-    /**
-     * stores the indexing speed.
-     */
-    protected float indexingSpeed;
-
-    /**
-     * stores the no of indexed docs.
-     */
-    protected int indexedDocs;
-
-    /**
-     * stores the total document count.
-     */
-    protected int totalDocCount;
-
-    /**
-     * stores the elapsed time in indexing.
-     */
-    protected long elapsedTime;
-
-    /**
-     * elapsed time in indexing as String.
-     */
-    protected String elapsedTimeAsString;
-
-    /**
-     * 
-     */
-    protected String title;
-
-    /**
-     * 
-     */
-    protected String entityName;
-
-    /**
-     * 
-     */
-    protected String entityType;
 
     /**
      * @return the indexedDocs
      */
-    public int getIndexedDocs()
-    {
-        return indexedDocs;
-    }
+    int getIndexedDocs();
 
     /**
      * @param indexedDocs the indexedDocs to set
      */
-    public void setIndexedDocs(int indexedDocs)
-    {
-        this.indexedDocs = indexedDocs;
-    }
+    void setIndexedDocs(int indexedDocs);
 
     /**
      * @return the title
      */
-    public String getTitle()
-    {
-        return title;
-    }
+    String getTitle();
 
     /**
      * @param title the title to set
      */
-    public void setTitle(String title)
-    {
-        this.title = title;
-    }
+    void setTitle(String title);
 
     /**
      * @return the lastIndexedDocumentIndex
      */
-    public synchronized int getLastIndexedDocumentIndex()
-    {
-        return indexedDocs;
-    }
+    int getLastIndexedDocumentIndex();
 
     /**
      * @param lastIndexedDocumentIndex the lastIndexedDocumentIndex to set
      */
-    public synchronized void setLastIndexedDocumentIndex(int lastIndexedDocumentIndex)
-    {
-        this.indexedDocs = lastIndexedDocumentIndex;
-    }
+    void setLastIndexedDocumentIndex(int lastIndexedDocumentIndex);
 
     /**
      * @return the totalDocCount
      */
-    public synchronized int getTotalDocCount()
-    {
-        return totalDocCount;
-    }
+    int getTotalDocCount();
 
     /**
      * @param totalDocCount the totalDocCount to set
      */
-    public synchronized void setTotalDocCount(int totalDocCount)
-    {
-        this.totalDocCount = totalDocCount;
-    }
+    void setTotalDocCount(int totalDocCount);
 
     /**
      * @param indexingSpeed the indexingSpeed to set
      */
-    public synchronized void setIndexingSpeed(float indexingSpeed)
-    {
-        this.indexingSpeed = indexingSpeed;
-    }
+    void setIndexingSpeed(float indexingSpeed);
 
     /**
      * @return the indexingSpeed
      */
-    public synchronized float getIndexingSpeed()
-    {
-        return indexingSpeed;
-    }
+    float getIndexingSpeed();
 
     /**
      * @return the completion time stamp in milli seconds.
      */
-    public synchronized long getEstimatedCompletionTime()
-    {
-        return this.estimatedCompletionTime;
-    }
+    long getEstimatedCompletionTime();
 
     /**
      * @return the completion time stamp.
      */
-    public synchronized String getEstimatedCompletionTimeAsString()
-    {
-
-        return this.estimatedCompletionTimeAsString;
-    }
-
-    /**
-     * @param count number of documents
-     * @return the list of indexed documents.
-     */
-    List<DocumentReference> getLastIndexedDocuments(int count)
-    {
-        return null;
-    }
+    String getEstimatedCompletionTimeAsString();
 
     /**
      * @return the elapsedTime
      */
-    public long getElapsedTime()
-    {
-        return elapsedTime;
-    }
+    long getElapsedTime();
 
     /**
      * @param elapsedTime the elapsedTime to set
      */
-    public void setElapsedTime(long elapsedTime)
-    {
-        this.elapsedTime = elapsedTime;
-    }
+    void setElapsedTime(long elapsedTime);
 
     /**
      * @param estimatedCompletionTime the estimatedCompletionTime to set
      */
-    public void setEstimatedCompletionTime(long estimatedCompletionTime)
-    {
-        this.estimatedCompletionTime = estimatedCompletionTime;
-    }
+    void setEstimatedCompletionTime(long estimatedCompletionTime);
 
     /**
      * @param estimatedCompletionTimeAsString the estimatedCompletionTimeAsString to set
      */
-    public void setEstimatedCompletionTimeAsString(String estimatedCompletionTimeAsString)
-    {
-        this.estimatedCompletionTimeAsString = estimatedCompletionTimeAsString;
-    }
+    void setEstimatedCompletionTimeAsString(String estimatedCompletionTimeAsString);
 
     /**
      * @return the elapsedTimeAsString
      */
-    public String getElapsedTimeAsString()
-    {
-        return elapsedTimeAsString;
-    }
+    String getElapsedTimeAsString();
 
     /**
      * @param elapsedTimeAsString the elapsedTimeAsString to set
      */
-    public void setElapsedTimeAsString(String elapsedTimeAsString)
-    {
-        this.elapsedTimeAsString = elapsedTimeAsString;
-    }
+    void setElapsedTimeAsString(String elapsedTimeAsString);
 
     /**
      * @return queue size of the indexing process.
      */
-    public synchronized int getQueueSize()
-    {
-        return (this.totalDocCount - this.indexedDocs);
-    }
+    int getQueueSize();
 
     /**
      * @param elapsedTime1 .
      * @param docsIndexed no of document indexed
      * @param recentlyIndexedDocs list of recently indexed docs
      */
-    public abstract void addStepDetails(long elapsedTime1, int docsIndexed, List< ? > recentlyIndexedDocs);
-
-    /**
-     * @param secondsInput time in seconds.
-     * @return String
-     */
-    protected String formatIntoHHMMSS(int secondsInput)
-    {
-        int hours = (int) (secondsInput / 3600);
-        int remainder = (int) (secondsInput % 3600);
-        int minutes = (int) remainder / 60;
-        int seconds = remainder % 60;
-
-        return ((hours < 10 ? "0" : "") + hours + ":" + (minutes < 10 ? "0" : "") + minutes + ":"
-            + (seconds < 10 ? "0" : "") + seconds);
-    }
+    void addStepDetails(long elapsedTime1, int docsIndexed, List< ? > recentlyIndexedDocs);
 
     /**
      * @return the entityName
      */
-    public String getEntityName()
-    {
-        return entityName;
-    }
+    String getEntityName();
 
     /**
      * @param entityName the entityName to set
      */
-    public void setEntityName(String entityName)
-    {
-        this.entityName = entityName;
-    }
+    void setEntityName(String entityName);
 
     /**
      * @return the entityType
      */
-    public String getEntityType()
-    {
-        return entityType;
-    }
+    String getEntityType();
 
     /**
      * @param entityType the entityType to set
      */
-    public void setEntityType(String entityType)
-    {
-        this.entityType = entityType;
-    }
-
-    /**
-     * @return the recentlyIndexedDocs
-     */
-    public abstract List< ? > getRecentlyIndexedDocs();
+    void setEntityType(String entityType);
 
 }

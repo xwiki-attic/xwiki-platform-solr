@@ -22,13 +22,12 @@ package org.xwiki.platform.search.index.internal;
 import java.util.List;
 
 import org.apache.solr.common.SolrInputDocument;
-import org.xwiki.platform.search.index.DocumentIndexerStatus;
 
 /**
  * @version $Id$
  */
-public class SolrjDocumentIndexerStatus extends DocumentIndexerStatus
-{   
+public class SolrjDocumentIndexerStatus extends AbstractDocumentIndexerStatus
+{
     /**
      * List of SolrInput Documents recently Indexed.
      */
@@ -37,8 +36,10 @@ public class SolrjDocumentIndexerStatus extends DocumentIndexerStatus
     /**
      * {@inheritDoc}
      * 
-     * @see org.xwiki.platform.search.index.DocumentIndexerStatus#addStepDetails(long, int, java.util.List)
+     * @see org.xwiki.platform.search.index.internal.AbstractDocumentIndexerStatus#addStepDetails(long, int,
+     *      java.util.List)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public void addStepDetails(long elapsedTime1, int docsIndexed, List< ? > recentlyIndexedDocs)
     {
@@ -57,7 +58,6 @@ public class SolrjDocumentIndexerStatus extends DocumentIndexerStatus
 
                 int a = (this.indexedDocs * 1000);
                 float speed = (a / this.elapsedTime);
-                System.out.println(speed);
                 this.setIndexingSpeed(speed);
             }
             this.setEstimatedCompletionTimeAsString(this.formatIntoHHMMSS((int) (this.estimatedCompletionTime / 1000)));
@@ -77,17 +77,6 @@ public class SolrjDocumentIndexerStatus extends DocumentIndexerStatus
     {
         this.recentlyIndexedDocs = recentlyIndexedDocs;
 
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.xwiki.platform.search.index.DocumentIndexerStatus#getRecentlyIndexedDocs()
-     */
-    @Override
-    public List<SolrInputDocument> getRecentlyIndexedDocs()
-    {
-        return null;
     }
 
 }
