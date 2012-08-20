@@ -8,6 +8,7 @@ README
    Add the below jar files to XE/webapps/xwiki/WEB-INF/lib.
    Untill the Solr search is added to xwiki-platform, for convienience the files are hosted in dropbox site here.
    https://dl.dropbox.com/u/2027256/solr_lib.zip
+
    apache-solr-core-4.0.0- ALPHA.jar
    apache-solr-solrj-4.0.0-ALPHA.jar
    apache-solr-velocity-4.0.0-ALPHA.jar
@@ -20,7 +21,8 @@ README
    apache-solr-clustering-4.0.0-ALPHA.jar
 
 3. Download Lucene from http://www.apache.org/dyn/closer.cgi/lucene/java/3.6.1  .Add the below jar files to XE/webapps/xwiki/WEB-INF/lib.
-   Untill the Solr search is added to xwiki-platform, for convienience the files are hosted in dropbox site here. Lucene Lib
+   Untill the Solr search is added to xwiki-platform, for convienience the files are hosted in dropbox site here.https://dl.dropbox.com/u/2027256/lucene_libs.zip
+
    lucene-analyzers-4.0.0-ALPHA.jar
    lucene-icu-4.0.0-ALPHA.jar
    lucene-phonetic-4.0.0-ALPHA.jar
