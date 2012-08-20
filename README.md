@@ -9,37 +9,37 @@ README
    Untill the Solr search is added to xwiki-platform, for convienience the files are hosted in dropbox site here.
    https://dl.dropbox.com/u/2027256/solr_lib.zip
 
-   apache-solr-core-4.0.0- ALPHA.jar
-   apache-solr-solrj-4.0.0-ALPHA.jar
-   apache-solr-velocity-4.0.0-ALPHA.jar
-   apache-solr-langid-4.0.0- ALPHA.jar
-   apache-solr-analysis-extras-4.0.0- ALPHA.jar
-   apache-solr-dataimporthandler-4.0.0-ALPHA.jar
-   apache-solr-cell-4.0.0-ALPHA.jar
-   apache-solr-dataimporthandler-extras-4.0.0-ALPHA.jar 
-   apache-solr-uima-4.0.0-ALPHA.jar
-   apache-solr-clustering-4.0.0-ALPHA.jar
+   ~ apache-solr-core-4.0.0- ALPHA.jar
+     apache-solr-solrj-4.0.0-ALPHA.jar
+     apache-solr-velocity-4.0.0-ALPHA.jar
+     apache-solr-langid-4.0.0- ALPHA.jar
+     apache-solr-analysis-extras-4.0.0- ALPHA.jar
+     apache-solr-dataimporthandler-4.0.0-ALPHA.jar
+     apache-solr-cell-4.0.0-ALPHA.jar
+     apache-solr-dataimporthandler-extras-4.0.0-ALPHA.jar 
+     apache-solr-uima-4.0.0-ALPHA.jar
+     apache-solr-clustering-4.0.0-ALPHA.jar
 
 3. Download Lucene from http://www.apache.org/dyn/closer.cgi/lucene/java/3.6.1  .Add the below jar files to XE/webapps/xwiki/WEB-INF/lib.
    Untill the Solr search is added to xwiki-platform, for convienience the files are hosted in dropbox site here.https://dl.dropbox.com/u/2027256/lucene_libs.zip
 
-   lucene-analyzers-4.0.0-ALPHA.jar
-   lucene-icu-4.0.0-ALPHA.jar
-   lucene-phonetic-4.0.0-ALPHA.jar
-   lucene-spellchecker-4.0.0-ALPHA.jar
-   lucene-core-4.0.0-ALPHA.jar
-   lucene-join-4.0.0-ALPHA.jar
-   lucene-queries-4.0.0-ALPHA.jar
-   lucene-stempel-4.0.0-ALPHA.jar
-   lucene-facet-4.0.0-ALPHA.jar
-   lucene-kuromoji-4.0.0-ALPHA.jar
-   lucene-queryparser-4.0.0-ALPHA.jar
-   lucene-grouping-4.0.0-ALPHA.jar
-   lucene-memory-4.0.0-ALPHA.jar
-   lucene-remote-4.0.0-ALPHA.jar
-   lucene-highlighter-4.0.0-ALPHA.jar
-   lucene-misc-4.0.0-ALPHA.jar
-   lucene-spatial-4.0.0-ALPHA.jar
+   ~ lucene-analyzers-4.0.0-ALPHA.jar
+     lucene-icu-4.0.0-ALPHA.jar
+     lucene-phonetic-4.0.0-ALPHA.jar
+     lucene-spellchecker-4.0.0-ALPHA.jar
+     lucene-core-4.0.0-ALPHA.jar
+     lucene-join-4.0.0-ALPHA.jar
+     lucene-queries-4.0.0-ALPHA.jar
+     lucene-stempel-4.0.0-ALPHA.jar
+     lucene-facet-4.0.0-ALPHA.jar
+     lucene-kuromoji-4.0.0-ALPHA.jar
+     lucene-queryparser-4.0.0-ALPHA.jar
+     lucene-grouping-4.0.0-ALPHA.jar
+     lucene-memory-4.0.0-ALPHA.jar
+     lucene-remote-4.0.0-ALPHA.jar
+     lucene-highlighter-4.0.0-ALPHA.jar
+     lucene-misc-4.0.0-ALPHA.jar
+     lucene-spatial-4.0.0-ALPHA.jar
 
 4. Add  google gson library to the XE/webapps/xwiki/WEB-INF/lib. Indexing uses json communication to update the progress bar. Download from http://code.google.com/p/google-gson/downloads/list
 
