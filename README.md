@@ -4,15 +4,17 @@ README
 
 2. XWiki Enterprise 4.2-SNAPSHOT has lucene 3.5 libraries.Delete lucene-analyzer, lucene-core, lucene-queryparser of version 3.5.0 , xwiki-platform-search-lucene-4.2-milestone-2.jar from xwiki-enterprise-jetty-hsqldb-4.2-SNAPSHOT/webapps/xwiki/WEB-INF/lib.
 
-3. Download Solr from http://www.apache.org/dyn/closer.cgi/lucene/solr/4.0.0-ALPHA . Add the below jar files to XE/webapps/xwiki/WEB-INF/lib.
-   Untill the Solr search is added to xwiki-platform, for convienience the files are hosted in dropbox site here. Solr Lib
+3. Download Solr from http://www.apache.org/dyn/closer.cgi/lucene/solr/4.0.0-ALPHA . 
+   Add the below jar files to XE/webapps/xwiki/WEB-INF/lib.
+   Untill the Solr search is added to xwiki-platform, for convienience the files are hosted in dropbox site here.
+   https://dl.dropbox.com/u/2027256/solr_lib.zip
    apache-solr-core-4.0.0- ALPHA.jar
    apache-solr-solrj-4.0.0-ALPHA.jar
    apache-solr-velocity-4.0.0-ALPHA.jar
    apache-solr-langid-4.0.0- ALPHA.jar
    apache-solr-analysis-extras-4.0.0- ALPHA.jar
    apache-solr-dataimporthandler-4.0.0-ALPHA.jar
-   apache-solr-cell-4.0.0-ALPHA.jar             
+   apache-solr-cell-4.0.0-ALPHA.jar
    apache-solr-dataimporthandler-extras-4.0.0-ALPHA.jar 
    apache-solr-uima-4.0.0-ALPHA.jar
    apache-solr-clustering-4.0.0-ALPHA.jar
