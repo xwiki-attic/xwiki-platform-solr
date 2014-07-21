@@ -1,3 +1,6 @@
+This project is now deprecated since there's a SOLR integration in the XWiki platform, see:
+http://extensions.xwiki.org/xwiki/bin/view/Extension/Solr+Search+Application
+
 README
 -----------------------------------------------
 1. Get the latest XWiki Enterprise 4.2-SNAPSHOT.
